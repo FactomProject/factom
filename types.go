@@ -5,7 +5,14 @@ import (
 	"crypto/sha256"
 	"encoding/binary"
 	"encoding/hex"
+	"encoding/json"
 )
+
+type jsonentry struct {
+	ChainID string
+	ExtIDs  []string
+	Data    string
+}
 
 // Objects implimenting the FactomWriter interface may be used in the Submit
 // call to create and add an entry to the factom network.
@@ -61,6 +68,27 @@ func (e *Entry) MarshalBinary() []byte {
 	buf.Write(e.Data)
 
 	return buf.Bytes()
+}
+
+// UnmarshalJSON makes satisfies the json.Unmarshaler interfact and populates
+// an entry with the data from a json entry.
+func (e *Entry) UnmarshalJSON(b []byte) error {
+	var (
+		j jsonentry
+		err error
+	)
+	json.Unmarshal(b, &j)
+	
+	e.ChainID, err = hex.DecodeString(j.ChainID)
+	if err != nil {
+		return err
+	}
+	for _, v := range j.ExtIDs {
+		e.ExtIDs = append(e.ExtIDs, []byte(v))
+	}
+	e.Data = []byte(j.Data)
+	
+	return nil
 }
 
 // A Chain that can be submitted to the factom network.
