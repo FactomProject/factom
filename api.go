@@ -122,13 +122,12 @@ func RevealChain(c *Chain) error {
 // Submit wraps CommitEntry and RevealEntry. Submit takes a FactomWriter (an
 // entry is a FactomWriter) and does a commit and reveal for the entry adding
 // it to the factom blockchain.
-func Submit(f FactomWriter) error {
+func Submit(f FactomWriter) (err error) {
 	e := f.CreateFactomEntry()
-	err := CommitEntry(e)
-	if err != nil {
-		return err
-	}
-	time.Sleep(1 * time.Minute)
+//	err = CommitEntry(e)
+//	if err != nil {
+//		return err
+//	}
 	err = RevealEntry(e)
 	if err != nil {
 		return err

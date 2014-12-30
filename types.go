@@ -3,9 +3,11 @@ package factom
 import (
 	"bytes"
 	"crypto/sha256"
+	"encoding/base64"
 	"encoding/binary"
 	"encoding/hex"
 	"encoding/json"
+	"time"
 )
 
 type jsonentry struct {
@@ -28,9 +30,10 @@ type FactomChainer interface {
 
 // A factom entry that can be submitted to the factom network.
 type Entry struct {
-	ChainID []byte
-	ExtIDs  [][]byte
-	Data    []byte
+	TimeStamp int64
+	ChainID   []byte
+	ExtIDs    [][]byte
+	Data      []byte
 }
 
 // CreateFactomEntry allows an Entry to satisfy the FactomWriter interface.
@@ -38,7 +41,7 @@ func (e *Entry) CreateFacomEntry() *Entry {
 	return e
 }
 
-// Hash returns a hex encoded string that is the sha256 hash of the entry.
+// Hash returns a hex encoded sha256 hash of the entry.
 func (e *Entry) Hash() string {
 	s := sha256.New()
 	s.Write(e.MarshalBinary())
@@ -70,12 +73,16 @@ func (e *Entry) MarshalBinary() []byte {
 	return buf.Bytes()
 }
 
+// StampTime sets the TimeStamp to the current unix time
+func (e *Entry) StampTime() {
+	e.TimeStamp = time.Now().Unix()
+}
+
 // UnmarshalJSON makes satisfies the json.Unmarshaler interfact and populates
 // an entry with the data from a json entry.
-func (e *Entry) UnmarshalJSON(b []byte) error {
+func (e *Entry) UnmarshalJSON(b []byte) (err error) {
 	var (
 		j jsonentry
-		err error
 	)
 	json.Unmarshal(b, &j)
 	
@@ -86,7 +93,10 @@ func (e *Entry) UnmarshalJSON(b []byte) error {
 	for _, v := range j.ExtIDs {
 		e.ExtIDs = append(e.ExtIDs, []byte(v))
 	}
-	e.Data = []byte(j.Data)
+	e.Data, err = base64.StdEncoding.DecodeString(j.Data)
+	if err != nil {
+		return err
+	}
 	
 	return nil
 }
