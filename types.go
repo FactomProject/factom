@@ -74,9 +74,8 @@ func (e *Entry) MarshalBinary() []byte {
 // UnmarshalJSON makes satisfies the json.Unmarshaler interfact and populates
 // an entry with the data from a json entry.
 func (e *Entry) UnmarshalJSON(b []byte) (err error) {
-	var (
-		j jsonentry
-	)
+	var j jsonentry
+
 	json.Unmarshal(b, &j)
 	
 	e.ChainID, err = hex.DecodeString(j.ChainID)

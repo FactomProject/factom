@@ -3,6 +3,7 @@ package factom
 import (
 	"crypto/sha256"
 	"encoding/hex"
+	"fmt"
 	"net/http"
 	"net/url"
 	"time"
@@ -14,6 +15,16 @@ func sha(b []byte) []byte {
 	s := sha256.New()
 	s.Write(b)
 	return s.Sum(nil)
+}
+
+// PrintEntry is a helper function for debugging entry transport and encoding
+func PrintEntry(e *Entry) {
+	fmt.Println("ChainID:", hex.EncodeToString(e.ChainID))
+	fmt.Println("ExtIDs:")
+	for i := range e.ExtIDs {
+		fmt.Println("	", string(e.ExtIDs[i]))
+	}
+	fmt.Println("Data:", string(e.Data))
 }
 
 // SetServer specifies the address of the server recieving the factom messages.
