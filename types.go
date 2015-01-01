@@ -37,7 +37,7 @@ type Entry struct {
 }
 
 // CreateFactomEntry allows an Entry to satisfy the FactomWriter interface.
-func (e *Entry) CreateFacomEntry() *Entry {
+func (e *Entry) CreateFactomEntry() *Entry {
 	return e
 }
 
