@@ -7,7 +7,6 @@ import (
 	"encoding/binary"
 	"encoding/hex"
 	"encoding/json"
-	"time"
 )
 
 type jsonentry struct {
@@ -30,7 +29,6 @@ type FactomChainer interface {
 
 // A factom entry that can be submitted to the factom network.
 type Entry struct {
-	TimeStamp int64
 	ChainID   []byte
 	ExtIDs    [][]byte
 	Data      []byte
@@ -71,11 +69,6 @@ func (e *Entry) MarshalBinary() []byte {
 	buf.Write(e.Data)
 
 	return buf.Bytes()
-}
-
-// StampTime sets the TimeStamp to the current unix time
-func (e *Entry) StampTime() {
-	e.TimeStamp = time.Now().Unix()
 }
 
 // UnmarshalJSON makes satisfies the json.Unmarshaler interfact and populates
