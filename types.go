@@ -3,7 +3,7 @@ package factom
 import (
 	"bytes"
 	"crypto/sha256"
-	"encoding/base64"
+//	"encoding/base64"
 	"encoding/binary"
 	"encoding/hex"
 	"encoding/json"
@@ -85,7 +85,7 @@ func (e *Entry) UnmarshalJSON(b []byte) (err error) {
 	for _, v := range j.ExtIDs {
 		e.ExtIDs = append(e.ExtIDs, []byte(v))
 	}
-	e.Data, err = base64.StdEncoding.DecodeString(j.Data)
+	e.Data, err = hex.DecodeString(j.Data)
 	if err != nil {
 		return err
 	}
