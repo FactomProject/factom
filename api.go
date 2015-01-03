@@ -7,6 +7,8 @@ import (
 	"net/http"
 	"net/url"
 	"time"
+	
+	"github.com/FactomProject/FactomCode/wallet"
 )
 
 var server string = "http://localhost:8083"
@@ -70,10 +72,13 @@ func NewChain(name []string, eids []string, data []byte) (c *Chain, err error) {
 // CommitEntry sends a message to the factom network containing a hash of the
 // entry to be used to verify the later RevealEntry.
 func CommitEntry(e *Entry) error {
+	sig := wallet.SignData(e.MarshalBinary())
+
 	data := url.Values{
-		"datatype": {"entryhash"},
-		"format":   {"binary"},
-		"data":     {e.Hash()},
+		"datatype":  {"entryhash"},
+		"format":    {"binary"},
+		"signature": {hex.EncodeToString((*sig.Sig)[:])},
+		"data":      {e.Hash()},
 	}
 	_, err := http.PostForm(server, data)
 	if err != nil {
