@@ -3,6 +3,7 @@ package factom
 import (
 	"bytes"
 	"crypto/sha256"
+	"encoding/binary"
 	"encoding/hex"
 	"fmt"
 	"net/http"
@@ -75,10 +76,10 @@ func NewChain(name []string, eids []string, data []byte) (c *Chain, err error) {
 func CommitEntry(e *Entry) error {
 	var msg bytes.Buffer
 	
-	msg.Write([]byte{byte(time.Now().Unix())})
+	binary.Write(&msg, binary.BigEndian, uint64(time.Now().Unix()))
 	msg.WriteString(e.Hash())
-	sig := wallet.SignData(msg.Bytes())
-	
+
+	sig := wallet.SignData(msg.Bytes())	
 	// msg.Bytes should be a int64 timestamp followed by a binary entry
 	
 	data := url.Values{
