@@ -1,6 +1,7 @@
 package factom
 
 import (
+	"bytes"
 	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
@@ -72,13 +73,19 @@ func NewChain(name []string, eids []string, data []byte) (c *Chain, err error) {
 // CommitEntry sends a message to the factom network containing a hash of the
 // entry to be used to verify the later RevealEntry.
 func CommitEntry(e *Entry) error {
-	sig := wallet.SignData(e.MarshalBinary())
-
+	var msg bytes.Buffer
+	
+	msg.Write([]byte{byte(time.Now().Unix())})
+	msg.Write(e.MarshalBinary())
+	sig := wallet.SignData(msg.Bytes())
+	
+	// msg.Bytes should be a int64 timestamp followed by a binary entry
+	
 	data := url.Values{
-		"datatype":  {"entryhash"},
+		"datatype":  {"commitentry"},
 		"format":    {"binary"},
 		"signature": {hex.EncodeToString((*sig.Sig)[:])},
-		"data":      {e.Hash()},
+		"data":      {hex.EncodeToString(msg.Bytes())},
 	}
 	_, err := http.PostForm(server, data)
 	if err != nil {
