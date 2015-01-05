@@ -76,7 +76,7 @@ func CommitEntry(e *Entry) error {
 	var msg bytes.Buffer
 	
 	msg.Write([]byte{byte(time.Now().Unix())})
-	msg.Write(sha(e.MarshalBinary()))
+	msg.WriteString(e.Hash())
 	sig := wallet.SignData(msg.Bytes())
 	
 	// msg.Bytes should be a int64 timestamp followed by a binary entry
