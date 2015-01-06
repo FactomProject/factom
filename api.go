@@ -25,8 +25,8 @@ func sha(b []byte) []byte {
 func PrintEntry(e *Entry) {
 	fmt.Println("ChainID:", hex.EncodeToString(e.ChainID))
 	fmt.Println("ExtIDs:")
-	for i := range e.ExtIDs {
-		fmt.Println("	", string(e.ExtIDs[i]))
+	for _, v := range e.ExtIDs {
+		fmt.Println("	", string(v))
 	}
 	fmt.Println("Data:", string(e.Data))
 }
@@ -85,7 +85,7 @@ func CommitEntry(e *Entry) error {
 	data := url.Values{
 		"datatype":  {"commitentry"},
 		"format":    {"binary"},
-		"signature": {hex.EncodeToString((*sig.Sig)[:])},
+		"signature": {hex.EncodeToString((*sig.Pub)[:])},
 		"data":      {hex.EncodeToString(msg.Bytes())},
 	}
 	_, err := http.PostForm(server, data)
