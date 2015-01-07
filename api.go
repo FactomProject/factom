@@ -9,7 +9,7 @@ import (
 	"net/http"
 	"net/url"
 	"time"
-	
+
 	"github.com/FactomProject/FactomCode/wallet"
 )
 
@@ -75,13 +75,13 @@ func NewChain(name []string, eids []string, data []byte) (c *Chain, err error) {
 // entry to be used to verify the later RevealEntry.
 func CommitEntry(e *Entry) error {
 	var msg bytes.Buffer
-	
+
 	binary.Write(&msg, binary.BigEndian, uint64(time.Now().Unix()))
 	msg.WriteString(e.Hash())
 
-	sig := wallet.SignData(msg.Bytes())	
+	sig := wallet.SignData(msg.Bytes())
 	// msg.Bytes should be a int64 timestamp followed by a binary entry
-	
+
 	data := url.Values{
 		"datatype":  {"commitentry"},
 		"format":    {"binary"},
@@ -148,10 +148,10 @@ func RevealChain(c *Chain) error {
 // it to the factom blockchain.
 func Submit(f FactomWriter) (err error) {
 	e := f.CreateFactomEntry()
-//	err = CommitEntry(e)
-//	if err != nil {
-//		return err
-//	}
+	//	err = CommitEntry(e)
+	//	if err != nil {
+	//		return err
+	//	}
 	err = RevealEntry(e)
 	if err != nil {
 		return err
