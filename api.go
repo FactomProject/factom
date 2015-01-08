@@ -77,7 +77,7 @@ func CommitEntry(e *Entry) error {
 	var msg bytes.Buffer
 
 	binary.Write(&msg, binary.BigEndian, uint64(time.Now().Unix()))
-	msg.WriteString(e.Hash())
+	msg.Write(e.MarshalBinary())
 
 	sig := wallet.SignData(msg.Bytes())
 	// msg.Bytes should be a int64 timestamp followed by a binary entry
@@ -148,10 +148,10 @@ func RevealChain(c *Chain) error {
 // it to the factom blockchain.
 func Submit(f FactomWriter) (err error) {
 	e := f.CreateFactomEntry()
-	//	err = CommitEntry(e)
-	//	if err != nil {
-	//		return err
-	//	}
+	err = CommitEntry(e)
+	if err != nil {
+		return err
+	}
 	err = RevealEntry(e)
 	if err != nil {
 		return err
