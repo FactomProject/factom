@@ -102,7 +102,7 @@ func RevealEntry(e *Entry) error {
 	data := url.Values{
 		"datatype": {"entry"},
 		"format":   {"binary"},
-		"entry":    {e.Hex()},
+		"entry":    {hex.EncodeToString(e.MarshalBinary())},
 	}
 	_, err := http.PostForm(server, data)
 	if err != nil {
@@ -134,7 +134,7 @@ func RevealChain(c *Chain) error {
 	data := url.Values{
 		"datatype": {"entry"},
 		"format":   {"binary"},
-		"data":     {c.FirstEntry.Hex()},
+		"data":     {hex.EncodeToString(c.FirstEntry.MarshalBinary())},
 	}
 	_, err := http.PostForm(server, data)
 	if err != nil {

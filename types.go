@@ -47,6 +47,7 @@ func (e *Entry) Hash() string {
 }
 
 // Hex return the hex encoded string of the binary entry.
+// Depricated!
 func (e *Entry) Hex() string {
 	return hex.EncodeToString(e.MarshalBinary())
 }
