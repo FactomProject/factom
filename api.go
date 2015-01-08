@@ -100,7 +100,7 @@ func CommitEntry(e *Entry) error {
 // will be rejected if a CommitEntry was not done.
 func RevealEntry(e *Entry) error {
 	data := url.Values{
-		"datatype": {"entry"},
+		"datatype": {"revealentry"},
 		"format":   {"binary"},
 		"entry":    {hex.EncodeToString(e.MarshalBinary())},
 	}
