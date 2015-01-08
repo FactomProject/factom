@@ -85,7 +85,7 @@ func CommitEntry(e *Entry) error {
 	data := url.Values{
 		"datatype":  {"commitentry"},
 		"format":    {"binary"},
-		"signature": {hex.EncodeToString((*sig.Pub)[:])},
+		"signature": {hex.EncodeToString((*sig.Pub.Key)[:])},
 		"data":      {hex.EncodeToString(msg.Bytes())},
 	}
 	_, err := http.PostForm(server, data)
