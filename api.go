@@ -13,7 +13,7 @@ import (
 	"github.com/FactomProject/FactomCode/wallet"
 )
 
-var server string = "http://localhost:8083"
+var server string = "http://localhost:8083/v1"
 
 func sha(b []byte) []byte {
 	s := sha256.New()
