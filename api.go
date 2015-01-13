@@ -61,13 +61,8 @@ func NewChain(name []string, eids []string, data []byte) (c *Chain, err error) {
 	for _, v := range name {
 		c.Name = append(c.Name, []byte(v))
 	}
-	c.GenerateID()
-	e := c.FirstEntry
-	e.ChainID = c.ChainID
-	e.Data = data
-	for _, v := range eids {
-		e.ExtIDs = append(e.ExtIDs, []byte(v))
-	}
+	str_name := c.GenerateID()
+	c.FirstEntry, err = NewEntry(str_name,eids,data)
 	return
 }
 
@@ -77,7 +72,7 @@ func CommitEntry(e *Entry) error {
 	var msg bytes.Buffer
 
 	binary.Write(&msg, binary.BigEndian, uint64(time.Now().Unix()))
-	msg.Write(e.MarshalBinary())
+	msg.Write([]byte(e.Hash()))
 
 	sig := wallet.SignData(msg.Bytes())
 	// msg.Bytes should be a int64 timestamp followed by a binary entry
@@ -85,7 +80,8 @@ func CommitEntry(e *Entry) error {
 	data := url.Values{
 		"datatype":  {"commitentry"},
 		"format":    {"binary"},
-		"signature": {hex.EncodeToString((*sig.Pub.Key)[:])},
+		"signature": {hex.EncodeToString((*sig.Sig)[:])},
+		"pubkey":	{hex.EncodeToString((*sig.Pub.Key)[:])},
 		"data":      {hex.EncodeToString(msg.Bytes())},
 	}
 	_, err := http.PostForm(server, data)
@@ -114,10 +110,25 @@ func RevealEntry(e *Entry) error {
 // CommitChain sends a message to the factom network containing a series of
 // hashes to be used to verify the later RevealChain.
 func CommitChain(c *Chain) error {
+	var msg bytes.Buffer
+
+	binary.Write(&msg, binary.BigEndian, uint64(time.Now().Unix()))
+	msg.Write(c.MarshalBinary())
+
+	chainhash, chainentryhash, entryhash := c.Hash() 
+	msg.Write([]byte(chainhash))
+	msg.Write([]byte(chainentryhash))
+	msg.Write([]byte(entryhash))
+
+	sig := wallet.SignData(msg.Bytes())
+
 	data := url.Values{
-		"datatype": {"chainhash"},
+		"datatype": {"commitchain"},
 		"format":   {"binary"},
-		"data":     {c.Hash()},
+		"signature": {hex.EncodeToString((*sig.Sig)[:])},
+		"pubkey": 	{hex.EncodeToString((*sig.Pub.Key)[:])},
+		"data":      {hex.EncodeToString(msg.Bytes())},
+
 	}
 
 	_, err := http.PostForm(server, data)
