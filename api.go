@@ -17,7 +17,7 @@ var (
 	server = "localhost:8088"
 )
 
-// GetBlockHeight reports the current Block Height
+// GetBlockHeight reports the current Directory Block Height
 func GetBlockHeight() (int, error) {
 	api := fmt.Sprintf("http://%s/v1/dblockheight/", server)
 	
@@ -39,17 +39,21 @@ func GetBlockHeight() (int, error) {
 }
 
 // GetDBlocks gets the Directory Blocks whithin the Block Height Range provided
-// (inclusive). Each DBlock should contain a series of Entry Block Hashes.
+// (inclusive). Each DBlock should contain a series of Entry Block Merkel Roots.
 func GetDBlocks(from, to int) ([]DBlock, error) {
+	// NOTICE /v1/dblocksbyrange currently returs a json list of json objects
+	// while this function expects a series of json objects
+	
 	dblocks := make([]DBlock, 0)
-	api := fmt.Sprintf("http://%s/v1/dblocksbyrange/%s/%s", server, strconv.Itoa(from),
-		strconv.Itoa(to))
+	api := fmt.Sprintf("http://%s/v1/dblocksbyrange/%s/%s", server,
+		strconv.Itoa(from), strconv.Itoa(to))
 
 	resp, err := http.Get(api)
 	if err != nil {
 		return nil, err
 	}
 	defer resp.Body.Close()
+	
 	dec := json.NewDecoder(resp.Body)
 	for {
 		var block DBlock
@@ -64,8 +68,8 @@ func GetDBlocks(from, to int) ([]DBlock, error) {
 	return dblocks, nil
 }
 
-// GetEBlock gets an entry block specified by the Entry Block Hash. The EBlock
-// should contain a series of Entry Hashes
+// GetEBlock gets an entry block specified by the Entry Block Merkel Root. The
+// EBlock should contain a series of Entry Hashes.
 func GetEBlock(s string) (EBlock, error) {
 	var eblock EBlock
 	api := fmt.Sprintf("http://%s/v1/eblockbymr/%s", server, s)
@@ -87,27 +91,41 @@ func GetEBlock(s string) (EBlock, error) {
 	return eblock, nil
 }
 
+// GetEntry gets an entry based on the Entry Hash. The Entry should contain a
+// hex encoded string of Entry Data and a series of External IDs.
+func GetEntry(s string) (Entry, error) {
+	var entry Entry
+	api := fmt.Sprintf("http://%s/v1/entry/%s", server, s)
+
+	resp, err := http.Get(api)
+	if err != nil {
+		return entry, err
+	}
+	defer resp.Body.Close()
+	
+	p, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return entry, err
+	}
+	err = json.Unmarshal(p, entry)
+
+	return entry, nil
+}
+
 
 
 // TODO ...
 // ........
 
 // GetChain gets a series of Entry Hashes associated with the Chain ID provided
-func GetChain(s string) Chain {
+func GetChain(s string) (Chain, error) {
 	var c Chain
-	return c
+	return c, nil
 }
 
 // GetDBlock gets a Directory Block by the Directory Block Hash. The DBlock
 // should contain a series of Entry Block Hashes.
-func GetDBlock(s string) DBlock {
+func GetDBlock(s string) (DBlock, error) {
 	var d DBlock
-	return d
-}
-
-// GetEntry gets an entry based on the Entry Hash. The Entry should contain a
-// hex encoded string of Entry Data and a series of External IDs.
-func GetEntry(s string) Entry {
-	var e Entry
-	return e
+	return d, nil
 }
