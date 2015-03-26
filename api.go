@@ -40,24 +40,24 @@ func GetBlockHeight() (int, error) {
 
 // GetDBlock gets a Directory Block by the Directory Block Hash. The Directory
 // Block should contain a series of Entry Block Hashes.
-func GetDBlock(hash string) ([]DBlock, error) {
+func GetDBlock(hash string) (DBlock, error) {
+	var dblock DBlock
 	api := fmt.Sprintf("http://%s/v1/dblock/%s", server, hash)
 
 	resp, err := http.Get(api)
 	if err != nil {
-		return nil, err
+		return dblock, err
 	}
 	defer resp.Body.Close()
 	
 	p, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		return nil, err
+		return dblock, err
 	}
 	
-	var dblock DBlock
-	err := json.Unmarshall(p, dblock)
+	err = json.Unmarshal(p, dblock)
 	if err != nil {
-		return nil, err
+		return dblock, err
 	}
 
 	return dblock, nil
@@ -143,11 +143,4 @@ func GetEntry(s string) (Entry, error) {
 func GetChain(s string) (Chain, error) {
 	var c Chain
 	return c, nil
-}
-
-// GetDBlock gets a Directory Block by the Directory Block Hash. The DBlock
-// should contain a series of Entry Block Hashes.
-func GetDBlock(s string) (DBlock, error) {
-	var d DBlock
-	return d, nil
 }
