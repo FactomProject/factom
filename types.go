@@ -35,8 +35,8 @@ type EBlock struct {
 		TimeStamp     int64
 	}
 	EBEntries []struct {
-		timeStamp int64
-		hash      string
+		TimeStamp int64
+		Hash      string
 	}
 }
 

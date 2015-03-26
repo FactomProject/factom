@@ -38,12 +38,34 @@ func GetBlockHeight() (int, error) {
 	return height, nil
 }
 
+// GetDBlock gets a Directory Block by the Directory Block Hash. The Directory
+// Block should contain a series of Entry Block Hashes.
+func GetDBlock(hash string) ([]DBlock, error) {
+	api := fmt.Sprintf("http://%s/v1/dblock/%s", server, hash)
+
+	resp, err := http.Get(api)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+	
+	p, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+	
+	var dblock DBlock
+	err := json.Unmarshall(p, dblock)
+	if err != nil {
+		return nil, err
+	}
+
+	return dblock, nil
+}
+
 // GetDBlocks gets the Directory Blocks whithin the Block Height Range provided
 // (inclusive). Each DBlock should contain a series of Entry Block Merkel Roots.
 func GetDBlocks(from, to int) ([]DBlock, error) {
-	// NOTICE /v1/dblocksbyrange currently returs a json list of json objects
-	// while this function expects a series of json objects
-	
 	dblocks := make([]DBlock, 0)
 	api := fmt.Sprintf("http://%s/v1/dblocksbyrange/%s/%s", server,
 		strconv.Itoa(from), strconv.Itoa(to))
