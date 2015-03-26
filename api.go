@@ -1,187 +1,146 @@
+// Copyright 2015 Factom Foundation
+// Use of this source code is governed by the MIT
+// license that can be found in the LICENSE file.
+
 package factom
 
 import (
-	"bytes"
-	"crypto/sha256"
-	"encoding/binary"
-	"encoding/hex"
 	"fmt"
+	"encoding/json"
+	"io"
+	"io/ioutil"
 	"net/http"
-	"net/url"
-	"time"
-
-	"github.com/FactomProject/FactomCode/wallet"
+	"strconv"
 )
 
-var server string = "http://localhost:8083/v1"
+var (
+	server = "localhost:8088"
+)
 
-func sha(b []byte) []byte {
-	s := sha256.New()
-	s.Write(b)
-	return s.Sum(nil)
-}
-
-// PrintEntry is a helper function for debugging entry transport and encoding
-func PrintEntry(e *Entry) {
-	fmt.Println("ChainID:", hex.EncodeToString(e.ChainID))
-	fmt.Println("ExtIDs:")
-	for _, v := range e.ExtIDs {
-		fmt.Println("	", string(v))
+// GetBlockHeight reports the current Directory Block Height
+func GetBlockHeight() (int, error) {
+	api := fmt.Sprintf("http://%s/v1/dblockheight/", server)
+	
+	resp, err := http.Get(api)
+	if err != nil {
+		return 0, err
 	}
-	fmt.Println("Data:", string(e.Data))
+	defer resp.Body.Close()
+	
+	p, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return 0, err
+	}
+	height, err := strconv.Atoi(string(p))
+	if err != nil {
+		return 0, err
+	}
+	return height, nil
 }
 
-// SetServer specifies the address of the server recieving the factom messages.
-// It should be depricated by the final release once the p2p network has been
-// implimented
-func SetServer(s string) {
-	server = s
+// GetDBlock gets a Directory Block by the Directory Block Hash. The Directory
+// Block should contain a series of Entry Block Hashes.
+func GetDBlock(hash string) (DBlock, error) {
+	var dblock DBlock
+	api := fmt.Sprintf("http://%s/v1/dblock/%s", server, hash)
+
+	resp, err := http.Get(api)
+	if err != nil {
+		return dblock, err
+	}
+	defer resp.Body.Close()
+	
+	p, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return dblock, err
+	}
+	
+	err = json.Unmarshal(p, dblock)
+	if err != nil {
+		return dblock, err
+	}
+
+	return dblock, nil
 }
 
-// NewEntry creates a factom entry. It is supplied a string chain id, a []byte
-// of data, and a series of string external ids for entry lookup
-func NewEntry(cid string, eids []string, data []byte) (e *Entry, err error) {
-	e = new(Entry)
-	e.ChainID, err = hex.DecodeString(cid)
+// GetDBlocks gets the Directory Blocks whithin the Block Height Range provided
+// (inclusive). Each DBlock should contain a series of Entry Block Merkel Roots.
+func GetDBlocks(from, to int) ([]DBlock, error) {
+	dblocks := make([]DBlock, 0)
+	api := fmt.Sprintf("http://%s/v1/dblocksbyrange/%s/%s", server,
+		strconv.Itoa(from), strconv.Itoa(to))
+
+	resp, err := http.Get(api)
 	if err != nil {
 		return nil, err
 	}
-	e.Data = data
-	for _, v := range eids {
-		e.ExtIDs = append(e.ExtIDs, []byte(v))
+	defer resp.Body.Close()
+	
+	dec := json.NewDecoder(resp.Body)
+	for {
+		var block DBlock
+		if err := dec.Decode(&block); err == io.EOF {
+			break
+		} else if err != nil {
+			return dblocks, err
+		}
+		dblocks = append(dblocks, block)
 	}
-	return
+
+	return dblocks, nil
 }
 
-// NewChain creates a factom chain from a []string chain name and a new entry
-// to be the first entry of the new chain from []byte data, and a series of
-// string external ids
-func NewChain(name []string, eids []string, data []byte) (c *Chain, err error) {
-	c = new(Chain)
-	for _, v := range name {
-		c.Name = append(c.Name, []byte(v))
+// GetEBlock gets an entry block specified by the Entry Block Merkel Root. The
+// EBlock should contain a series of Entry Hashes.
+func GetEBlock(s string) (EBlock, error) {
+	var eblock EBlock
+	api := fmt.Sprintf("http://%s/v1/eblockbymr/%s", server, s)
+
+	resp, err := http.Get(api)
+	if err != nil {
+		return eblock, err
 	}
-	str_name := c.GenerateID()
-	c.FirstEntry, err = NewEntry(str_name,eids,data)
-	return
+	defer resp.Body.Close()
+	
+	p, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return eblock, err
+	}
+	err = json.Unmarshal(p, eblock)
+	if err != nil {
+		return eblock, err
+	}
+	return eblock, nil
 }
 
-// CommitEntry sends a message to the factom network containing a hash of the
-// entry to be used to verify the later RevealEntry.
-func CommitEntry(e *Entry) error {
-	var msg bytes.Buffer
+// GetEntry gets an entry based on the Entry Hash. The Entry should contain a
+// hex encoded string of Entry Data and a series of External IDs.
+func GetEntry(s string) (Entry, error) {
+	var entry Entry
+	api := fmt.Sprintf("http://%s/v1/entry/%s", server, s)
 
-	binary.Write(&msg, binary.BigEndian, uint64(time.Now().Unix()))
-	msg.Write([]byte(e.Hash()))
-
-	sig := wallet.SignData(msg.Bytes())
-	// msg.Bytes should be a int64 timestamp followed by a binary entry
-
-	data := url.Values{
-		"datatype":  {"commitentry"},
-		"format":    {"binary"},
-		"signature": {hex.EncodeToString((*sig.Sig)[:])},
-		"pubkey":	{hex.EncodeToString((*sig.Pub.Key)[:])},
-		"data":      {hex.EncodeToString(msg.Bytes())},
-	}
-	_, err := http.PostForm(server, data)
+	resp, err := http.Get(api)
 	if err != nil {
-		return err
+		return entry, err
 	}
-	return nil
+	defer resp.Body.Close()
+	
+	p, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return entry, err
+	}
+	err = json.Unmarshal(p, entry)
+
+	return entry, nil
 }
 
-// RevealEntry sends a message to the factom network containing the binary
-// encoded entry for the server to add it to the factom blockchain. The entry
-// will be rejected if a CommitEntry was not done.
-func RevealEntry(e *Entry) error {
-	data := url.Values{
-		"datatype": {"revealentry"},
-		"format":   {"binary"},
-		"entry":    {hex.EncodeToString(e.MarshalBinary())},
-	}
-	_, err := http.PostForm(server, data)
-	if err != nil {
-		return err
-	}
-	return nil
-}
 
-// CommitChain sends a message to the factom network containing a series of
-// hashes to be used to verify the later RevealChain.
-func CommitChain(c *Chain) error {
-	var msg bytes.Buffer
 
-	binary.Write(&msg, binary.BigEndian, uint64(time.Now().Unix()))
-	msg.Write(c.MarshalBinary())
+// TODO ...
+// ........
 
-	chainhash, chainentryhash, entryhash := c.Hash() 
-	msg.Write([]byte(chainhash))
-	msg.Write([]byte(chainentryhash))
-	msg.Write([]byte(entryhash))
-
-	sig := wallet.SignData(msg.Bytes())
-
-	data := url.Values{
-		"datatype": {"commitchain"},
-		"format":   {"binary"},
-		"signature": {hex.EncodeToString((*sig.Sig)[:])},
-		"pubkey": 	{hex.EncodeToString((*sig.Pub.Key)[:])},
-		"data":      {hex.EncodeToString(msg.Bytes())},
-
-	}
-
-	_, err := http.PostForm(server, data)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-// RevealChain sends a message to the factom network containing the binary
-// encoded first entry for a chain to be used by the server to add a new factom
-// chain. It will be rejected if a CommitChain was not done.
-func RevealChain(c *Chain) error {
-	data := url.Values{
-		"datatype": {"entry"},
-		"format":   {"binary"},
-		"data":     {hex.EncodeToString(c.MarshalBinary())},
-	}
-	_, err := http.PostForm(server, data)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-// Submit wraps CommitEntry and RevealEntry. Submit takes a FactomWriter (an
-// entry is a FactomWriter) and does a commit and reveal for the entry adding
-// it to the factom blockchain.
-func Submit(f FactomWriter) (err error) {
-	e := f.CreateFactomEntry()
-	err = CommitEntry(e)
-	if err != nil {
-		return err
-	}
-	err = RevealEntry(e)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-// CreateChain takes a FactomChainer (a Chain is a FactomChainer) and calls
-// commit and reveal to create the factom chain on the network.
-func CreateChain(f FactomChainer) error {
-	c := f.CreateFactomChain()
-	err := CommitChain(c)
-	if err != nil {
-		return err
-	}
-	time.Sleep(1 * time.Minute)
-	err = RevealChain(c)
-	if err != nil {
-		return err
-	}
-	return nil
+// GetChain gets a series of Entry Hashes associated with the Chain ID provided
+func GetChain(s string) (Chain, error) {
+	var c Chain
+	return c, nil
 }
