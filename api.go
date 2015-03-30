@@ -94,7 +94,7 @@ func GetDBlocks(from, to int) ([]DBlock, error) {
 // EBlock should contain a series of Entry Hashes.
 func GetEBlock(s string) (EBlock, error) {
 	var eblock EBlock
-	api := fmt.Sprintf("http://%s/v1/eblockbymr/%s", server, s)
+	api := fmt.Sprintf("http://%s/v1/eblock/%s", server, s)
 
 	resp, err := http.Get(api)
 	if err != nil {

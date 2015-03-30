@@ -22,6 +22,10 @@ type DBlock struct {
 		MerkleRoot string
 		ChainID    string
 	}
+	Chain    string
+	DBHash   string
+	IsSealed bool
+	Salt     string
 }
 
 func (d DBlock) Time() time.Time {
@@ -38,6 +42,11 @@ type EBlock struct {
 		TimeStamp int64
 		Hash      string
 	}
+	Chain      string
+	EBHash     string
+	IsSealed   bool
+	MerkleRoot string
+	Salt       string
 }
 
 func (e EBlock) Time() time.Time {
