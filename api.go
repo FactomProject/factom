@@ -5,8 +5,8 @@
 package factom
 
 import (
-	"fmt"
 	"encoding/json"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -20,13 +20,13 @@ var (
 // GetBlockHeight reports the current Directory Block Height
 func GetBlockHeight() (int, error) {
 	api := fmt.Sprintf("http://%s/v1/dblockheight/", server)
-	
+
 	resp, err := http.Get(api)
 	if err != nil {
 		return 0, err
 	}
 	defer resp.Body.Close()
-	
+
 	p, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		return 0, err
@@ -49,12 +49,12 @@ func GetDBlock(hash string) (DBlock, error) {
 		return dblock, err
 	}
 	defer resp.Body.Close()
-	
+
 	p, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		return dblock, err
 	}
-	
+
 	err = json.Unmarshal(p, dblock)
 	if err != nil {
 		return dblock, err
@@ -75,7 +75,7 @@ func GetDBlocks(from, to int) ([]DBlock, error) {
 		return nil, err
 	}
 	defer resp.Body.Close()
-	
+
 	dec := json.NewDecoder(resp.Body)
 	for {
 		var block DBlock
@@ -101,7 +101,7 @@ func GetEBlock(s string) (EBlock, error) {
 		return eblock, err
 	}
 	defer resp.Body.Close()
-	
+
 	p, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		return eblock, err
@@ -124,7 +124,7 @@ func GetEntry(s string) (Entry, error) {
 		return entry, err
 	}
 	defer resp.Body.Close()
-	
+
 	p, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		return entry, err
@@ -133,8 +133,6 @@ func GetEntry(s string) (Entry, error) {
 
 	return entry, nil
 }
-
-
 
 // TODO ...
 // ........
