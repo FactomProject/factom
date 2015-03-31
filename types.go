@@ -10,22 +10,16 @@ import (
 
 type DBlock struct {
 	Header struct {
-		Version       int
-		TimeStamp     int64
-		BatchFlag     int
-		EntryCount    int
 		BlockID       int
-		PrevBlockHash string
+		EntryCount    int
 		MerkleRoot    string
+		PrevBlockHash string
+		TimeStamp     int64
 	}
 	DBEntries []struct {
-		MerkleRoot string
 		ChainID    string
+		MerkleRoot string
 	}
-	Chain    string
-	DBHash   string
-	IsSealed bool
-	Salt     string
 }
 
 func (d DBlock) Time() time.Time {
@@ -42,11 +36,6 @@ type EBlock struct {
 		TimeStamp int64
 		Hash      string
 	}
-	Chain      string
-	EBHash     string
-	IsSealed   bool
-	MerkleRoot string
-	Salt       string
 }
 
 func (e EBlock) Time() time.Time {
