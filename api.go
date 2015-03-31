@@ -92,8 +92,8 @@ func GetDBlocks(from, to int) ([]DBlock, error) {
 
 // GetEBlock gets an entry block specified by the Entry Block Merkel Root. The
 // EBlock should contain a series of Entry Hashes.
-func GetEBlock(s string) (EBlock, error) {
-	var eblock EBlock
+func GetEBlock(s string) (*EBlock, error) {
+	eblock := new(EBlock)
 	api := fmt.Sprintf("http://%s/v1/eblock/%s", server, s)
 
 	resp, err := http.Get(api)
@@ -115,8 +115,8 @@ func GetEBlock(s string) (EBlock, error) {
 
 // GetEntry gets an entry based on the Entry Hash. The Entry should contain a
 // hex encoded string of Entry Data and a series of External IDs.
-func GetEntry(s string) (Entry, error) {
-	var entry Entry
+func GetEntry(s string) (*Entry, error) {
+	entry := new(Entry)
 	api := fmt.Sprintf("http://%s/v1/entry/%s", server, s)
 
 	resp, err := http.Get(api)
