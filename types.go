@@ -9,6 +9,7 @@ import (
 )
 
 type DBlock struct {
+	DBHash string
 	Header struct {
 		BlockID       int
 		EntryCount    int
