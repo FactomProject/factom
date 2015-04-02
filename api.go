@@ -40,8 +40,8 @@ func GetBlockHeight() (int, error) {
 
 // GetDBlock gets a Directory Block by the Directory Block Hash. The Directory
 // Block should contain a series of Entry Block Hashes.
-func GetDBlock(hash string) (DBlock, error) {
-	var dblock DBlock
+func GetDBlock(hash string) (*DBlock, error) {
+	dblock := new(DBlock)
 	api := fmt.Sprintf("http://%s/v1/dblock/%s", server, hash)
 
 	resp, err := http.Get(api)
