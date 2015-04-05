@@ -33,14 +33,20 @@ type EBlock struct {
 		PrevBlockHash string
 		TimeStamp     int64
 	}
-	EBEntries []struct {
-		TimeStamp int64
-		Hash      string
-	}
+	EBEntries []EBEntry
 }
 
 func (e EBlock) Time() time.Time {
 	return time.Unix(e.Header.TimeStamp, 0)
+}
+
+type EBEntry struct {
+	TimeStamp int64
+	Hash      string
+}
+
+func (e EBEntry) Time() time.Time {
+	return time.Unix(e.TimeStamp, 0)
 }
 
 type Entry struct {
