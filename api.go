@@ -38,6 +38,31 @@ func GetBlockHeight() (int, error) {
 	return height, nil
 }
 
+// GetChain gets a Entry Block Chain by the ChainID. The Chain should contain a
+// series of Entry Block Hashes.
+func GetChain(hash string) (*Chain, error) {
+	chain := new(Chain)
+	api := fmt.Sprintf("http://%s/v1/chain/%s", server, hash)
+
+	resp, err := http.Get(api)
+	if err != nil {
+		return chain, err
+	}
+	defer resp.Body.Close()
+
+	p, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return chain, err
+	}
+
+	err = json.Unmarshal(p, chain)
+	if err != nil {
+		return chain, err
+	}
+
+	return chain, nil
+}
+
 // GetDBlock gets a Directory Block by the Directory Block Hash. The Directory
 // Block should contain a series of Entry Block Hashes.
 func GetDBlock(hash string) (*DBlock, error) {
@@ -136,9 +161,3 @@ func GetEntry(s string) (*Entry, error) {
 
 // TODO ...
 // ........
-
-// GetChain gets a series of Entry Hashes associated with the Chain ID provided
-func GetChain(s string) (Chain, error) {
-	var c Chain
-	return c, nil
-}

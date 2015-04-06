@@ -5,8 +5,28 @@
 package factom
 
 import (
+	"encoding/hex"
 	"time"
 )
+
+type Chain struct {
+	Blocks     []EBlock
+	ChainID    string
+	FirstEntry Entry
+	Name       []string
+}
+
+func (c *Chain) Names() []string {
+	names := make([]string, 0)
+	for _, v := range c.Name {
+		p, err := hex.DecodeString(v)
+		if err != nil {
+			return nil
+		}
+		names = append(names, string(p))
+	}
+	return names
+}
 
 type DBlock struct {
 	DBHash string
@@ -53,8 +73,4 @@ type Entry struct {
 	ChainID string
 	ExtIDs  []string
 	Data    string
-}
-
-// TODO
-type Chain struct {
 }
