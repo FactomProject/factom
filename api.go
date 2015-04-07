@@ -63,6 +63,32 @@ func GetChain(hash string) (*Chain, error) {
 	return chain, nil
 }
 
+// GetChains gets all of the Chains. Each Chain should contain a series of
+// Entry Block Hashes
+func GetChains() ([]Chain, error) {
+	chains := make([]Chain, 0)
+	api := fmt.Sprintf("http://%s/v1/chains/", server)
+
+	resp, err := http.Get(api)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	dec := json.NewDecoder(resp.Body)
+	for {
+		var chain Chain
+		if err := dec.Decode(&chain); err == io.EOF {
+			break
+		} else if err != nil {
+			return chains, err
+		}
+		chains = append(chains, chain)
+	}
+
+	return chains, nil
+}
+
 // GetDBlock gets a Directory Block by the Directory Block Hash. The Directory
 // Block should contain a series of Entry Block Hashes.
 func GetDBlock(hash string) (*DBlock, error) {
