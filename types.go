@@ -10,7 +10,6 @@ import (
 )
 
 type Chain struct {
-	Blocks     []EBlock
 	ChainID    string
 	FirstEntry Entry
 	Name       []string
