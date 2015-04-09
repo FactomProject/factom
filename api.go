@@ -185,5 +185,29 @@ func GetEntry(s string) (*Entry, error) {
 	return entry, nil
 }
 
+func GetEntriesByExtID(eid string) ([]Entry, error) {
+	entries := make([]Entry, 0)
+	api := fmt.Sprintf("http://%s/v1/entriesbyeid/%s", server, eid)
+
+	resp, err := http.Get(api)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	dec := json.NewDecoder(resp.Body)
+	for {
+		var entry Entry
+		if err := dec.Decode(&entry); err == io.EOF {
+			break
+		} else if err != nil {
+			return entries, err
+		}
+		entries = append(entries, entry)
+	}
+
+	return entries, nil
+}
+
 // TODO ...
 // ........
