@@ -208,6 +208,3 @@ func GetEntriesByExtID(eid string) ([]Entry, error) {
 
 	return entries, nil
 }
-
-// TODO ...
-// ........
