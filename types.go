@@ -27,6 +27,15 @@ func (c *Chain) Names() []string {
 	return names
 }
 
+type DBInfo struct {
+	BTCBlockHash   string
+	BTCBlockHeight int64
+	BTCTxHash      string
+	BTCTxOffset    int64
+	DBHash         string
+	DBMerkleRoot   string
+}
+
 type DBlock struct {
 	DBHash string
 	Header struct {

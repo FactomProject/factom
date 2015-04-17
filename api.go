@@ -141,6 +141,32 @@ func GetDBlocks(from, to int) ([]DBlock, error) {
 	return dblocks, nil
 }
 
+// GetDBInfo gets the Directory Block information by the Directory Block Hash.
+// The Directory Block Info should contain information about the directory
+// block and the BTC transaction containing the Merkle Root.
+func GetDBInfo(hash string) (*DBInfo, error) {
+	dbinfo := new(DBInfo)
+	api := fmt.Sprintf("http://%s/v1/dbinfo/%s", server, hash)
+
+	resp, err := http.Get(api)
+	if err != nil {
+		return dbinfo, err
+	}
+	defer resp.Body.Close()
+
+	p, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return dbinfo, err
+	}
+
+	err = json.Unmarshal(p, dbinfo)
+	if err != nil {
+		return dbinfo, err
+	}
+
+	return dbinfo, nil
+}
+
 // GetEBlock gets an entry block specified by the Entry Block Merkel Root. The
 // EBlock should contain a series of Entry Hashes.
 func GetEBlock(s string) (*EBlock, error) {
