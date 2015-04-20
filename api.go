@@ -158,7 +158,6 @@ func GetDBInfo(hash string) (*DBInfo, error) {
 	if err != nil {
 		return dbinfo, err
 	}
-
 	err = json.Unmarshal(p, dbinfo)
 	if err != nil {
 		return dbinfo, err
