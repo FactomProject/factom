@@ -10,12 +10,29 @@ import (
 	"io"
 	"io/ioutil"
 	"net/http"
+	"net/url"
 	"strconv"
 )
 
 var (
 	server = "localhost:8088"
 )
+
+// BuyTestCredits buys Entry Credits for an Entry Credit Key
+func BuyTestCredits(key string, amt int) error {
+	api := fmt.Sprintf("http://%s/v1/buytestcredits/", server)
+	data := url.Values{
+		"to":     {key},
+		"amount": {strconv.Itoa(amt)},
+	}
+	resp, err := http.PostForm(api, data)
+	if err != nil {
+		return err
+	}
+	resp.Body.Close()
+	
+	return nil
+}
 
 // GetBlockHeight reports the current Directory Block Height
 func GetBlockHeight() (int, error) {
