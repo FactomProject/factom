@@ -5,13 +5,12 @@
 package factom
 
 import (
-	"fmt"
 	"bytes"
 	"crypto/sha256"
 	"encoding/binary"
 	"encoding/hex"
 	"time"
-	
+
 	"golang.org/x/crypto/sha3"
 )
 
@@ -94,11 +93,8 @@ func (e *Entry) Hash() [32]byte {
 	if err != nil {
 		return [32]byte{byte(0)}
 	}
-	fmt.Println("a:", hex.EncodeToString(a[:]))
 	b := sha3.Sum256(a)
-	fmt.Println("b:", hex.EncodeToString(b[:]))
 	c := append(a, b[:]...)
-	
 	return sha256.Sum256(c)
 }
 
@@ -112,7 +108,7 @@ func (e *Entry) MarshalBinary() ([]byte, error) {
 	if err != nil {
 		return buf.Bytes(), err
 	}
-	
+
 	// Header
 	// 1 byte Version
 	buf.Write([]byte{0})
@@ -123,39 +119,40 @@ func (e *Entry) MarshalBinary() ([]byte, error) {
 	} else {
 		buf.Write(p)
 	}
-	
+
 	// 2 byte size of extids
 	if err := binary.Write(buf, binary.BigEndian, int16(len(x))); err != nil {
 		return buf.Bytes(), err
 	}
-	
+
 	// 2 byte payload size
-	if err := binary.Write(buf, binary.BigEndian, int16(len(x) + len(d)));
-		err != nil {
+	if err := binary.Write(buf, binary.BigEndian, int16(len(x)+len(d))); err != nil {
 		return buf.Bytes(), err
 	}
-	
+
 	// Payload
 	// extids
 	buf.Write(x)
-	
-	// content
+
+	// data
 	buf.Write(d)
-	
+
 	return buf.Bytes(), nil
 }
 
 func (e *Entry) MarshalExtIDsBinary() ([]byte, error) {
 	buf := new(bytes.Buffer)
-	
+
 	for _, v := range e.ExtIDs {
 		p, err := hex.DecodeString(v)
 		if err != nil {
 			return buf.Bytes(), err
 		}
+		// 2 byte length of extid
 		binary.Write(buf, binary.BigEndian, int16(len(p)))
+		// extid
 		buf.Write(p)
 	}
-	
+
 	return buf.Bytes(), nil
 }
