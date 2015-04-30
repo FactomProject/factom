@@ -5,13 +5,19 @@
 package factom
 
 import (
+	"bytes"
+	"encoding/binary"
 	"encoding/json"
 	"fmt"
 	"io"
 	"io/ioutil"
 	"net/http"
 	"net/url"
+	"os"
 	"strconv"
+	"time"
+
+	ed "github.com/agl/ed25519"
 )
 
 var (
@@ -26,6 +32,51 @@ func BuyTestCredits(key string, amt int) error {
 		"amount": {strconv.Itoa(amt)},
 	}
 	resp, err := http.PostForm(api, data)
+	if err != nil {
+		return err
+	}
+	resp.Body.Close()
+	
+	return nil
+}
+
+// TODO CommitChain
+
+// CommitEntry sends the signed Entry Hash and the Entry Credit public key to
+// the factom network. Once the payment is verified and the network is commited
+// to publishing the Entry it may be published with a call to RevealEntry.
+func CommitEntry(e *Entry, key *[64]byte) error {
+	buf := new(bytes.Buffer)
+	
+	// 1 byte version
+	buf.Write([]byte{0})
+	
+	// 6 byte milliTimestamp (truncated unix time)
+	m := milliTime()
+	buf.Write(m[:])
+			
+	// 32 byte Entry Hash
+	h := e.Hash()
+	buf.Write(h[:])
+	
+	// 1 byte number of entry credits to pay
+	if c, err := ecCost(e); err != nil {
+		return err
+	} else {
+		buf.Write([]byte{byte(c)})
+	}
+	
+	// msg is the byte string before the pubkey and sig
+	msg := buf.Bytes()
+	
+	// 32 byte public key
+	buf.Write(key[32:64])
+	
+	// 64 byte signature
+	buf.Write(ed.Sign(key, msg)[:])
+	
+	api := fmt.Sprintf("http://%s/v1/commitentry/", server)
+	resp, err := http.Post(api, "binary", buf)
 	if err != nil {
 		return err
 	}
@@ -249,4 +300,43 @@ func GetEntriesByExtID(eid string) ([]Entry, error) {
 	}
 
 	return entries, nil
+}
+
+func NewECKey() *[64]byte {
+	rand, err := os.Open("/dev/random")
+	if err != nil {
+		return &[64]byte{byte(0)}
+	}
+
+	// private key is [32]byte private section + [32]byte public key
+	_, priv, err := ed.GenerateKey(rand)
+	if err != nil {
+		return &[64]byte{byte(0)} 
+	}
+	return priv
+}
+
+func milliTime() [6]byte {
+	var r [6]byte
+	buf := new(bytes.Buffer)
+	binary.Write(buf, binary.BigEndian, time.Now().Unix())
+	copy(r[:], buf.Bytes()[2:])
+	return r
+}
+
+func ecCost(e *Entry) (int8, error) {
+	p, err := e.MarshalBinary()
+	if err != nil {
+		return 0, err
+	} 
+	// n is the capacity of the entry payment in KB
+	r := len(p) % 1000
+	n := int8(len(p) / 1000)
+	if r > 0 {
+		n += 1
+	}
+	if n > 10 {
+		return n, fmt.Errorf("Entry larger than 10KB")
+	}
+	return n, nil
 }
