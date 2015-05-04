@@ -75,6 +75,8 @@ func CommitEntry(e *Entry, key *[64]byte) error {
 	// 64 byte signature
 	buf.Write(ed.Sign(key, msg)[:])
 	
+	fmt.Printf("%x\n", buf)
+	
 	api := fmt.Sprintf("http://%s/v1/commitentry/", server)
 	resp, err := http.Post(api, "binary", buf)
 	if err != nil {
@@ -316,11 +318,10 @@ func NewECKey() *[64]byte {
 	return priv
 }
 
-func milliTime() [6]byte {
-	var r [6]byte
+func milliTime() (r [6]byte) {
 	buf := new(bytes.Buffer)
-	binary.Write(buf, binary.BigEndian, time.Now().Unix())
-	copy(r[:], buf.Bytes()[2:])
+	binary.Write(buf, binary.BigEndian, time.Now().UnixNano())
+	copy(r[:], buf.Bytes()[:6])
 	return r
 }
 
