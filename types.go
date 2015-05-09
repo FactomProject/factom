@@ -125,11 +125,6 @@ func (e *Entry) MarshalBinary() ([]byte, error) {
 		return buf.Bytes(), err
 	}
 
-	// 2 byte payload size
-	if err := binary.Write(buf, binary.BigEndian, int16(len(x)+len(d))); err != nil {
-		return buf.Bytes(), err
-	}
-
 	// Payload
 	// extids
 	buf.Write(x)

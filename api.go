@@ -40,7 +40,42 @@ func BuyTestCredits(key string, amt int) error {
 	return nil
 }
 
-// TODO CommitChain
+/* TODO finish CommitChain
+// CommitChain sends the signed ChainID, the Entry Hash, and the Entry Credit
+// public key to the factom network. Once the payment is verified and the
+// network is commited to publishing the Chain it may be published by revealing
+// the First Entry in the Chain.
+func CommitChain(c *Chain, key *[64]byte) error {
+	buf := new(bytes.Buffer)
+	
+	// 1 byte version
+	buf.Write([]byte{0})
+	
+	// 6 byte milliTimestamp (truncated unix time)
+	m := milliTime()
+	buf.Write(m)
+
+	// 32 byte ChainID Hash
+	if c, err := hex.DecodeString(e.ChainID); err != nil {
+		return err
+	} else {
+		// double sha256 hash of ChainID
+		h1 := sha256.Sum256(c)
+		h2 := sha256.Sum256(h1[:])
+		buf.Write(h2[:])
+	}
+	
+	// 32 byte Hash of the Entry Hash + ChainID
+	
+	// 32 byte Entry Hash of the First Entry
+	
+	// 1 byte number of Entry Credits to pay
+	
+	// 32 byte Pubkey
+	
+	// 64 byte Signature of data from the Verstion to the Entry Credits
+}
+*/
 
 // CommitEntry sends the signed Entry Hash and the Entry Credit public key to
 // the factom network. Once the payment is verified and the network is commited
@@ -52,8 +87,7 @@ func CommitEntry(e *Entry, key *[64]byte) error {
 	buf.Write([]byte{0})
 	
 	// 6 byte milliTimestamp (truncated unix time)
-	m := milliTime()
-	buf.Write(m[:])
+	buf.Write(milliTime())
 			
 	// 32 byte Entry Hash
 	h := e.Hash()
@@ -318,11 +352,12 @@ func NewECKey() *[64]byte {
 	return priv
 }
 
-func milliTime() (r [6]byte) {
+func milliTime() (r []byte) {
 	buf := new(bytes.Buffer)
-	binary.Write(buf, binary.BigEndian, time.Now().UnixNano())
-	copy(r[:], buf.Bytes()[:6])
-	return r
+	t := time.Now().UnixNano()
+	m := t / 1e6
+	binary.Write(buf, binary.BigEndian, m)
+	return buf.Bytes()[2:]
 }
 
 func ecCost(e *Entry) (int8, error) {
