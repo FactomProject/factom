@@ -110,6 +110,7 @@ func (e *Entry) MarshalBinary() ([]byte, error) {
 	}
 
 	// Header
+
 	// 1 byte Version
 	buf.Write([]byte{0})
 
@@ -126,6 +127,7 @@ func (e *Entry) MarshalBinary() ([]byte, error) {
 	}
 
 	// Payload
+
 	// extids
 	buf.Write(x)
 
