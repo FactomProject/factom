@@ -7,14 +7,11 @@ package factom
 import (
 	"bytes"
 	"encoding/binary"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
-	"io"
-	"io/ioutil"
 	"net/http"
-	"net/url"
 	"os"
-	"strconv"
 	"time"
 
 	ed "github.com/agl/ed25519"
@@ -23,22 +20,6 @@ import (
 var (
 	server = "localhost:8088"
 )
-
-// BuyTestCredits buys Entry Credits for an Entry Credit Key
-func BuyTestCredits(key string, amt int) error {
-	api := fmt.Sprintf("http://%s/v1/buytestcredits/", server)
-	data := url.Values{
-		"to":     {key},
-		"amount": {strconv.Itoa(amt)},
-	}
-	resp, err := http.PostForm(api, data)
-	if err != nil {
-		return err
-	}
-	resp.Body.Close()
-	
-	return nil
-}
 
 /* TODO finish CommitChain
 // CommitChain sends the signed ChainID, the Entry Hash, and the Entry Credit
@@ -56,11 +37,11 @@ func CommitChain(c *Chain, key *[64]byte) error {
 	buf.Write(m)
 
 	// 32 byte ChainID Hash
-	if c, err := hex.DecodeString(e.ChainID); err != nil {
+	if p, err := hex.DecodeString(e.ChainID); err != nil {
 		return err
 	} else {
 		// double sha256 hash of ChainID
-		h1 := sha256.Sum256(c)
+		h1 := sha256.Sum256(p)
 		h2 := sha256.Sum256(h1[:])
 		buf.Write(h2[:])
 	}
@@ -68,12 +49,22 @@ func CommitChain(c *Chain, key *[64]byte) error {
 	// 32 byte Hash of the Entry Hash + ChainID
 	
 	// 32 byte Entry Hash of the First Entry
+	buf.Write(c.FirstEntry.Hash()[:])
 	
 	// 1 byte number of Entry Credits to pay
+	if d, err := ecCost(c); err != nil {
+		return err
+	} else {
+		buf.WriteByte(d)
+	}
+	
+	msg := buf.Bytes()
 	
 	// 32 byte Pubkey
+	buf.Write(key[32:64])
 	
 	// 64 byte Signature of data from the Verstion to the Entry Credits
+	buf.Write(ed.Sign(key, msg))
 }
 */
 
@@ -81,6 +72,10 @@ func CommitChain(c *Chain, key *[64]byte) error {
 // the factom network. Once the payment is verified and the network is commited
 // to publishing the Entry it may be published with a call to RevealEntry.
 func CommitEntry(e *Entry, key *[64]byte) error {
+	type commit struct {
+		CommitEntryMsg string
+	}
+	
 	buf := new(bytes.Buffer)
 	
 	// 1 byte version
@@ -97,7 +92,7 @@ func CommitEntry(e *Entry, key *[64]byte) error {
 	if c, err := ecCost(e); err != nil {
 		return err
 	} else {
-		buf.Write([]byte{byte(c)})
+		buf.WriteByte(byte(c))
 	}
 	
 	// msg is the byte string before the pubkey and sig
@@ -109,10 +104,15 @@ func CommitEntry(e *Entry, key *[64]byte) error {
 	// 64 byte signature
 	buf.Write(ed.Sign(key, msg)[:])
 	
-	fmt.Printf("%x\n", buf)
+	c := new(commit)
+	c.CommitEntryMsg = hex.EncodeToString(buf.Bytes())
+	j, err := json.Marshal(c)
+	if err != nil {
+		return err
+	}
 	
-	api := fmt.Sprintf("http://%s/v1/commitentry/", server)
-	resp, err := http.Post(api, "binary", buf)
+	api := fmt.Sprintf("http://%s/v1/commit-entry/", server)
+	resp, err := http.Post(api, "application/json", bytes.NewBuffer(j))
 	if err != nil {
 		return err
 	}
@@ -121,221 +121,31 @@ func CommitEntry(e *Entry, key *[64]byte) error {
 	return nil
 }
 
-// GetBlockHeight reports the current Directory Block Height
-func GetBlockHeight() (int, error) {
-	api := fmt.Sprintf("http://%s/v1/dblockheight/", server)
+func RevealEntry(e *Entry) error {
+	type reveal struct {
+		Entry string
+	}
+	
+	r := new(reveal)
+	if p, err := e.MarshalBinary(); err != nil {
+		return err
+	} else {
+		r.Entry = hex.EncodeToString(p)
+	}
 
-	resp, err := http.Get(api)
+	j, err := json.Marshal(r)
 	if err != nil {
-		return 0, err
+		return err
 	}
-	defer resp.Body.Close()
-
-	p, err := ioutil.ReadAll(resp.Body)
+	
+	api := fmt.Sprintf("http://%s/v1/reveal-entry/", server)
+	resp, err := http.Post(api, "application/json", bytes.NewBuffer(j))
 	if err != nil {
-		return 0, err
+		return err
 	}
-	height, err := strconv.Atoi(string(p))
-	if err != nil {
-		return 0, err
-	}
-	return height, nil
-}
-
-// GetChain gets a Entry Block Chain by the ChainID. The Chain should contain a
-// series of Entry Block Hashes.
-func GetChain(hash string) (*Chain, error) {
-	chain := new(Chain)
-	api := fmt.Sprintf("http://%s/v1/chain/%s", server, hash)
-
-	resp, err := http.Get(api)
-	if err != nil {
-		return chain, err
-	}
-	defer resp.Body.Close()
-
-	p, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return chain, err
-	}
-
-	err = json.Unmarshal(p, chain)
-	if err != nil {
-		return chain, err
-	}
-
-	return chain, nil
-}
-
-// GetChains gets all of the Chains. Each Chain should contain a series of
-// Entry Block Hashes
-func GetChains() ([]Chain, error) {
-	chains := make([]Chain, 0)
-	api := fmt.Sprintf("http://%s/v1/chains/", server)
-
-	resp, err := http.Get(api)
-	if err != nil {
-		return nil, err
-	}
-	defer resp.Body.Close()
-
-	dec := json.NewDecoder(resp.Body)
-	for {
-		var chain Chain
-		if err := dec.Decode(&chain); err == io.EOF {
-			break
-		} else if err != nil {
-			return chains, err
-		}
-		chains = append(chains, chain)
-	}
-
-	return chains, nil
-}
-
-// GetDBlock gets a Directory Block by the Directory Block Hash. The Directory
-// Block should contain a series of Entry Block Hashes.
-func GetDBlock(hash string) (*DBlock, error) {
-	dblock := new(DBlock)
-	api := fmt.Sprintf("http://%s/v1/dblock/%s", server, hash)
-
-	resp, err := http.Get(api)
-	if err != nil {
-		return dblock, err
-	}
-	defer resp.Body.Close()
-
-	p, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return dblock, err
-	}
-
-	err = json.Unmarshal(p, dblock)
-	if err != nil {
-		return dblock, err
-	}
-
-	return dblock, nil
-}
-
-// GetDBlocks gets the Directory Blocks whithin the Block Height Range provided
-// (inclusive). Each DBlock should contain a series of Entry Block Merkel Roots.
-func GetDBlocks(from, to int) ([]DBlock, error) {
-	dblocks := make([]DBlock, 0)
-	api := fmt.Sprintf("http://%s/v1/dblocksbyrange/%s/%s", server,
-		strconv.Itoa(from), strconv.Itoa(to))
-
-	resp, err := http.Get(api)
-	if err != nil {
-		return nil, err
-	}
-	defer resp.Body.Close()
-
-	dec := json.NewDecoder(resp.Body)
-	for {
-		var block DBlock
-		if err := dec.Decode(&block); err == io.EOF {
-			break
-		} else if err != nil {
-			return dblocks, err
-		}
-		dblocks = append(dblocks, block)
-	}
-
-	return dblocks, nil
-}
-
-// GetDBInfo gets the Directory Block information by the Directory Block Hash.
-// The Directory Block Info should contain information about the directory
-// block and the BTC transaction containing the Merkle Root.
-func GetDBInfo(hash string) (*DBInfo, error) {
-	dbinfo := new(DBInfo)
-	api := fmt.Sprintf("http://%s/v1/dbinfo/%s", server, hash)
-
-	resp, err := http.Get(api)
-	if err != nil {
-		return dbinfo, err
-	}
-	defer resp.Body.Close()
-
-	p, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return dbinfo, err
-	}
-	err = json.Unmarshal(p, dbinfo)
-	if err != nil {
-		return dbinfo, err
-	}
-
-	return dbinfo, nil
-}
-
-// GetEBlock gets an entry block specified by the Entry Block Merkel Root. The
-// EBlock should contain a series of Entry Hashes.
-func GetEBlock(s string) (*EBlock, error) {
-	eblock := new(EBlock)
-	api := fmt.Sprintf("http://%s/v1/eblock/%s", server, s)
-
-	resp, err := http.Get(api)
-	if err != nil {
-		return eblock, err
-	}
-	defer resp.Body.Close()
-
-	p, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return eblock, err
-	}
-	err = json.Unmarshal(p, eblock)
-	if err != nil {
-		return eblock, err
-	}
-	return eblock, nil
-}
-
-// GetEntry gets an entry based on the Entry Hash. The Entry should contain a
-// hex encoded string of Entry Data and a series of External IDs.
-func GetEntry(s string) (*Entry, error) {
-	entry := new(Entry)
-	api := fmt.Sprintf("http://%s/v1/entry/%s", server, s)
-
-	resp, err := http.Get(api)
-	if err != nil {
-		return entry, err
-	}
-	defer resp.Body.Close()
-
-	p, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return entry, err
-	}
-	err = json.Unmarshal(p, entry)
-
-	return entry, nil
-}
-
-func GetEntriesByExtID(eid string) ([]Entry, error) {
-	entries := make([]Entry, 0)
-	api := fmt.Sprintf("http://%s/v1/entriesbyeid/%s", server, eid)
-
-	resp, err := http.Get(api)
-	if err != nil {
-		return nil, err
-	}
-	defer resp.Body.Close()
-
-	dec := json.NewDecoder(resp.Body)
-	for {
-		var entry Entry
-		if err := dec.Decode(&entry); err == io.EOF {
-			break
-		} else if err != nil {
-			return entries, err
-		}
-		entries = append(entries, entry)
-	}
-
-	return entries, nil
+	resp.Body.Close()
+	
+	return nil
 }
 
 func NewECKey() *[64]byte {

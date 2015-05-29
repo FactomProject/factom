@@ -9,7 +9,6 @@ import (
 	"crypto/sha256"
 	"encoding/binary"
 	"encoding/hex"
-	"time"
 
 	"golang.org/x/crypto/sha3"
 )
@@ -17,75 +16,40 @@ import (
 type Chain struct {
 	ChainID    string
 	FirstEntry Entry
-	Name       []string
-}
-
-func (c *Chain) Names() []string {
-	names := make([]string, 0)
-	for _, v := range c.Name {
-		p, err := hex.DecodeString(v)
-		if err != nil {
-			return nil
-		}
-		names = append(names, string(p))
-	}
-	return names
-}
-
-type DBInfo struct {
-	BTCBlockHash   string
-	BTCBlockHeight int64
-	BTCTxHash      string
-	BTCTxOffset    int64
-	DBHash         string
-	DBMerkleRoot   string
 }
 
 type DBlock struct {
 	DBHash string
 	Header struct {
-		BlockID       int
-		EntryCount    int
-		MerkleRoot    string
-		PrevBlockHash string
-		TimeStamp     int64
+		PrevBlockKeyMR string
+		TimeStamp      uint64
+		SequenceNumber int
 	}
 	DBEntries []struct {
-		ChainID    string
-		MerkleRoot string
+		ChainID string
+		KeyMR   string
 	}
-}
-
-func (d DBlock) Time() time.Time {
-	return time.Unix(d.Header.TimeStamp, 0)
 }
 
 type EBlock struct {
 	Header struct {
-		BlockID       int
-		PrevBlockHash string
-		TimeStamp     int64
+		BlockSequenceNumber int
+		ChainID             string
+		PrevKeyMR           string
+		TimeStamp           uint64
 	}
 	EBEntries []EBEntry
 }
 
-func (e EBlock) Time() time.Time {
-	return time.Unix(e.Header.TimeStamp, 0)
-}
-
 type EBEntry struct {
 	TimeStamp int64
-	Hash      string
-}
-
-func (e EBEntry) Time() time.Time {
-	return time.Unix(e.TimeStamp, 0)
+	EntryHash string
 }
 
 type Entry struct {
 	ChainID string
 	ExtIDs  []string
-	Data    string
+	Content string
 }
 
 func (e *Entry) Hash() [32]byte {
@@ -100,7 +64,7 @@ func (e *Entry) Hash() [32]byte {
 
 func (e *Entry) MarshalBinary() ([]byte, error) {
 	buf := new(bytes.Buffer)
-	d, err := hex.DecodeString(e.Data)
+	c, err := hex.DecodeString(e.Content)
 	if err != nil {
 		return buf.Bytes(), err
 	}
@@ -132,7 +96,7 @@ func (e *Entry) MarshalBinary() ([]byte, error) {
 	buf.Write(x)
 
 	// data
-	buf.Write(d)
+	buf.Write(c)
 
 	return buf.Bytes(), nil
 }
