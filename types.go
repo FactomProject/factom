@@ -6,16 +6,13 @@ package factom
 
 import (
 	"bytes"
-	"crypto/sha256"
 	"encoding/binary"
 	"encoding/hex"
-
-	"golang.org/x/crypto/sha3"
 )
 
 type Chain struct {
 	ChainID    string
-	FirstEntry Entry
+	FirstEntry *Entry
 }
 
 type DBlock struct {
@@ -52,14 +49,12 @@ type Entry struct {
 	Content string
 }
 
-func (e *Entry) Hash() [32]byte {
+func (e *Entry) Hash() []byte {
 	a, err := e.MarshalBinary()
 	if err != nil {
-		return [32]byte{byte(0)}
+		return make([]byte, 32)
 	}
-	b := sha3.Sum256(a)
-	c := append(a, b[:]...)
-	return sha256.Sum256(c)
+	return sha23(a)
 }
 
 func (e *Entry) MarshalBinary() ([]byte, error) {
