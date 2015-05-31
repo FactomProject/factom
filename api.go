@@ -15,8 +15,8 @@ import (
 	"os"
 	"time"
 
-	"golang.org/x/crypto/sha3"
 	ed "github.com/agl/ed25519"
+	"golang.org/x/crypto/sha3"
 )
 
 var (
@@ -33,17 +33,17 @@ func CommitChain(c *Chain, key *[64]byte) error {
 	}
 
 	buf := new(bytes.Buffer)
-	
+
 	// 1 byte version
 	buf.Write([]byte{0})
-	
+
 	// 6 byte milliTimestamp
 	buf.Write(milliTime())
 
 	e := c.FirstEntry
 
 	// 32 byte ChainID Hash
-	if p, err := hex.DecodeString(e.ChainID); err != nil {
+	if p, err := hex.DecodeString(c.ChainID); err != nil {
 		return err
 	} else {
 		// double sha256 hash of ChainID
@@ -51,28 +51,28 @@ func CommitChain(c *Chain, key *[64]byte) error {
 	}
 
 	// 32 byte Weld; sha256(sha256(EntryHash + ChainID))
-	if cid, err := hex.DecodeString(e.ChainID); err != nil {
+	if cid, err := hex.DecodeString(c.ChainID); err != nil {
 		return err
 	} else {
-		s := append(e.Hash()[:], cid...)
+		s := append(e.Hash(), cid...)
 		buf.Write(shad(s))
 	}
-	
+
 	// 32 byte Entry Hash of the First Entry
 	buf.Write(e.Hash())
-	
+
 	// 1 byte number of Entry Credits to pay
 	if d, err := ecCost(e); err != nil {
 		return err
 	} else {
-		buf.WriteByte(byte(d+10))
+		buf.WriteByte(byte(d + 10))
 	}
-	
+
 	msg := buf.Bytes()
-	
+
 	// 32 byte Pubkey
 	buf.Write(key[32:64])
-	
+
 	// 64 byte Signature of data from the Verstion to the Entry Credits
 	buf.Write(ed.Sign(key, msg)[:])
 
@@ -82,7 +82,7 @@ func CommitChain(c *Chain, key *[64]byte) error {
 	if err != nil {
 		return err
 	}
-	
+
 	resp, err := http.Post(
 		fmt.Sprintf("http://%s/v1/commit-chain/", server),
 		"application/json",
@@ -91,7 +91,7 @@ func CommitChain(c *Chain, key *[64]byte) error {
 		return err
 	}
 	resp.Body.Close()
-	
+
 	return nil
 }
 
@@ -102,41 +102,41 @@ func CommitEntry(e *Entry, key *[64]byte) error {
 	type commit struct {
 		CommitEntryMsg string
 	}
-	
+
 	buf := new(bytes.Buffer)
-	
+
 	// 1 byte version
 	buf.Write([]byte{0})
-	
+
 	// 6 byte milliTimestamp (truncated unix time)
 	buf.Write(milliTime())
-			
+
 	// 32 byte Entry Hash
 	buf.Write(e.Hash())
-	
+
 	// 1 byte number of entry credits to pay
 	if c, err := ecCost(e); err != nil {
 		return err
 	} else {
 		buf.WriteByte(byte(c))
 	}
-	
+
 	// msg is the byte string before the pubkey and sig
 	msg := buf.Bytes()
-	
+
 	// 32 byte public key
 	buf.Write(key[32:64])
-	
+
 	// 64 byte signature
 	buf.Write(ed.Sign(key, msg)[:])
-	
+
 	com := new(commit)
 	com.CommitEntryMsg = hex.EncodeToString(buf.Bytes())
 	j, err := json.Marshal(com)
 	if err != nil {
 		return err
 	}
-	
+
 	resp, err := http.Post(
 		fmt.Sprintf("http://%s/v1/commit-entry/", server),
 		"application/json",
@@ -145,7 +145,7 @@ func CommitEntry(e *Entry, key *[64]byte) error {
 		return err
 	}
 	resp.Body.Close()
-	
+
 	return nil
 }
 
@@ -153,7 +153,7 @@ func RevealEntry(e *Entry) error {
 	type reveal struct {
 		Entry string
 	}
-	
+
 	r := new(reveal)
 	if p, err := e.MarshalBinary(); err != nil {
 		return err
@@ -165,14 +165,16 @@ func RevealEntry(e *Entry) error {
 	if err != nil {
 		return err
 	}
-	
-	api := fmt.Sprintf("http://%s/v1/reveal-entry/", server)
-	resp, err := http.Post(api, "application/json", bytes.NewBuffer(j))
+
+	resp, err := http.Post(
+		fmt.Sprintf("http://%s/v1/reveal-entry/", server),
+		"application/json",
+		bytes.NewBuffer(j))
 	if err != nil {
 		return err
 	}
 	resp.Body.Close()
-	
+
 	return nil
 }
 
@@ -185,7 +187,7 @@ func NewECKey() *[64]byte {
 	// private key is [32]byte private section + [32]byte public key
 	_, priv, err := ed.GenerateKey(rand)
 	if err != nil {
-		return &[64]byte{byte(0)} 
+		return &[64]byte{byte(0)}
 	}
 	return priv
 }
@@ -202,7 +204,7 @@ func ecCost(e *Entry) (int8, error) {
 	p, err := e.MarshalBinary()
 	if err != nil {
 		return 0, err
-	} 
+	}
 	// n is the capacity of the entry payment in KB
 	r := len(p) % 1024
 	n := int8(len(p) / 1024)
@@ -215,12 +217,14 @@ func ecCost(e *Entry) (int8, error) {
 	return n, nil
 }
 
+// shad Double Sha256 Hash; sha256(sha256(data))
 func shad(data []byte) []byte {
 	h1 := sha256.Sum256(data)
 	h2 := sha256.Sum256(h1[:])
 	return h2[:]
 }
 
+// sha23 combination sha256 and sha3 Hash; sha256(data + sha3(data))
 func sha23(data []byte) []byte {
 	h1 := sha3.Sum256(data)
 	h2 := sha256.Sum256(append(data, h1[:]...))
