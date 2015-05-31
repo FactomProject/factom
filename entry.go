@@ -1,7 +1,3 @@
-// Copyright 2015 Factom Foundation
-// Use of this source code is governed by the MIT
-// license that can be found in the LICENSE file.
-
 package factom
 
 import (
@@ -9,39 +5,6 @@ import (
 	"encoding/binary"
 	"encoding/hex"
 )
-
-type Chain struct {
-	ChainID    string
-	FirstEntry *Entry
-}
-
-type DBlock struct {
-	DBHash string
-	Header struct {
-		PrevBlockKeyMR string
-		TimeStamp      uint64
-		SequenceNumber int
-	}
-	DBEntries []struct {
-		ChainID string
-		KeyMR   string
-	}
-}
-
-type EBlock struct {
-	Header struct {
-		BlockSequenceNumber int
-		ChainID             string
-		PrevKeyMR           string
-		TimeStamp           uint64
-	}
-	EBEntries []EBEntry
-}
-
-type EBEntry struct {
-	TimeStamp int64
-	EntryHash string
-}
 
 type Entry struct {
 	ChainID string
