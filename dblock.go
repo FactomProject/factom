@@ -37,7 +37,9 @@ func GetDBlock(keymr string) (*DBlock, error) {
 	resp.Body.Close()
 	
 	d := new(DBlock)
-	json.Unmarshal(body, d)
+	if err := json.Unmarshal(body, d); err != nil {
+		return nil, err
+	}
 	
 	return d, nil
 }

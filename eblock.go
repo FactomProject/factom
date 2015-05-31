@@ -9,6 +9,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"net/http"
 
 	ed "github.com/agl/ed25519"
@@ -104,4 +105,24 @@ func CommitChain(c *Chain, key *[64]byte) error {
 	resp.Body.Close()
 
 	return nil
+}
+
+func GetEBlock(keymr string) (*EBlock, error) {
+	resp, err := http.Get(
+		fmt.Sprintf("http://%s/v1/entry-block-by-keymr/%s", server, keymr))
+	if err != nil {
+		return nil, err
+	}
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+	resp.Body.Close()
+	
+	e := new(EBlock)
+	if err := json.Unmarshal(body, e); err != nil {
+		return nil, err
+	}
+	
+	return e, nil
 }

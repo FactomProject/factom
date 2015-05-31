@@ -6,6 +6,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"net/http"
 	"time"
 
@@ -16,6 +17,26 @@ type Entry struct {
 	ChainID string
 	ExtIDs  []string
 	Content string
+}
+
+func GetEntry(hash string) (*Entry, error) {
+	resp, err := http.Get(
+		fmt.Sprintf("http://%s/v1/entry-by-hash/%s", server, hash))
+	if err != nil {
+		return nil, err
+	}
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+	resp.Body.Close()
+	
+	e := new(Entry)
+	if err := json.Unmarshal(body, e); err != nil {
+		return nil, err
+	}
+	
+	return e, nil
 }
 
 func (e *Entry) Hash() []byte {
