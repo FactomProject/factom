@@ -20,6 +20,10 @@ type Chain struct {
 	FirstEntry *Entry
 }
 
+type ChainHead struct {
+	EntryBlockKeyMR string
+}
+
 type EBlock struct {
 	Header struct {
 		BlockSequenceNumber int
@@ -105,6 +109,26 @@ func CommitChain(c *Chain, key *[64]byte) error {
 	resp.Body.Close()
 
 	return nil
+}
+
+func GetChainHead(chainid string) (*ChainHead, error) {
+	resp, err := http.Get(
+		fmt.Sprintf("http://%s/v1/chain-head/%s", server, chainid))
+	if err != nil {
+		return nil, err
+	}
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+	resp.Body.Close()
+	
+	c := new(ChainHead)
+	if err := json.Unmarshal(body, c); err != nil {
+		return nil, err
+	}
+	
+	return c, nil
 }
 
 func GetEBlock(keymr string) (*EBlock, error) {
