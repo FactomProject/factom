@@ -24,21 +24,6 @@ type ChainHead struct {
 	EntryBlockKeyMR string
 }
 
-type EBlock struct {
-	Header struct {
-		BlockSequenceNumber int
-		ChainID             string
-		PrevKeyMR           string
-		TimeStamp           uint64
-	}
-	EBEntries []EBEntry
-}
-
-type EBEntry struct {
-	TimeStamp int64
-	EntryHash string
-}
-
 // CommitChain sends the signed ChainID, the Entry Hash, and the Entry Credit
 // public key to the factom network. Once the payment is verified and the
 // network is commited to publishing the Chain it may be published by revealing
@@ -129,6 +114,21 @@ func GetChainHead(chainid string) (*ChainHead, error) {
 	}
 	
 	return c, nil
+}
+
+type EBlock struct {
+	Header struct {
+		BlockSequenceNumber int
+		ChainID             string
+		PrevKeyMR           string
+		TimeStamp           uint64
+	}
+	EBEntries []EBEntry
+}
+
+type EBEntry struct {
+	TimeStamp int64
+	EntryHash string
 }
 
 func GetEBlock(keymr string) (*EBlock, error) {
