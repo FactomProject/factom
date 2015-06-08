@@ -19,6 +19,12 @@ type Entry struct {
 	Content string
 }
 
+func NewEntry() *Entry {
+	e := new(Entry)
+	
+	return e
+}
+
 // CommitEntry sends the signed Entry Hash and the Entry Credit public key to
 // the factom network. Once the payment is verified and the network is commited
 // to publishing the Entry it may be published with a call to RevealEntry.

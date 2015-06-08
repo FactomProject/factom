@@ -6,6 +6,7 @@ package factom
 
 import (
 	"bytes"
+	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
@@ -18,6 +19,23 @@ import (
 type Chain struct {
 	ChainID    string
 	FirstEntry *Entry
+}
+
+func NewChain(e *Entry) *Chain {
+	c := new(Chain)
+	c.FirstEntry = e
+
+	// create the chainid from a series of hashes of the Entries ExtIDs
+	hs := sha256.New()
+	for _, id := range e.ExtIDs {
+		p, _ := hex.DecodeString(id)
+		h := sha256.Sum256(p)
+		hs.Write(h[:])
+	}
+	c.ChainID = hex.EncodeToString(hs.Sum(nil))
+	c.FirstEntry.ChainID = c.ChainID
+	
+	return c
 }
 
 type ChainHead struct {
@@ -86,6 +104,35 @@ func CommitChain(c *Chain, key *[64]byte) error {
 
 	resp, err := http.Post(
 		fmt.Sprintf("http://%s/v1/commit-chain/", server),
+		"application/json",
+		bytes.NewBuffer(j))
+	if err != nil {
+		return err
+	}
+	resp.Body.Close()
+
+	return nil
+}
+
+func RevealChain(c *Chain) error {
+	type reveal struct {
+		Entry string
+	}
+
+	r := new(reveal)
+	if p, err := c.FirstEntry.MarshalBinary(); err != nil {
+		return err
+	} else {
+		r.Entry = hex.EncodeToString(p)
+	}
+
+	j, err := json.Marshal(r)
+	if err != nil {
+		return err
+	}
+
+	resp, err := http.Post(
+		fmt.Sprintf("http://%s/v1/reveal-chain/", server),
 		"application/json",
 		bytes.NewBuffer(j))
 	if err != nil {
