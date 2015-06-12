@@ -38,7 +38,7 @@ func GetDBlock(keymr string) (*DBlock, error) {
 	
 	d := new(DBlock)
 	if err := json.Unmarshal(body, d); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("%s: %s\n", err, body)
 	}
 	
 	return d, nil
