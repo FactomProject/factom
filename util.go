@@ -14,6 +14,7 @@ import (
 
 var (
 	server = "localhost:8088"
+    serverFct = "localhost:8089"
 )
 
 func NewECKey() *[64]byte {

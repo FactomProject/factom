@@ -12,7 +12,7 @@ import (
 )
 
 type Balance struct {
-	Balance int
+	Balance int64
 }
 
 func ECBalance(key string) (*Balance, error) {
@@ -33,4 +33,53 @@ func ECBalance(key string) (*Balance, error) {
 	}
 	
 	return b, nil
+}
+
+func FctBalance(key string) (*Balance, error) {
+
+    str := fmt.Sprintf("http://%s/v1/factoid-balance/%s", serverFct, key)
+    resp, err := http.Get(str)
+    if err != nil {
+        return nil, err
+    }
+    
+    body, err := ioutil.ReadAll(resp.Body)
+    if err != nil {
+        return nil, err
+    }
+    resp.Body.Close()
+    
+    b := new(Balance)
+    if err := json.Unmarshal(body, b); err != nil {
+        return nil, err
+    }
+    
+    return b, nil
+}
+
+
+func GenerateFactoidAddress(name string) (string, error) {
+    
+    type address struct {
+        Address string
+    }
+    
+    str := fmt.Sprintf("http://%s/v1/factoid-generate-address/%s", serverFct, name)
+    resp, err := http.Get(str)
+    if err != nil {
+        return "", err
+    }
+    
+    body, err := ioutil.ReadAll(resp.Body)
+    if err != nil {
+        return "", err
+    }
+    resp.Body.Close()
+    
+    b := new(address)
+    if err := json.Unmarshal(body, b); err != nil {
+        return "", err
+    }
+    
+    return b.Address, nil
 }
