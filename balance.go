@@ -77,8 +77,8 @@ func GenerateFactoidAddress(name string) (string, error) {
     resp.Body.Close()
     
     b := new(address)
-    if err := json.Unmarshal(body, b); err != nil {
-        return "", err
+    if err := json.Unmarshal(body, b); err != nil || len(b.Address)==0  {
+        return "", fmt.Errorf("Duplicate Address ")
     }
     
     return b.Address, nil
