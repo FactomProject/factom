@@ -36,19 +36,18 @@ func ECBalance(key string) (*Balance, error) {
 }
 
 func FctBalance(key string) (*Balance, error) {
-
     str := fmt.Sprintf("http://%s/v1/factoid-balance/%s", serverFct, key)
     resp, err := http.Get(str)
     if err != nil {
         return nil, err
     }
-    
+
     body, err := ioutil.ReadAll(resp.Body)
     if err != nil {
         return nil, err
     }
     resp.Body.Close()
-    
+        
     b := new(Balance)
     if err := json.Unmarshal(body, b); err != nil {
         return nil, err
