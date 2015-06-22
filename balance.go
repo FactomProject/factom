@@ -84,7 +84,6 @@ func GenerateFactoidAddress(name string) (string, error) {
 
 
 func GenerateEntryCreditAddress(name string) (string, error) {
-    fmt.Println("Here!!!!!!!!!!!!!!!!!!!!!!!")//////////////////////////////////////////////////////////////////
     type address struct {
         Address string
     }
