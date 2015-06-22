@@ -63,7 +63,7 @@ func GenerateFactoidAddress(name string) (string, error) {
     }
     
     str := fmt.Sprintf("http://%s/v1/factoid-generate-address/%s", serverFct, name)
-    resp, err := http.Get(str)
+    resp, err := http.PostForm(str, nil)
     if err != nil {
         return "", err
     }
