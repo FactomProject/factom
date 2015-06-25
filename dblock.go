@@ -14,7 +14,7 @@ type DBlock struct {
 		TimeStamp      uint64
 		SequenceNumber int
 	}
-	DBEntries []struct {
+	EntryBlockList []struct {
 		ChainID string
 		KeyMR   string
 	}

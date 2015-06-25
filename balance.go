@@ -63,7 +63,7 @@ func GenerateFactoidAddress(name string) (string, error) {
     }
     
     str := fmt.Sprintf("http://%s/v1/factoid-generate-address/%s", serverFct, name)
-    resp, err := http.PostForm(str, nil)
+    resp, err := http.Get(str)
     if err != nil {
         return "", err
     }
@@ -76,7 +76,7 @@ func GenerateFactoidAddress(name string) (string, error) {
     
     b := new(address)
     if err := json.Unmarshal(body, b); err != nil || len(b.Address)==0  {
-        return "", fmt.Errorf("Duplicate or Invalid Name  ")
+        return "", fmt.Errorf("fct Duplicate or Invalid Name  ")
     }
     
     return b.Address, nil
@@ -102,7 +102,7 @@ func GenerateEntryCreditAddress(name string) (string, error) {
     
     b := new(address)
     if err := json.Unmarshal(body, b); err != nil || len(b.Address)==0  {
-        return "", fmt.Errorf("Duplicate or Invalid Name  ")
+        return "", fmt.Errorf("ec Duplicate or Invalid Name  ")
     }
     
     return b.Address, nil
