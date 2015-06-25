@@ -8,7 +8,7 @@ import (
 	"crypto/sha256"
 	"os"
 
-	ed "github.com/agl/ed25519"
+	ed "github.com/FactomProject/ed25519"
 	"golang.org/x/crypto/sha3"
 )
 
