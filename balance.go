@@ -11,49 +11,56 @@ import (
 	"net/http"
 )
 
-type Balance struct {
-	Balance int64
-}
 
-func ECBalance(key string) (*Balance, error) {
-	resp, err := http.Get(
-		fmt.Sprintf("http://%s/v1/entry-credit-balance/%s", server, key))
+
+func ECBalance(key string) (int64, error) {
+    str := fmt.Sprintf("http://%s/v1/entry-credit-balance/%s", serverFct, key)
+    resp, err := http.Get(str)
 	if err != nil {
-		return nil, err
+		return 0, err
 	}
+	
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		return nil, err
+		return 0, err
 	}
 	resp.Body.Close()
-	
-	b := new(Balance)
+    
+    type Balance struct {
+        Balance int64
+    }	
+    
+    b := new(Balance)
 	if err := json.Unmarshal(body, b); err != nil {
-		return nil, err
+        return 0, err
 	}
 	
-	return b, nil
+	return b.Balance, nil
 }
 
-func FctBalance(key string) (*Balance, error) {
+func FctBalance(key string) (int64, error) {
     str := fmt.Sprintf("http://%s/v1/factoid-balance/%s", serverFct, key)
     resp, err := http.Get(str)
     if err != nil {
-        return nil, err
+        return 0, err
     }
 
     body, err := ioutil.ReadAll(resp.Body)
     if err != nil {
-        return nil, err
+        return 0, err
     }
     resp.Body.Close()
         
-    b := new(Balance)
-    if err := json.Unmarshal(body, b); err != nil {
-        return nil, err
+    type Balance struct {
+        Balance int64
     }
     
-    return b, nil
+    b := new(Balance)
+    if err := json.Unmarshal(body, b); err != nil {
+        return 0, err
+    }
+    
+    return b.Balance, nil
 }
 
 func GenerateFactoidAddress(name string) (string, error) {
