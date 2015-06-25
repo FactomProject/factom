@@ -14,7 +14,7 @@ import (
 	"net/http"
 	"time"
 
-	ed "github.com/agl/ed25519"
+	ed "github.com/FactomProject/ed25519"
 )
 
 type Entry struct {
