@@ -5,6 +5,7 @@
 package factom
 
 import (
+    "strings"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -64,12 +65,15 @@ func FctBalance(key string) (int64, error) {
 }
 
 func GenerateFactoidAddress(name string) (string, error) {
+    name = strings.TrimSpace(name)
     
     type address struct {
         Address string
     }
     
     str := fmt.Sprintf("http://%s/v1/factoid-generate-address/%s", serverFct, name)
+    fmt.Println(str)/////////////////////////////////////////////////////////////////////////////////////////
+    
     resp, err := http.Get(str)
     if err != nil {
         return "", err
@@ -80,10 +84,10 @@ func GenerateFactoidAddress(name string) (string, error) {
         return "", err
     }
     resp.Body.Close()
-    
+
     b := new(address)
     if err := json.Unmarshal(body, b); err != nil || len(b.Address)==0  {
-        return "", fmt.Errorf("fct Duplicate or Invalid Name  ")
+        return "", fmt.Errorf("Factoid Address Generation Failed: "+string(body))
     }
     
     return b.Address, nil
@@ -91,11 +95,17 @@ func GenerateFactoidAddress(name string) (string, error) {
 
 
 func GenerateEntryCreditAddress(name string) (string, error) {
+    name = strings.TrimSpace(name)
+    
     type address struct {
         Address string
+        Success bool
     }
     
     str := fmt.Sprintf("http://%s/v1/factoid-generate-ec-address/%s", serverFct, name)
+    fmt.Println(str)//////////////////////////////////////////////////////////////////////////////
+    
+
     resp, err := http.Get(str)
     if err != nil {
         return "", err
@@ -109,8 +119,8 @@ func GenerateEntryCreditAddress(name string) (string, error) {
     
     b := new(address)
     if err := json.Unmarshal(body, b); err != nil || len(b.Address)==0  {
-        return "", fmt.Errorf("ec Duplicate or Invalid Name  ")
+        return "", fmt.Errorf("Entry Credit Address Generation Failed: "+string(body))
     }
-    
+
     return b.Address, nil
 }
