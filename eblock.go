@@ -18,7 +18,7 @@ type EBlock struct {
 		PrevKeyMR           string
 		TimeStamp           uint64
 	}
-	EBEntries []EBEntry
+	EntryList []EBEntry
 }
 
 type EBEntry struct {
