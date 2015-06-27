@@ -72,7 +72,6 @@ func GenerateFactoidAddress(name string) (string, error) {
     }
     
     str := fmt.Sprintf("http://%s/v1/factoid-generate-address/%s", serverFct, name)
-    fmt.Println(str)/////////////////////////////////////////////////////////////////////////////////////////
     
     resp, err := http.Get(str)
     if err != nil {
@@ -103,9 +102,7 @@ func GenerateEntryCreditAddress(name string) (string, error) {
     }
     
     str := fmt.Sprintf("http://%s/v1/factoid-generate-ec-address/%s", serverFct, name)
-    fmt.Println(str)//////////////////////////////////////////////////////////////////////////////
     
-
     resp, err := http.Get(str)
     if err != nil {
         return "", err
