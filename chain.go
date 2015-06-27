@@ -12,8 +12,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
-
-	ed "github.com/FactomProject/ed25519"
 )
 
 type Chain struct {
@@ -46,11 +44,11 @@ type ChainHead struct {
 // public key to the factom network. Once the payment is verified and the
 // network is commited to publishing the Chain it may be published by revealing
 // the First Entry in the Chain.
-func CommitChain(c *Chain, key *[64]byte) error {
-	type commit struct {
-		CommitChainMsg string
+func CommitChain(c *Chain, name string) error {
+	type walletcommit struct {
+		Message string
 	}
-
+	
 	buf := new(bytes.Buffer)
 
 	// 1 byte version
@@ -87,30 +85,21 @@ func CommitChain(c *Chain, key *[64]byte) error {
 		buf.WriteByte(byte(d + 10))
 	}
 
-	msg := buf.Bytes()
-
-	// 32 byte Pubkey
-	buf.Write(key[32:64])
-
-	// 64 byte Signature of data from the Verstion to the Entry Credits
-	buf.Write(ed.Sign(key, msg)[:])
-
-	com := new(commit)
-	com.CommitChainMsg = hex.EncodeToString(buf.Bytes())
+	com := new(walletcommit)
+	com.Message = hex.EncodeToString(buf.Bytes())
 	j, err := json.Marshal(com)
 	if err != nil {
 		return err
 	}
-
 	resp, err := http.Post(
-		fmt.Sprintf("http://%s/v1/commit-chain/", server),
+		fmt.Sprintf("http://%s/v1/commit-chain/%s", serverFct, name),
 		"application/json",
 		bytes.NewBuffer(j))
 	if err != nil {
 		return err
 	}
 	resp.Body.Close()
-
+    
 	return nil
 }
 

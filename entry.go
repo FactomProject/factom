@@ -13,8 +13,6 @@ import (
 	"io/ioutil"
 	"net/http"
 	"time"
-
-	ed "github.com/FactomProject/ed25519"
 )
 
 type Entry struct {
@@ -32,9 +30,9 @@ func NewEntry() *Entry {
 // CommitEntry sends the signed Entry Hash and the Entry Credit public key to
 // the factom network. Once the payment is verified and the network is commited
 // to publishing the Entry it may be published with a call to RevealEntry.
-func CommitEntry(e *Entry, key *[64]byte) error {
-	type commit struct {
-		CommitEntryMsg string
+func CommitEntry(e *Entry, name string) error {
+	type walletcommit struct {
+		Message string
 	}
 
 	buf := new(bytes.Buffer)
@@ -55,31 +53,21 @@ func CommitEntry(e *Entry, key *[64]byte) error {
 		buf.WriteByte(byte(c))
 	}
 
-	// msg is the byte string before the pubkey and sig
-	msg := buf.Bytes()
-
-	// 32 byte public key
-	buf.Write(key[32:64])
-
-	// 64 byte signature
-	buf.Write(ed.Sign(key, msg)[:])
-
-	com := new(commit)
-	com.CommitEntryMsg = hex.EncodeToString(buf.Bytes())
+	com := new(walletcommit)
+	com.Message = hex.EncodeToString(buf.Bytes())
 	j, err := json.Marshal(com)
 	if err != nil {
 		return err
 	}
-
 	resp, err := http.Post(
-		fmt.Sprintf("http://%s/v1/commit-entry/", server),
+		fmt.Sprintf("http://%s/v1/commit-entry/%s", serverFct, name),
 		"application/json",
 		bytes.NewBuffer(j))
 	if err != nil {
 		return err
 	}
 	resp.Body.Close()
-
+    
 	return nil
 }
 
