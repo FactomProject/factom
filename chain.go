@@ -91,6 +91,7 @@ func CommitChain(c *Chain, name string) error {
 	if err != nil {
 		return err
 	}
+	fmt.Println("DEBUG: Sending unsigned chain commit to wallet:", string(j))
 	resp, err := http.Post(
 		fmt.Sprintf("http://%s/v1/commit-chain/%s", serverFct, name),
 		"application/json",
