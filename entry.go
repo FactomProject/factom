@@ -12,7 +12,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
-	"time"
 )
 
 type Entry struct {
@@ -182,14 +181,6 @@ func (e *Entry) MarshalExtIDsBinary() ([]byte, error) {
 	}
 
 	return buf.Bytes(), nil
-}
-
-func milliTime() (r []byte) {
-	buf := new(bytes.Buffer)
-	t := time.Now().UnixNano()
-	m := t / 1e6
-	binary.Write(buf, binary.BigEndian, m)
-	return buf.Bytes()[2:]
 }
 
 func entryCost(e *Entry) (int8, error) {

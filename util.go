@@ -5,34 +5,30 @@
 package factom
 
 import (
+	"encoding/binary"
+	"bytes"
 	"crypto/sha256"
-	"os"
+	"time"
 
-	ed "github.com/FactomProject/ed25519"
 	"golang.org/x/crypto/sha3"
 )
 
 var (
 	server = "localhost:8088"
-    serverFct = "localhost:8089"
+	serverFct = "localhost:8089"
 )
-
-func NewECKey() *[64]byte {
-	rand, err := os.Open("/dev/random")
-	if err != nil {
-		return &[64]byte{byte(0)}
-	}
-
-	// private key is [32]byte private section + [32]byte public key
-	_, priv, err := ed.GenerateKey(rand)
-	if err != nil {
-		return &[64]byte{byte(0)}
-	}
-	return priv
-}
 
 func SetServer(s string) {
 	server = s
+}
+
+// milliTime returns a 6 byte slice representing the unix time in milliseconds
+func milliTime() (r []byte) {
+	buf := new(bytes.Buffer)
+	t := time.Now().UnixNano()
+	m := t / 1e6
+	binary.Write(buf, binary.BigEndian, m)
+	return buf.Bytes()[2:]
 }
 
 // shad Double Sha256 Hash; sha256(sha256(data))
