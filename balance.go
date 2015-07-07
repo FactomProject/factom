@@ -86,7 +86,7 @@ func GenerateFactoidAddress(name string) (string, error) {
 
     b := new(address)
     if err := json.Unmarshal(body, b); err != nil || len(b.Address)==0  {
-        return "", fmt.Errorf("Factoid Address Generation Failed: "+string(body))
+        return "", fmt.Errorf("Address %s already exists",name)
     }
     
     return b.Address, nil
@@ -116,7 +116,7 @@ func GenerateEntryCreditAddress(name string) (string, error) {
     
     b := new(address)
     if err := json.Unmarshal(body, b); err != nil || len(b.Address)==0  {
-        return "", fmt.Errorf("Entry Credit Address Generation Failed: "+string(body))
+        return "", fmt.Errorf("Address %s already exists",name)
     }
 
     return b.Address, nil
