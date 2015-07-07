@@ -10,8 +10,6 @@ import (
 	"crypto/sha256"
 	"crypto/sha512"
 	"time"
-
-	"golang.org/x/crypto/sha3"
 )
 
 var (
@@ -36,13 +34,6 @@ func milliTime() (r []byte) {
 func shad(data []byte) []byte {
 	h1 := sha256.Sum256(data)
 	h2 := sha256.Sum256(h1[:])
-	return h2[:]
-}
-
-// sha23 combination sha256 and sha3 Hash; sha256(data + sha3(data))
-func sha23(data []byte) []byte {
-	h1 := sha3.Sum256(data)
-	h2 := sha256.Sum256(append(data, h1[:]...))
 	return h2[:]
 }
 
