@@ -8,6 +8,7 @@ import (
 	"encoding/binary"
 	"bytes"
 	"crypto/sha256"
+	"crypto/sha512"
 	"time"
 
 	"golang.org/x/crypto/sha3"
@@ -42,5 +43,12 @@ func shad(data []byte) []byte {
 func sha23(data []byte) []byte {
 	h1 := sha3.Sum256(data)
 	h2 := sha256.Sum256(append(data, h1[:]...))
+	return h2[:]
+}
+
+// sha52
+func sha52(data []byte) []byte {
+	h1 := sha512.Sum512(data)
+	h2 := sha256.Sum256(append(h1[:], data...))
 	return h2[:]
 }

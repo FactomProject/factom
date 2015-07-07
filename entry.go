@@ -124,7 +124,7 @@ func (e *Entry) Hash() []byte {
 	if err != nil {
 		return make([]byte, 32)
 	}
-	return sha23(a)
+	return sha52(a)
 }
 
 func (e *Entry) MarshalBinary() ([]byte, error) {
