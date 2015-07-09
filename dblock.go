@@ -30,11 +30,14 @@ func GetDBlock(keymr string) (*DBlock, error) {
 	if err != nil {
 		return nil, err
 	}
+	defer resp.Body.Close()
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		return nil, err
 	}
-	resp.Body.Close()
+	if resp.StatusCode != 200 {
+		return nil, fmt.Errorf(string(body))
+	}
 	
 	d := new(DBlock)
 	if err := json.Unmarshal(body, d); err != nil {
@@ -50,11 +53,14 @@ func GetDBlockHead() (*DBlockHead, error) {
 	if err != nil {
 		return nil, err
 	}
+	defer resp.Body.Close()
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		return nil, err
 	}
-	resp.Body.Close()
+	if resp.StatusCode != 200 {
+		return nil, fmt.Errorf(string(body))
+	}
 	
 	d := new(DBlockHead)
 	json.Unmarshal(body, d)

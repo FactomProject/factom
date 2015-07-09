@@ -65,7 +65,15 @@ func CommitEntry(e *Entry, name string) error {
 	if err != nil {
 		return err
 	}
-	resp.Body.Close()
+	defer resp.Body.Close()
+    
+	if resp.StatusCode != 200 {
+		p, err := ioutil.ReadAll(resp.Body)
+		if err != nil {
+			return err
+		}
+		return fmt.Errorf(string(p))
+	}
     
 	return nil
 }
@@ -94,8 +102,16 @@ func RevealEntry(e *Entry) error {
 	if err != nil {
 		return err
 	}
-	resp.Body.Close()
-
+	defer resp.Body.Close()
+    
+	if resp.StatusCode != 200 {
+		p, err := ioutil.ReadAll(resp.Body)
+		if err != nil {
+			return err
+		}
+		return fmt.Errorf(string(p))
+	}
+    
 	return nil
 }
 
@@ -105,11 +121,14 @@ func GetEntry(hash string) (*Entry, error) {
 	if err != nil {
 		return nil, err
 	}
+	defer resp.Body.Close()
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		return nil, err
 	}
-	resp.Body.Close()
+	if resp.StatusCode != 200 {
+		return nil, fmt.Errorf(string(body))
+	}
 	
 	e := new(Entry)
 	if err := json.Unmarshal(body, e); err != nil {
