@@ -98,7 +98,15 @@ func CommitChain(c *Chain, name string) error {
 	if err != nil {
 		return err
 	}
-	resp.Body.Close()
+	defer resp.Body.Close()
+
+	if resp.StatusCode != 200 {
+		p, err := ioutil.ReadAll(resp.Body)
+		if err != nil {
+			return err
+		}
+		return fmt.Errorf(string(p))
+	}
     
 	return nil
 }
@@ -127,7 +135,16 @@ func RevealChain(c *Chain) error {
 	if err != nil {
 		return err
 	}
-	resp.Body.Close()
+	defer resp.Body.Close()
+
+	if resp.StatusCode != 200 {
+		p, err := ioutil.ReadAll(resp.Body)
+		if err != nil {
+			return err
+		}
+		return fmt.Errorf(string(p))
+	}
+    
 
 	return nil
 }
@@ -138,11 +155,20 @@ func GetChainHead(chainid string) (*ChainHead, error) {
 	if err != nil {
 		return nil, err
 	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != 200 {
+		p, err := ioutil.ReadAll(resp.Body)
+		if err != nil {
+			return nil, err
+		}
+		return nil, fmt.Errorf(string(p))
+	}
+    
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		return nil, err
 	}
-	resp.Body.Close()
 	
 	c := new(ChainHead)
 	if err := json.Unmarshal(body, c); err != nil {

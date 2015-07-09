@@ -67,10 +67,6 @@ func FctBalance(key string) (int64, error) {
 func GenerateFactoidAddress(name string) (string, error) {
     name = strings.TrimSpace(name)
     
-    type address struct {
-        Address string
-    }
-    
     str := fmt.Sprintf("http://%s/v1/factoid-generate-address/%s", serverFct, name)
     
     resp, err := http.Get(str)
@@ -84,22 +80,25 @@ func GenerateFactoidAddress(name string) (string, error) {
     }
     resp.Body.Close()
 
-    b := new(address)
-    if err := json.Unmarshal(body, b); err != nil || len(b.Address)==0  {
-        return "", fmt.Errorf("Address %s already exists",name)
+    type x struct {
+        Response string
+        Success bool
+    }
+    b := new(x)
+    if err := json.Unmarshal(body, b); err != nil {
+        return "", fmt.Errorf("Error attempting to create %s",name)
     }
     
-    return b.Address, nil
+    if !b.Success {
+        return "", fmt.Errorf(b.Response)
+    }
+    
+    return b.Response, nil
 }
 
 
 func GenerateEntryCreditAddress(name string) (string, error) {
     name = strings.TrimSpace(name)
-    
-    type address struct {
-        Address string
-        Success bool
-    }
     
     str := fmt.Sprintf("http://%s/v1/factoid-generate-ec-address/%s", serverFct, name)
     
@@ -114,10 +113,18 @@ func GenerateEntryCreditAddress(name string) (string, error) {
     }
     resp.Body.Close()
     
-    b := new(address)
-    if err := json.Unmarshal(body, b); err != nil || len(b.Address)==0  {
-        return "", fmt.Errorf("Address %s already exists",name)
+    type x struct {
+        Response string
+        Success bool
     }
-
-    return b.Address, nil
+    b := new(x)
+    if err := json.Unmarshal(body, b); err != nil {
+        return "", fmt.Errorf("Error attempting to create %s",name)
+    }
+    
+    if !b.Success {
+        return "", fmt.Errorf(b.Response)
+    }
+    
+    return b.Response, nil
 }
