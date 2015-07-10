@@ -5,6 +5,7 @@
 package factom
 
 import (
+    "strconv"
     "strings"
 	"encoding/json"
 	"fmt"
@@ -27,16 +28,25 @@ func ECBalance(key string) (int64, error) {
 	}
 	resp.Body.Close()
     
-    type Balance struct {
-        Balance int64
-    }	
+    type x struct {
+        Response string
+        Success bool
+    }
+    b := new(x)
+    if err := json.Unmarshal(body, b); err != nil {
+        return 0, fmt.Errorf("Error getting the balance of %s",key)
+    }
     
-    b := new(Balance)
-	if err := json.Unmarshal(body, b); err != nil {
-        return 0, err
-	}
-	
-	return b.Balance, nil
+    if !b.Success {
+        return 0, fmt.Errorf(b.Response)
+    }
+    
+    v,err := strconv.ParseInt(b.Response,10,64)
+    if err != nil {
+        return 0, fmt.Errorf("Error getting the balance of %s",key)
+    }
+    
+    return v, nil
 }
 
 func FctBalance(key string) (int64, error) {
@@ -52,16 +62,25 @@ func FctBalance(key string) (int64, error) {
     }
     resp.Body.Close()
         
-    type Balance struct {
-        Balance int64
+    type x struct {
+        Response string
+        Success bool
     }
-    
-    b := new(Balance)
+    b := new(x)
     if err := json.Unmarshal(body, b); err != nil {
-        return 0, err
+        return 0, fmt.Errorf("Error getting the balance of %s",key)
     }
     
-    return b.Balance, nil
+    if !b.Success {
+        return 0, fmt.Errorf(b.Response)
+    }
+    
+    v,err := strconv.ParseInt(b.Response,10,64)
+    if err != nil {
+        return 0, fmt.Errorf("Error getting the balance of %s",key)
+    }
+    
+    return v, nil
 }
 
 func GenerateFactoidAddress(name string) (string, error) {
