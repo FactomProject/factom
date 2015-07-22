@@ -37,7 +37,7 @@ func NewChain(e *Entry) *Chain {
 }
 
 type ChainHead struct {
-	EntryBlockKeyMR string
+	ChainHead string
 }
 
 // CommitChain sends the signed ChainID, the Entry Hash, and the Entry Credit
