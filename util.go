@@ -5,15 +5,15 @@
 package factom
 
 import (
-	"encoding/binary"
 	"bytes"
 	"crypto/sha256"
 	"crypto/sha512"
+	"encoding/binary"
 	"time"
 )
 
 var (
-	server = "localhost:8088"
+	server    = "localhost:8088"
 	serverFct = "localhost:8089"
 )
 
