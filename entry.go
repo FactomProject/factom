@@ -22,7 +22,7 @@ type Entry struct {
 
 func NewEntry() *Entry {
 	e := new(Entry)
-	
+
 	return e
 }
 
@@ -66,7 +66,7 @@ func CommitEntry(e *Entry, name string) error {
 		return err
 	}
 	defer resp.Body.Close()
-    
+
 	if resp.StatusCode != 200 {
 		p, err := ioutil.ReadAll(resp.Body)
 		if err != nil {
@@ -74,7 +74,7 @@ func CommitEntry(e *Entry, name string) error {
 		}
 		return fmt.Errorf(string(p))
 	}
-    
+
 	return nil
 }
 
@@ -103,7 +103,7 @@ func RevealEntry(e *Entry) error {
 		return err
 	}
 	defer resp.Body.Close()
-    
+
 	if resp.StatusCode != 200 {
 		p, err := ioutil.ReadAll(resp.Body)
 		if err != nil {
@@ -111,7 +111,7 @@ func RevealEntry(e *Entry) error {
 		}
 		return fmt.Errorf(string(p))
 	}
-    
+
 	return nil
 }
 
@@ -129,12 +129,12 @@ func GetEntry(hash string) (*Entry, error) {
 	if resp.StatusCode != 200 {
 		return nil, fmt.Errorf(string(body))
 	}
-	
+
 	e := new(Entry)
 	if err := json.Unmarshal(body, e); err != nil {
 		return nil, err
 	}
-	
+
 	return e, nil
 }
 

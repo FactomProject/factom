@@ -32,7 +32,7 @@ func NewChain(e *Entry) *Chain {
 	}
 	c.ChainID = hex.EncodeToString(hs.Sum(nil))
 	c.FirstEntry.ChainID = c.ChainID
-	
+
 	return c
 }
 
@@ -48,7 +48,7 @@ func CommitChain(c *Chain, name string) error {
 	type walletcommit struct {
 		Message string
 	}
-	
+
 	buf := new(bytes.Buffer)
 
 	// 1 byte version
@@ -107,7 +107,7 @@ func CommitChain(c *Chain, name string) error {
 		}
 		return fmt.Errorf(string(p))
 	}
-    
+
 	return nil
 }
 
@@ -144,7 +144,6 @@ func RevealChain(c *Chain) error {
 		}
 		return fmt.Errorf(string(p))
 	}
-    
 
 	return nil
 }
@@ -164,16 +163,16 @@ func GetChainHead(chainid string) (*ChainHead, error) {
 		}
 		return nil, fmt.Errorf(string(p))
 	}
-    
+
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		return nil, err
 	}
-	
+
 	c := new(ChainHead)
 	if err := json.Unmarshal(body, c); err != nil {
 		return nil, err
 	}
-	
+
 	return c, nil
 }
