@@ -144,7 +144,6 @@ func RevealChain(c *Chain) error {
 		}
 		return fmt.Errorf(string(p))
 	}
-    
 
 	return nil
 }

@@ -16,13 +16,13 @@ type EBlock struct {
 		BlockSequenceNumber int
 		ChainID             string
 		PrevKeyMR           string
-		TimeStamp           uint64
+		Timestamp           uint64
 	}
 	EntryList []EBEntry
 }
 
 type EBEntry struct {
-	TimeStamp int64
+	Timestamp int64
 	EntryHash string
 }
 

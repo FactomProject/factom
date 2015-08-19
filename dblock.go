@@ -11,7 +11,7 @@ type DBlock struct {
 	DBHash string
 	Header struct {
 		PrevBlockKeyMR string
-		TimeStamp      uint64
+		Timestamp      uint64
 		SequenceNumber int
 	}
 	EntryBlockList []struct {
