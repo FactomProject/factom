@@ -40,11 +40,11 @@ func GetEBlock(keymr string) (*EBlock, error) {
 	if resp.StatusCode != 200 {
 		return nil, fmt.Errorf(string(body))
 	}
-	
+
 	e := new(EBlock)
 	if err := json.Unmarshal(body, e); err != nil {
 		return nil, err
 	}
-	
+
 	return e, nil
 }
