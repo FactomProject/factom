@@ -207,14 +207,24 @@ func entryCost(e *Entry) (int8, error) {
 	if err != nil {
 		return 0, err
 	}
+	
+	// caulculaate the length exluding the header size 35 for Milestone 1
+	l := len(p) - 35
+	
+	if l > 10240 {
+		return 10, fmt.Errorf("Entry cannot be larger than 10KB")
+	}	
+	
 	// n is the capacity of the entry payment in KB
-	r := len(p) % 1024
-	n := int8(len(p) / 1024)
+	r := l % 1024
+	n := int8(l / 1024)
+	
 	if r > 0 {
 		n += 1
 	}
-	if n > 10 {
-		return n, fmt.Errorf("Cannot make a payment for Entry larger than 10KB")
-	}
-	return n, nil
+		
+	if n < 1 {
+		n = 1
+	}	
+	return n, nil	
 }
