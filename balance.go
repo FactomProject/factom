@@ -144,3 +144,67 @@ func GenerateEntryCreditAddress(name string) (string, error) {
 
 	return b.Response, nil
 }
+
+func GenerateFactoidAddressFromPrivateKey(name string, privateKey string) (string, error) {
+	name = strings.TrimSpace(name)
+
+	str := fmt.Sprintf("http://%s/v1/factoid-generate-address-from-private-key/?name=%s&privateKey=%s", serverFct, name, privateKey)
+
+	resp, err := http.Get(str)
+	if err != nil {
+		return "", err
+	}
+
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return "", err
+	}
+	resp.Body.Close()
+
+	type x struct {
+		Response string
+		Success  bool
+	}
+	b := new(x)
+	if err := json.Unmarshal(body, b); err != nil {
+		return "", fmt.Errorf("Error attempting to create %s", name)
+	}
+
+	if !b.Success {
+		return "", fmt.Errorf(b.Response)
+	}
+
+	return b.Response, nil
+}
+
+func GenerateEntryCreditAddressFromPrivateKey(name string, privateKey string) (string, error) {
+	name = strings.TrimSpace(name)
+
+	str := fmt.Sprintf("http://%s/v1/factoid-generate-ec-address-from-private-key/?name=%s&privateKey=%s", serverFct, name, privateKey)
+
+	resp, err := http.Get(str)
+	if err != nil {
+		return "", err
+	}
+
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return "", err
+	}
+	resp.Body.Close()
+
+	type x struct {
+		Response string
+		Success  bool
+	}
+	b := new(x)
+	if err := json.Unmarshal(body, b); err != nil {
+		return "", fmt.Errorf("Error attempting to create %s", name)
+	}
+
+	if !b.Success {
+		return "", fmt.Errorf(b.Response)
+	}
+
+	return b.Response, nil
+}
