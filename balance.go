@@ -209,10 +209,10 @@ func GenerateEntryCreditAddressFromPrivateKey(name string, privateKey string) (s
 	return b.Response, nil
 }
 
-func GenerateFactoidAddressFromHumanReadiblePrivateKey(name string, privateKey string) (string, error) {
+func GenerateFactoidAddressFromHumanReadablePrivateKey(name string, privateKey string) (string, error) {
 	name = strings.TrimSpace(name)
 
-	str := fmt.Sprintf("http://%s/v1/factoid-generate-address-from-human-readible-private-key/?name=%s&privateKey=%s", serverFct, name, privateKey)
+	str := fmt.Sprintf("http://%s/v1/factoid-generate-address-from-human-readable-private-key/?name=%s&privateKey=%s", serverFct, name, privateKey)
 
 	resp, err := http.Get(str)
 	if err != nil {
@@ -241,10 +241,10 @@ func GenerateFactoidAddressFromHumanReadiblePrivateKey(name string, privateKey s
 	return b.Response, nil
 }
 
-func GenerateEntryCreditAddressFromHumanReadiblePrivateKey(name string, privateKey string) (string, error) {
+func GenerateEntryCreditAddressFromHumanReadablePrivateKey(name string, privateKey string) (string, error) {
 	name = strings.TrimSpace(name)
 
-	str := fmt.Sprintf("http://%s/v1/factoid-generate-ec-address-from-human-readible-private-key/?name=%s&privateKey=%s", serverFct, name, privateKey)
+	str := fmt.Sprintf("http://%s/v1/factoid-generate-ec-address-from-human-readable-private-key/?name=%s&privateKey=%s", serverFct, name, privateKey)
 
 	resp, err := http.Get(str)
 	if err != nil {
@@ -278,7 +278,7 @@ func GenerateFactoidAddressFromMnemonic(name string, mnemonic string) (string, e
 
 	mnemonic = strings.Replace(mnemonic, " ", "%20", -1)
 
-	str := fmt.Sprintf("http://%s/v1/factoid-generate-address-from-mnemonic/?name=%s&mnemonic=%s", serverFct, name, mnemonic)
+	str := fmt.Sprintf("http://%s/v1/factoid-generate-address-from-token-sale/?name=%s&mnemonic=%s", serverFct, name, mnemonic)
 
 	resp, err := http.Get(str)
 	if err != nil {
@@ -307,36 +307,3 @@ func GenerateFactoidAddressFromMnemonic(name string, mnemonic string) (string, e
 	return b.Response, nil
 }
 
-func GenerateEntryCreditAddressFromMnemonic(name string, mnemonic string) (string, error) {
-	name = strings.TrimSpace(name)
-
-	mnemonic = strings.Replace(mnemonic, " ", "%20", -1)
-
-	str := fmt.Sprintf("http://%s/v1/factoid-generate-ec-address-from-mnemonic/?name=%s&mnemonic=%s", serverFct, name, mnemonic)
-
-	resp, err := http.Get(str)
-	if err != nil {
-		return "", err
-	}
-
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return "", err
-	}
-	resp.Body.Close()
-
-	type x struct {
-		Response string
-		Success  bool
-	}
-	b := new(x)
-	if err := json.Unmarshal(body, b); err != nil {
-		return "", fmt.Errorf("Error attempting to create %s", name)
-	}
-
-	if !b.Success {
-		return "", fmt.Errorf(b.Response)
-	}
-
-	return b.Response, nil
-}
