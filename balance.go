@@ -103,7 +103,7 @@ func GenerateFactoidAddress(name string) (string, error) {
 	}
 	b := new(x)
 	if err := json.Unmarshal(body, b); err != nil {
-		return "", fmt.Errorf("Error attempting to create %s", name)
+		return "", fmt.Errorf("Error attempting to create %s - %v", name, err)
 	}
 
 	if !b.Success {
@@ -135,7 +135,7 @@ func GenerateEntryCreditAddress(name string) (string, error) {
 	}
 	b := new(x)
 	if err := json.Unmarshal(body, b); err != nil {
-		return "", fmt.Errorf("Error attempting to create %s", name)
+		return "", fmt.Errorf("Error attempting to create %s - %v", name, err)
 	}
 
 	if !b.Success {
@@ -167,7 +167,7 @@ func GenerateFactoidAddressFromPrivateKey(name string, privateKey string) (strin
 	}
 	b := new(x)
 	if err := json.Unmarshal(body, b); err != nil {
-		return "", fmt.Errorf("Error attempting to create %s", name)
+		return "", fmt.Errorf("Error attempting to create %s - %v", name, err)
 	}
 
 	if !b.Success {
@@ -199,7 +199,7 @@ func GenerateEntryCreditAddressFromPrivateKey(name string, privateKey string) (s
 	}
 	b := new(x)
 	if err := json.Unmarshal(body, b); err != nil {
-		return "", fmt.Errorf("Error attempting to create %s", name)
+		return "", fmt.Errorf("Error attempting to create %s - %v", name, err)
 	}
 
 	if !b.Success {
@@ -231,7 +231,7 @@ func GenerateFactoidAddressFromHumanReadablePrivateKey(name string, privateKey s
 	}
 	b := new(x)
 	if err := json.Unmarshal(body, b); err != nil {
-		return "", fmt.Errorf("Error attempting to create %s", name)
+		return "", fmt.Errorf("Error attempting to create %s - %v", name, err)
 	}
 
 	if !b.Success {
@@ -263,7 +263,7 @@ func GenerateEntryCreditAddressFromHumanReadablePrivateKey(name string, privateK
 	}
 	b := new(x)
 	if err := json.Unmarshal(body, b); err != nil {
-		return "", fmt.Errorf("Error attempting to create %s", name)
+		return "", fmt.Errorf("Error attempting to create %s - %v", name, err)
 	}
 
 	if !b.Success {
@@ -297,7 +297,7 @@ func GenerateFactoidAddressFromMnemonic(name string, mnemonic string) (string, e
 	}
 	b := new(x)
 	if err := json.Unmarshal(body, b); err != nil {
-		return "", fmt.Errorf("Error attempting to create %s", name)
+		return "", fmt.Errorf("Error attempting to create %s - %v", name, err)
 	}
 
 	if !b.Success {
@@ -306,4 +306,3 @@ func GenerateFactoidAddressFromMnemonic(name string, mnemonic string) (string, e
 
 	return b.Response, nil
 }
-
