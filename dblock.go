@@ -24,6 +24,31 @@ type DBlockHead struct {
 	KeyMR string
 }
 
+func GetDBlockHeight() (int, error) {
+	resp, err := http.Get(
+		fmt.Sprintf("http://%s/v1/directory-block-height/", server))
+	if err != nil {
+		return 0, err
+	}
+	defer resp.Body.Close()
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return 0, err
+	}
+	if resp.StatusCode != 200 {
+		return 0, fmt.Errorf(string(body))
+	}
+	type dbh struct {
+		Height int
+	}
+	d := new(dbh)
+	if err := json.Unmarshal(body, d); err != nil {
+		return 0, fmt.Errorf("%s: %s\n", err, body)
+	}
+
+	return d.Height, nil
+}
+
 func GetDBlock(keymr string) (*DBlock, error) {
 	resp, err := http.Get(
 		fmt.Sprintf("http://%s/v1/directory-block-by-keymr/%s", server, keymr))
@@ -38,12 +63,12 @@ func GetDBlock(keymr string) (*DBlock, error) {
 	if resp.StatusCode != 200 {
 		return nil, fmt.Errorf(string(body))
 	}
-
+	
 	d := new(DBlock)
 	if err := json.Unmarshal(body, d); err != nil {
 		return nil, fmt.Errorf("%s: %s\n", err, body)
 	}
-
+	
 	return d, nil
 }
 
