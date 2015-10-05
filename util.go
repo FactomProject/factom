@@ -12,6 +12,10 @@ import (
 	"time"
 )
 
+const (
+	ZeroHash = "0000000000000000000000000000000000000000000000000000000000000000"
+)
+
 var (
 	server    = "localhost:8088"
 	serverFct = "localhost:8089"
