@@ -222,9 +222,6 @@ func GetFirstEntry(chainid string) (*Entry, error) {
 			return e, err
 		}
 	}
-	if len(eb.EntryList) > 1 {
-		return e, fmt.Errorf("Processing Error: More than 1 Entry in the first Bnery Block (this shouldn't happen!)")
-	}
 	
 	return GetEntry(eb.EntryList[0].EntryHash)
 }
