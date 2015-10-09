@@ -48,3 +48,22 @@ func GetEBlock(keymr string) (*EBlock, error) {
 
 	return e, nil
 }
+
+func GetAllEBlockEntries(ebhash string) ([]*Entry, error) {
+	es := make([]*Entry, 0)
+
+	eb, err := GetEBlock(ebhash)
+	if err != nil {
+		return es, err
+	}
+
+	for _, v := range eb.EntryList {
+		e, err := GetEntry(v.EntryHash)
+		if err != nil {
+			return es, err
+		}
+		es = append(es, e)
+	}
+	
+	return es, nil
+}

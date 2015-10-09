@@ -176,3 +176,52 @@ func GetChainHead(chainid string) (*ChainHead, error) {
 
 	return c, nil
 }
+
+func GetAllChainEntries(chainid string) ([]*Entry, error) {
+	es := make([]*Entry, 0)
+
+	head, err := GetChainHead(chainid)
+	if err != nil {
+		return es, err
+	}
+	
+	for ebhash := head.ChainHead; ebhash != ZeroHash; {
+		eb, err := GetEBlock(ebhash)
+		if err != nil {
+			return es, err
+		}
+		s, err := GetAllEBlockEntries(ebhash)
+		if err != nil {
+			return es, err
+		}
+		es = append(s, es...)
+		
+		ebhash = eb.Header.PrevKeyMR
+	}
+	
+	return es, nil
+}
+
+func GetFirstEntry(chainid string) (*Entry, error) {
+	e := NewEntry()
+	
+	head, err := GetChainHead(chainid)
+	if err != nil {
+		return e, err
+	}
+	
+	eb, err := GetEBlock(head.ChainHead)
+	if err != nil {
+		return e, err
+	}
+	
+	for eb.Header.PrevKeyMR != ZeroHash {
+		ebhash := eb.Header.PrevKeyMR
+		eb, err = GetEBlock(ebhash)
+		if err != nil {
+			return e, err
+		}
+	}
+	
+	return GetEntry(eb.EntryList[0].EntryHash)
+}
