@@ -16,8 +16,8 @@ import (
 
 type Entry struct {
 	ChainID string
-	ExtIDs  []string
-	Content string
+	ExtIDs  [][]byte
+	Content []byte
 }
 
 func NewEntry() *Entry {
@@ -148,15 +148,11 @@ func (e *Entry) Hash() []byte {
 
 func (e *Entry) MarshalBinary() ([]byte, error) {
 	buf := new(bytes.Buffer)
-	c, err := hex.DecodeString(e.Content)
+	ids, err := e.MarshalExtIDsBinary()
 	if err != nil {
 		return buf.Bytes(), err
 	}
-	x, err := e.MarshalExtIDsBinary()
-	if err != nil {
-		return buf.Bytes(), err
-	}
-
+	
 	// Header
 
 	// 1 byte Version
@@ -170,17 +166,17 @@ func (e *Entry) MarshalBinary() ([]byte, error) {
 	}
 
 	// 2 byte size of extids
-	if err := binary.Write(buf, binary.BigEndian, int16(len(x))); err != nil {
+	if err := binary.Write(buf, binary.BigEndian, int16(len(ids))); err != nil {
 		return buf.Bytes(), err
 	}
 
 	// Payload
 
-	// extids
-	buf.Write(x)
+	// ExtIDs
+	buf.Write(ids)
 
-	// data
-	buf.Write(c)
+	// Content
+	buf.Write(e.Content)
 
 	return buf.Bytes(), nil
 }
@@ -189,17 +185,64 @@ func (e *Entry) MarshalExtIDsBinary() ([]byte, error) {
 	buf := new(bytes.Buffer)
 
 	for _, v := range e.ExtIDs {
-		p, err := hex.DecodeString(v)
-		if err != nil {
-			return buf.Bytes(), err
-		}
 		// 2 byte length of extid
-		binary.Write(buf, binary.BigEndian, int16(len(p)))
+		binary.Write(buf, binary.BigEndian, int16(len(v)))
 		// extid
-		buf.Write(p)
+		buf.Write(v)
 	}
 
 	return buf.Bytes(), nil
+}
+
+func (e *Entry) MarshalJSON() ([]byte, error) {
+	type js struct {
+		ChainID string
+		ExtIDs []string
+		Content string
+	}
+	
+	j := new(js)
+	
+	j.ChainID = e.ChainID
+	
+	for _, id := range e.ExtIDs {
+		j.ExtIDs = append(j.ExtIDs, hex.EncodeToString(id))
+	}
+	
+	j.Content = hex.EncodeToString(e.Content)
+	
+	return json.Marshal(j)
+}
+
+func (e *Entry) UnmarshalJSON(data []byte) error {
+	type js struct {
+		ChainID string
+		ExtIDs []string
+		Content string
+	}
+	
+	j := new(js)
+	if err := json.Unmarshal(data, j); err != nil {
+		return err
+	}
+	
+	e.ChainID = j.ChainID
+	
+	for _, v := range j.ExtIDs {
+		p, err := hex.DecodeString(v)
+		if err != nil {
+			return err
+		}
+		e.ExtIDs = append(e.ExtIDs, p)
+	}
+	
+	c, err := hex.DecodeString(j.Content)
+	if err != nil {
+		return err
+	}
+	e.Content = c
+	
+	return nil
 }
 
 func entryCost(e *Entry) (int8, error) {
