@@ -214,6 +214,17 @@ func (e *Entry) MarshalJSON() ([]byte, error) {
 	return json.Marshal(j)
 }
 
+func (e *Entry) String() string {
+	var s string
+	s += fmt.Sprintln("ChainID:", e.ChainID)
+	for _, id := range e.ExtIDs {
+		s += fmt.Sprintln("ExtID:", string(id))
+	}
+	s += fmt.Sprintln("Content:")
+	s += fmt.Sprintln(string(e.Content))
+	return s
+}
+
 func (e *Entry) UnmarshalJSON(data []byte) error {
 	type js struct {
 		ChainID string
