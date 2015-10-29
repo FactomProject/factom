@@ -7,23 +7,6 @@ import (
 	"net/http"
 )
 
-type DBlock struct {
-	DBHash string
-	Header struct {
-		PrevBlockKeyMR string
-		Timestamp      uint64
-		SequenceNumber int
-	}
-	EntryBlockList []struct {
-		ChainID string
-		KeyMR   string
-	}
-}
-
-type DBlockHead struct {
-	KeyMR string
-}
-
 func GetDBlockHeight() (int, error) {
 	resp, err := http.Get(
 		fmt.Sprintf("http://%s/v1/directory-block-height/", server))
@@ -47,6 +30,23 @@ func GetDBlockHeight() (int, error) {
 	}
 
 	return d.Height, nil
+}
+
+type DBlock struct {
+	DBHash string
+	Header struct {
+		PrevBlockKeyMR string
+		Timestamp      uint64
+		SequenceNumber int
+	}
+	EntryBlockList []struct {
+		ChainID string
+		KeyMR   string
+	}
+}
+
+type DBlockHead struct {
+	KeyMR string
 }
 
 func GetDBlock(keymr string) (*DBlock, error) {
@@ -91,4 +91,18 @@ func GetDBlockHead() (*DBlockHead, error) {
 	json.Unmarshal(body, d)
 
 	return d, nil
+}
+
+func (d *DBlock) String() string {
+	var s string
+	s += fmt.Sprintln("PrevBlockKeyMR:", d.Header.PrevBlockKeyMR)
+	s += fmt.Sprintln("Timestamp:", d.Header.Timestamp)
+	s += fmt.Sprintln("SequenceNumber:", d.Header.SequenceNumber)
+	for _, v := range d.EntryBlockList {
+		s += fmt.Sprintln("EntryBlock {")
+		s += fmt.Sprintln("	ChainID", v.ChainID)
+		s += fmt.Sprintln("	KeyMR", v.KeyMR)
+		s += fmt.Sprintln("}")
+	}
+	return s
 }
