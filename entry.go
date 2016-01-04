@@ -12,6 +12,8 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	
+	ed "github.com/agl/ed25519"
 )
 
 type Entry struct {
@@ -76,6 +78,66 @@ func CommitEntry(e *Entry, name string) error {
 	}
 
 	return nil
+}
+
+func ComposeEntryCommit(pub *[32]byte, pri *[64]byte, e *Entry) ([]byte, error) {
+	type commit struct {
+		CommitEntryMsg string
+	}
+
+	buf := new(bytes.Buffer)
+
+	// 1 byte version
+	buf.Write([]byte{0})
+
+	// 6 byte milliTimestamp (truncated unix time)
+	buf.Write(milliTime())
+
+	// 32 byte Entry Hash
+	buf.Write(e.Hash())
+
+	// 1 byte number of entry credits to pay
+	if c, err := entryCost(e); err != nil {
+		return nil, err
+	} else {
+		buf.WriteByte(byte(c))
+	}
+	
+	// 32 byte Entry Credit Public Key
+	buf.Write(pub[:])
+
+	// 64 byte Signature
+	sig := ed.Sign(pri, buf.Bytes())
+	buf.Write(sig[:])
+	
+	com := new(commit)
+	com.CommitEntryMsg = hex.EncodeToString(buf.Bytes())
+	j, err := json.Marshal(com)
+	if err != nil {
+		return nil, err
+	}
+	
+	return j, nil
+}
+
+func ComposeEntryReveal(e *Entry) ([]byte, error) {
+	type reveal struct {
+		Entry string
+	}
+
+	r := new(reveal)
+	if p, err := e.MarshalBinary(); err != nil {
+		return nil, err
+	} else {
+		r.Entry = hex.EncodeToString(p)
+	}
+
+	j, err := json.Marshal(r)
+	if err != nil {
+		return nil, err
+	}
+	
+	return j, nil
 }
 
 func RevealEntry(e *Entry) error {
