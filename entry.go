@@ -206,10 +206,10 @@ func (e *Entry) MarshalJSON() ([]byte, error) {
 	j.ChainID = e.ChainID
 	
 	for _, id := range e.ExtIDs {
-		j.ExtIDs = append(j.ExtIDs, hex.EncodeToString(id))
+		j.ExtIDs = append(j.ExtIDs, string(id))
 	}
 	
-	j.Content = hex.EncodeToString(e.Content)
+	j.Content = string(e.Content)
 	
 	return json.Marshal(j)
 }
@@ -240,18 +240,10 @@ func (e *Entry) UnmarshalJSON(data []byte) error {
 	e.ChainID = j.ChainID
 	
 	for _, v := range j.ExtIDs {
-		p, err := hex.DecodeString(v)
-		if err != nil {
-			return err
-		}
-		e.ExtIDs = append(e.ExtIDs, p)
+		e.ExtIDs = append(e.ExtIDs, []byte(v))
 	}
 	
-	c, err := hex.DecodeString(j.Content)
-	if err != nil {
-		return err
-	}
-	e.Content = c
+	e.Content = []byte(j.Content)
 	
 	return nil
 }
