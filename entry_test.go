@@ -60,3 +60,24 @@ func TestComposeEntryReveal(t *testing.T) {
 	
 	t.Log("json:", string(j))
 }
+
+func TestComposeChainCommit(t *testing.T) {
+	pub, pri, err := ed.GenerateKey(rand.Reader)
+	if err != nil {
+		t.Error(err)
+	}
+	
+	e := factom.NewEntry()
+	if err := e.UnmarshalJSON(jsonentry); err != nil {
+		t.Error(err)
+	}
+	
+	c := factom.NewChain(e)
+	
+	j, err := factom.ComposeChainCommit(pub, pri, c)
+	if err != nil {
+		t.Error(err)
+	}
+	
+	t.Log("json:", string(j))
+}

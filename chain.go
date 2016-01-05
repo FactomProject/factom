@@ -12,6 +12,8 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+
+	ed "github.com/agl/ed25519"
 )
 
 type Chain struct {
@@ -108,6 +110,64 @@ func CommitChain(c *Chain, name string) error {
 	}
 
 	return nil
+}
+
+func ComposeChainCommit(pub *[32]byte, pri *[64]byte, c *Chain) ([]byte, error) {
+	type commit struct {
+		CommitChainMsg string
+	}
+
+	buf := new(bytes.Buffer)
+
+	// 1 byte version
+	buf.Write([]byte{0})
+
+	// 6 byte milliTimestamp
+	buf.Write(milliTime())
+
+	e := c.FirstEntry
+
+	// 32 byte ChainID Hash
+	if p, err := hex.DecodeString(c.ChainID); err != nil {
+		return nil, err
+	} else {
+		// double sha256 hash of ChainID
+		buf.Write(shad(p))
+	}
+
+	// 32 byte Weld; sha256(sha256(EntryHash + ChainID))
+	if cid, err := hex.DecodeString(c.ChainID); err != nil {
+		return nil, err
+	} else {
+		s := append(e.Hash(), cid...)
+		buf.Write(shad(s))
+	}
+
+	// 32 byte Entry Hash of the First Entry
+	buf.Write(e.Hash())
+
+	// 1 byte number of Entry Credits to pay
+	if d, err := entryCost(e); err != nil {
+		return nil, err
+	} else {
+		buf.WriteByte(byte(d + 10))
+	}
+	
+	// 32 byte pubkey
+	buf.Write(pub[:])
+	
+	// 64 byte Signature
+	sig := ed.Sign(pri, buf.Bytes())
+	buf.Write(sig[:])
+	
+	com := new(commit)
+	com.CommitChainMsg = hex.EncodeToString(buf.Bytes())
+	j, err := json.Marshal(com)
+	if err != nil {
+		return nil, err
+	}
+	
+	return j, nil
 }
 
 func RevealChain(c *Chain) error {
