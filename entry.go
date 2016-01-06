@@ -103,11 +103,13 @@ func ComposeEntryCommit(pub *[32]byte, pri *[64]byte, e *Entry) ([]byte, error) 
 		buf.WriteByte(byte(c))
 	}
 	
+	// sign the commit
+	sig := ed.Sign(pri, buf.Bytes())
+	
 	// 32 byte Entry Credit Public Key
 	buf.Write(pub[:])
 
 	// 64 byte Signature
-	sig := ed.Sign(pri, buf.Bytes())
 	buf.Write(sig[:])
 	
 	com := new(commit)
