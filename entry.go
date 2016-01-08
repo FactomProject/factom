@@ -292,6 +292,7 @@ func (e *Entry) String() string {
 func (e *Entry) UnmarshalJSON(data []byte) error {
 	type js struct {
 		ChainID string
+		ChainName []string
 		ExtIDs []string
 		Content string
 	}
@@ -302,6 +303,15 @@ func (e *Entry) UnmarshalJSON(data []byte) error {
 	}
 	
 	e.ChainID = j.ChainID
+	
+	if e.ChainID == "" {
+		n := NewEntry()
+		for _, v := range j.ChainName {
+			n.ExtIDs = append(n.ExtIDs, []byte(v))
+		}
+		m := NewChain(n)
+		e.ChainID = m.ChainID
+	}
 	
 	for _, v := range j.ExtIDs {
 		e.ExtIDs = append(e.ExtIDs, []byte(v))

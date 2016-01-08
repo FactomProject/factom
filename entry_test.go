@@ -21,12 +21,28 @@ var jsonentry = []byte(`
 	"Content":"Hello Factom!"
 }`)
 
+var jsonentry2 = []byte(`
+{
+	"ChainName":["foo", "bar"],
+	"ExtIDs":[
+		"foo",
+		"bar"
+	],
+	"Content":"Hello Factom!"
+}`)
+
 func TestUnmarshalJSON(t *testing.T) {
-	e := factom.NewEntry()
-	if err := e.UnmarshalJSON(jsonentry); err != nil {
+	e1 := factom.NewEntry()
+	if err := e1.UnmarshalJSON(jsonentry); err != nil {
 		t.Error(err)
 	}
-	t.Log(e)
+	t.Log(e1)
+
+	e2 := factom.NewEntry()
+	if err := e2.UnmarshalJSON(jsonentry2); err != nil {
+		t.Error(err)
+	}
+	t.Log(e2)
 }
 
 func TestComposeEntryCommit(t *testing.T) {
