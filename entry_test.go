@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"testing"
 
-	ed "github.com/agl/ed25519"
+	ed "github.com/FactomProject/ed25519"
 	"github.com/FactomProject/factom"
 )
 
