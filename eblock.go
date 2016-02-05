@@ -26,7 +26,7 @@ func GetAllEBlockEntries(ebhash string) ([]*Entry, error) {
 		}
 		es = append(es, e)
 	}
-	
+
 	return es, nil
 }
 

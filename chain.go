@@ -152,23 +152,23 @@ func ComposeChainCommit(pub *[32]byte, pri *[64]byte, c *Chain) ([]byte, error) 
 	} else {
 		buf.WriteByte(byte(d + 10))
 	}
-	
+
 	// sign the commit
 	sig := ed.Sign(pri, buf.Bytes())
-	
+
 	// 32 byte pubkey
 	buf.Write(pub[:])
-	
+
 	// 64 byte Signature
 	buf.Write(sig[:])
-	
+
 	com := new(commit)
 	com.CommitChainMsg = hex.EncodeToString(buf.Bytes())
 	j, err := json.Marshal(com)
 	if err != nil {
 		return nil, err
 	}
-	
+
 	return j, nil
 }
 
@@ -245,7 +245,7 @@ func GetAllChainEntries(chainid string) ([]*Entry, error) {
 	if err != nil {
 		return es, err
 	}
-	
+
 	for ebhash := head.ChainHead; ebhash != ZeroHash; {
 		eb, err := GetEBlock(ebhash)
 		if err != nil {
@@ -256,26 +256,26 @@ func GetAllChainEntries(chainid string) ([]*Entry, error) {
 			return es, err
 		}
 		es = append(s, es...)
-		
+
 		ebhash = eb.Header.PrevKeyMR
 	}
-	
+
 	return es, nil
 }
 
 func GetFirstEntry(chainid string) (*Entry, error) {
 	e := NewEntry()
-	
+
 	head, err := GetChainHead(chainid)
 	if err != nil {
 		return e, err
 	}
-	
+
 	eb, err := GetEBlock(head.ChainHead)
 	if err != nil {
 		return e, err
 	}
-	
+
 	for eb.Header.PrevKeyMR != ZeroHash {
 		ebhash := eb.Header.PrevKeyMR
 		eb, err = GetEBlock(ebhash)
@@ -283,6 +283,6 @@ func GetFirstEntry(chainid string) (*Entry, error) {
 			return e, err
 		}
 	}
-	
+
 	return GetEntry(eb.EntryList[0].EntryHash)
 }

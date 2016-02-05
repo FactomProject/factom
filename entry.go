@@ -12,7 +12,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
-	
+
 	ed "github.com/FactomProject/ed25519"
 )
 
@@ -102,23 +102,23 @@ func ComposeEntryCommit(pub *[32]byte, pri *[64]byte, e *Entry) ([]byte, error) 
 	} else {
 		buf.WriteByte(byte(c))
 	}
-	
+
 	// sign the commit
 	sig := ed.Sign(pri, buf.Bytes())
-	
+
 	// 32 byte Entry Credit Public Key
 	buf.Write(pub[:])
 
 	// 64 byte Signature
 	buf.Write(sig[:])
-	
+
 	com := new(commit)
 	com.CommitEntryMsg = hex.EncodeToString(buf.Bytes())
 	j, err := json.Marshal(com)
 	if err != nil {
 		return nil, err
 	}
-	
+
 	return j, nil
 }
 
@@ -138,7 +138,7 @@ func ComposeEntryReveal(e *Entry) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	
+
 	return j, nil
 }
 
@@ -216,7 +216,7 @@ func (e *Entry) MarshalBinary() ([]byte, error) {
 	if err != nil {
 		return buf.Bytes(), err
 	}
-	
+
 	// Header
 
 	// 1 byte Version
@@ -261,20 +261,20 @@ func (e *Entry) MarshalExtIDsBinary() ([]byte, error) {
 func (e *Entry) MarshalJSON() ([]byte, error) {
 	type js struct {
 		ChainID string
-		ExtIDs []string
+		ExtIDs  []string
 		Content string
 	}
-	
+
 	j := new(js)
-	
+
 	j.ChainID = e.ChainID
-	
+
 	for _, id := range e.ExtIDs {
 		j.ExtIDs = append(j.ExtIDs, string(id))
 	}
-	
+
 	j.Content = string(e.Content)
-	
+
 	return json.Marshal(j)
 }
 
@@ -291,19 +291,19 @@ func (e *Entry) String() string {
 
 func (e *Entry) UnmarshalJSON(data []byte) error {
 	type js struct {
-		ChainID string
+		ChainID   string
 		ChainName []string
-		ExtIDs []string
-		Content string
+		ExtIDs    []string
+		Content   string
 	}
-	
+
 	j := new(js)
 	if err := json.Unmarshal(data, j); err != nil {
 		return err
 	}
-	
+
 	e.ChainID = j.ChainID
-	
+
 	if e.ChainID == "" {
 		n := NewEntry()
 		for _, v := range j.ChainName {
@@ -312,13 +312,13 @@ func (e *Entry) UnmarshalJSON(data []byte) error {
 		m := NewChain(n)
 		e.ChainID = m.ChainID
 	}
-	
+
 	for _, v := range j.ExtIDs {
 		e.ExtIDs = append(e.ExtIDs, []byte(v))
 	}
-	
+
 	e.Content = []byte(j.Content)
-	
+
 	return nil
 }
 
@@ -327,24 +327,24 @@ func entryCost(e *Entry) (int8, error) {
 	if err != nil {
 		return 0, err
 	}
-	
+
 	// caulculaate the length exluding the header size 35 for Milestone 1
 	l := len(p) - 35
-	
+
 	if l > 10240 {
 		return 10, fmt.Errorf("Entry cannot be larger than 10KB")
-	}	
-	
+	}
+
 	// n is the capacity of the entry payment in KB
 	r := l % 1024
 	n := int8(l / 1024)
-	
+
 	if r > 0 {
 		n += 1
 	}
-		
+
 	if n < 1 {
 		n = 1
-	}	
-	return n, nil	
+	}
+	return n, nil
 }
