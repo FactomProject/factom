@@ -14,6 +14,7 @@ import (
 	"net/http"
 
 	ed "github.com/FactomProject/ed25519"
+	"github.com/FactomProject/factomd/wsapi"
 )
 
 type Chain struct {
@@ -35,10 +36,6 @@ func NewChain(e *Entry) *Chain {
 	c.FirstEntry.ChainID = c.ChainID
 
 	return c
-}
-
-type ChainHead struct {
-	ChainHead string
 }
 
 // CommitChain sends the signed ChainID, the Entry Hash, and the Entry Credit
@@ -184,58 +181,30 @@ func RevealChain(c *Chain) error {
 		r.Entry = hex.EncodeToString(p)
 	}
 
-	j, err := json.Marshal(r)
+	resp, err := CallV2("reveal-chain", true, r)
 	if err != nil {
 		return err
 	}
 
-	resp, err := http.Post(
-		fmt.Sprintf("http://%s/v1/reveal-chain/", server),
-		"application/json",
-		bytes.NewBuffer(j))
-	if err != nil {
-		return err
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != 200 {
-		p, err := ioutil.ReadAll(resp.Body)
-		if err != nil {
-			return err
-		}
-		return fmt.Errorf(string(p))
+	if resp.Error != nil {
+		return fmt.Errorf(resp.Error.Message)
 	}
 
+	//return resp.Result.(*wsapi.RevealChainResponse)., nil
 	return nil
 }
 
-func GetChainHead(chainid string) (*ChainHead, error) {
-	resp, err := http.Get(
-		fmt.Sprintf("http://%s/v1/chain-head/%s", server, chainid))
+func GetChainHead(chainid string) (string, error) {
+	resp, err := CallV2("chain-head", false, chainid)
 	if err != nil {
-		return nil, err
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != 200 {
-		p, err := ioutil.ReadAll(resp.Body)
-		if err != nil {
-			return nil, err
-		}
-		return nil, fmt.Errorf(string(p))
+		return "", err
 	}
 
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return nil, err
+	if resp.Error != nil {
+		return "", fmt.Errorf(resp.Error.Message)
 	}
 
-	c := new(ChainHead)
-	if err := json.Unmarshal(body, c); err != nil {
-		return nil, err
-	}
-
-	return c, nil
+	return resp.Result.(*wsapi.ChainHeadResponse).ChainHead, nil
 }
 
 func GetAllChainEntries(chainid string) ([]*Entry, error) {
@@ -246,7 +215,7 @@ func GetAllChainEntries(chainid string) ([]*Entry, error) {
 		return es, err
 	}
 
-	for ebhash := head.ChainHead; ebhash != ZeroHash; {
+	for ebhash := head; ebhash != ZeroHash; {
 		eb, err := GetEBlock(ebhash)
 		if err != nil {
 			return es, err
@@ -271,7 +240,7 @@ func GetFirstEntry(chainid string) (*Entry, error) {
 		return e, err
 	}
 
-	eb, err := GetEBlock(head.ChainHead)
+	eb, err := GetEBlock(head)
 	if err != nil {
 		return e, err
 	}

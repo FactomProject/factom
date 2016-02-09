@@ -14,6 +14,7 @@ import (
 	"net/http"
 
 	ed "github.com/FactomProject/ed25519"
+	"github.com/FactomProject/factomd/wsapi"
 )
 
 type Entry struct {
@@ -142,41 +143,28 @@ func ComposeEntryReveal(e *Entry) ([]byte, error) {
 	return j, nil
 }
 
-func RevealEntry(e *Entry) error {
+func RevealEntry(e *Entry) (*wsapi.RevealEntryResponse, error) {
 	type reveal struct {
 		Entry string
 	}
 
 	r := new(reveal)
 	if p, err := e.MarshalBinary(); err != nil {
-		return err
+		return nil, err
 	} else {
 		r.Entry = hex.EncodeToString(p)
 	}
 
-	j, err := json.Marshal(r)
+	resp, err := CallV2("reveal-entry", false, r)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	resp, err := http.Post(
-		fmt.Sprintf("http://%s/v1/reveal-entry/", server),
-		"application/json",
-		bytes.NewBuffer(j))
-	if err != nil {
-		return err
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != 200 {
-		p, err := ioutil.ReadAll(resp.Body)
-		if err != nil {
-			return err
-		}
-		return fmt.Errorf(string(p))
+	if resp.Error != nil {
+		return nil, fmt.Errorf(resp.Error.Message)
 	}
 
-	return nil
+	return resp.Result.(*wsapi.RevealEntryResponse), nil
 }
 
 func GetEntry(hash string) (*Entry, error) {

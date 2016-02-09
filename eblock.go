@@ -5,10 +5,9 @@
 package factom
 
 import (
-	"encoding/json"
 	"fmt"
-	"io/ioutil"
-	"net/http"
+
+	"github.com/FactomProject/factomd/wsapi"
 )
 
 func GetAllEBlockEntries(ebhash string) ([]*Entry, error) {
@@ -30,55 +29,15 @@ func GetAllEBlockEntries(ebhash string) ([]*Entry, error) {
 	return es, nil
 }
 
-type EBlock struct {
-	Header struct {
-		BlockSequenceNumber int
-		ChainID             string
-		PrevKeyMR           string
-		Timestamp           uint64
-	}
-	EntryList []EBEntry
-}
-
-type EBEntry struct {
-	Timestamp int64
-	EntryHash string
-}
-
-func GetEBlock(keymr string) (*EBlock, error) {
-	resp, err := http.Get(
-		fmt.Sprintf("http://%s/v1/entry-block-by-keymr/%s", server, keymr))
+func GetEBlock(keymr string) (*wsapi.EntryBlockResponse, error) {
+	resp, err := CallV2("entry-block-by-keymr", false, keymr)
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return nil, err
-	}
-	if resp.StatusCode != 200 {
-		return nil, fmt.Errorf(string(body))
+
+	if resp.Error != nil {
+		return nil, fmt.Errorf(resp.Error.Message)
 	}
 
-	e := new(EBlock)
-	if err := json.Unmarshal(body, e); err != nil {
-		return nil, err
-	}
-
-	return e, nil
-}
-
-func (e *EBlock) String() string {
-	var s string
-	s += fmt.Sprintln("BlockSequenceNumber:", e.Header.BlockSequenceNumber)
-	s += fmt.Sprintln("ChainID:", e.Header.ChainID)
-	s += fmt.Sprintln("PrevKeyMR:", e.Header.PrevKeyMR)
-	s += fmt.Sprintln("Timestamp:", e.Header.Timestamp)
-	for _, v := range e.EntryList {
-		s += fmt.Sprintln("EBEntry {")
-		s += fmt.Sprintln("	Timestamp", v.Timestamp)
-		s += fmt.Sprintln("	EntryHash", v.EntryHash)
-		s += fmt.Sprintln("}")
-	}
-	return s
+	return resp.Result.(*wsapi.EntryBlockResponse), nil
 }

@@ -9,76 +9,35 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
-	"strconv"
 	"strings"
+
+	"github.com/FactomProject/factomd/wsapi"
 )
 
 func ECBalance(key string) (int64, error) {
-	str := fmt.Sprintf("http://%s/v1/entry-credit-balance/%s", serverFct, key)
-	resp, err := http.Get(str)
+	resp, err := CallV2("entry-credit-balance", false, key)
 	if err != nil {
 		return 0, err
 	}
 
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return 0, err
-	}
-	resp.Body.Close()
-
-	type x struct {
-		Response string
-		Success  bool
-	}
-	b := new(x)
-	if err := json.Unmarshal(body, b); err != nil {
-		return 0, fmt.Errorf("Error getting the balance of %s", key)
+	if resp.Error != nil {
+		return 0, fmt.Errorf(resp.Error.Message)
 	}
 
-	if !b.Success {
-		return 0, fmt.Errorf(b.Response)
-	}
-
-	v, err := strconv.ParseInt(b.Response, 10, 64)
-	if err != nil {
-		return 0, fmt.Errorf("Error getting the balance of %s", key)
-	}
-
-	return v, nil
+	return resp.Result.(*wsapi.EntryCreditBalanceResponse).Balance, nil
 }
 
 func FctBalance(key string) (int64, error) {
-	str := fmt.Sprintf("http://%s/v1/factoid-balance/%s", serverFct, key)
-	resp, err := http.Get(str)
+	resp, err := CallV2("factoid-balance", false, key)
 	if err != nil {
 		return 0, err
 	}
 
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return 0, err
-	}
-	resp.Body.Close()
-
-	type x struct {
-		Response string
-		Success  bool
-	}
-	b := new(x)
-	if err := json.Unmarshal(body, b); err != nil {
-		return 0, fmt.Errorf("Error getting the balance of %s", key)
+	if resp.Error != nil {
+		return 0, fmt.Errorf(resp.Error.Message)
 	}
 
-	if !b.Success {
-		return 0, fmt.Errorf(b.Response)
-	}
-
-	v, err := strconv.ParseInt(b.Response, 10, 64)
-	if err != nil {
-		return 0, fmt.Errorf("Error getting the balance of %s", key)
-	}
-
-	return v, nil
+	return resp.Result.(*wsapi.FactoidBalanceResponse).Balance, nil
 }
 
 func GenerateFactoidAddress(name string) (string, error) {

@@ -9,7 +9,14 @@ import (
 	"crypto/sha256"
 	"crypto/sha512"
 	"encoding/binary"
+	"encoding/json"
+	"fmt"
+	"io/ioutil"
+	"net/http"
+	"strings"
 	"time"
+
+	"github.com/FactomProject/factomd/common/primitives"
 )
 
 const (
@@ -57,4 +64,50 @@ func sha52(data []byte) []byte {
 	h1 := sha512.Sum512(data)
 	h2 := sha256.Sum256(append(h1[:], data...))
 	return h2[:]
+}
+
+func CallV2(method string, post bool, params interface{}) (*primitives.JSON2Response, error) {
+	j := primitives.NewJSON2RequestBlank()
+	j.Method = method
+	j.Params = params
+	j.ID = 1
+
+	postGet := "GET"
+	if post == true {
+		postGet = "POST"
+	}
+
+	address := fmt.Sprintf("http://%s/v2", server)
+
+	data, err := j.JSONString()
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(postGet, address, strings.NewReader(data))
+	if err != nil {
+		return nil, err
+	}
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, err
+	}
+
+	defer resp.Body.Close()
+
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	jResp := new(primitives.JSON2Response)
+
+	err = json.Unmarshal(body, jResp)
+	if err != nil {
+		return nil, err
+	}
+
+	return jResp, nil
 }

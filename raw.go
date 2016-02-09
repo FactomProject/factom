@@ -2,37 +2,22 @@ package factom
 
 import (
 	"encoding/hex"
-	"encoding/json"
 	"fmt"
-	"io/ioutil"
-	"net/http"
+
+	"github.com/FactomProject/factomd/wsapi"
 )
 
-type Data struct {
-	Data string
-}
-
 func GetRaw(keymr string) ([]byte, error) {
-	resp, err := http.Get(
-		fmt.Sprintf("http://%s/v1/get-raw-data/%s", server, keymr))
+	resp, err := CallV2("get-raw-data", false, keymr)
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return nil, err
-	}
-	if resp.StatusCode != 200 {
-		return nil, fmt.Errorf(string(body))
+
+	if resp.Error != nil {
+		return nil, fmt.Errorf(resp.Error.Message)
 	}
 
-	d := new(Data)
-	if err := json.Unmarshal(body, d); err != nil {
-		return nil, err
-	}
-
-	raw, err := hex.DecodeString(d.Data)
+	raw, err := hex.DecodeString(resp.Result.(*wsapi.GetRawDataResponse).Data)
 	if err != nil {
 		return nil, err
 	}
