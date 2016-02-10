@@ -17,12 +17,6 @@ import (
 	"github.com/FactomProject/factomd/wsapi"
 )
 
-type Entry struct {
-	ChainID string
-	ExtIDs  [][]byte
-	Content []byte
-}
-
 func NewEntry() *Entry {
 	e := new(Entry)
 
@@ -168,27 +162,28 @@ func RevealEntry(e *Entry) (*wsapi.RevealEntryResponse, error) {
 }
 
 func GetEntry(hash string) (*Entry, error) {
-	resp, err := http.Get(
-		fmt.Sprintf("http://%s/v1/entry-by-hash/%s", server, hash))
+	resp, err := CallV2("entry-by-hash", false, hash)
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return nil, err
-	}
-	if resp.StatusCode != 200 {
-		return nil, fmt.Errorf(string(body))
+
+	if resp.Error != nil {
+		return nil, fmt.Errorf(resp.Error.Message)
 	}
 
-	e := new(Entry)
-	if err := json.Unmarshal(body, e); err != nil {
-		return nil, err
-	}
-
-	return e, nil
+	return resp.Result.(*Entry), nil
 }
+
+/**************************************************************************************/
+
+type Entry wsapi.EntryResponse
+
+/*
+type Entry struct {
+	ChainID string
+	ExtIDs  [][]byte
+	Content []byte
+}*/
 
 func (e *Entry) Hash() []byte {
 	a, err := e.MarshalBinary()
@@ -228,7 +223,7 @@ func (e *Entry) MarshalBinary() ([]byte, error) {
 	buf.Write(ids)
 
 	// Content
-	buf.Write(e.Content)
+	buf.Write([]byte(e.Content))
 
 	return buf.Bytes(), nil
 }
@@ -240,7 +235,7 @@ func (e *Entry) MarshalExtIDsBinary() ([]byte, error) {
 		// 2 byte length of extid
 		binary.Write(buf, binary.BigEndian, int16(len(v)))
 		// extid
-		buf.Write(v)
+		buf.Write([]byte(v))
 	}
 
 	return buf.Bytes(), nil
@@ -258,10 +253,10 @@ func (e *Entry) MarshalJSON() ([]byte, error) {
 	j.ChainID = e.ChainID
 
 	for _, id := range e.ExtIDs {
-		j.ExtIDs = append(j.ExtIDs, string(id))
+		j.ExtIDs = append(j.ExtIDs, id)
 	}
 
-	j.Content = string(e.Content)
+	j.Content = e.Content
 
 	return json.Marshal(j)
 }
@@ -270,10 +265,10 @@ func (e *Entry) String() string {
 	var s string
 	s += fmt.Sprintln("ChainID:", e.ChainID)
 	for _, id := range e.ExtIDs {
-		s += fmt.Sprintln("ExtID:", string(id))
+		s += fmt.Sprintln("ExtID:", id)
 	}
 	s += fmt.Sprintln("Content:")
-	s += fmt.Sprintln(string(e.Content))
+	s += fmt.Sprintln(e.Content)
 	return s
 }
 
@@ -295,17 +290,17 @@ func (e *Entry) UnmarshalJSON(data []byte) error {
 	if e.ChainID == "" {
 		n := NewEntry()
 		for _, v := range j.ChainName {
-			n.ExtIDs = append(n.ExtIDs, []byte(v))
+			n.ExtIDs = append(n.ExtIDs, v)
 		}
 		m := NewChain(n)
 		e.ChainID = m.ChainID
 	}
 
 	for _, v := range j.ExtIDs {
-		e.ExtIDs = append(e.ExtIDs, []byte(v))
+		e.ExtIDs = append(e.ExtIDs, v)
 	}
 
-	e.Content = []byte(j.Content)
+	e.Content = j.Content
 
 	return nil
 }

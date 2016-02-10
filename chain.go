@@ -29,7 +29,7 @@ func NewChain(e *Entry) *Chain {
 	// create the chainid from a series of hashes of the Entries ExtIDs
 	hs := sha256.New()
 	for _, id := range e.ExtIDs {
-		h := sha256.Sum256(id)
+		h := sha256.Sum256([]byte(id))
 		hs.Write(h[:])
 	}
 	c.ChainID = hex.EncodeToString(hs.Sum(nil))
