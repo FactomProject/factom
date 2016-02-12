@@ -6,31 +6,20 @@ import (
 	"github.com/FactomProject/factomd/wsapi"
 )
 
-/*
+
 func GetDBlockHeight() (int, error) {
-	resp, err := http.Get(
-		fmt.Sprintf("http://%s/v1/directory-block-height/", server))
+	resp, err := CallV2("directory-block-height", false, nil)
 	if err != nil {
 		return 0, err
-	}
-	defer resp.Body.Close()
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return 0, err
-	}
-	if resp.StatusCode != 200 {
-		return 0, fmt.Errorf(string(body))
-	}
-	type dbh struct {
-		Height int
-	}
-	d := new(dbh)
-	if err := json.Unmarshal(body, d); err != nil {
-		return 0, fmt.Errorf("%s: %s\n", err, body)
 	}
 
-	return d.Height, nil
-}*/
+	if resp.Error != nil {
+		return 0, fmt.Errorf(resp.Error.Message)
+	}
+
+	return int(resp.Result.(*wsapi.DirectoryBlockHeightResponse).Height), nil
+}
+
 /*
 type DBlock struct {
 	DBHash string
