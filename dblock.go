@@ -6,7 +6,6 @@ import (
 	"github.com/FactomProject/factomd/wsapi"
 )
 
-
 func GetDBlockHeight() (int, error) {
 	resp, err := CallV2("directory-block-height", false, nil)
 	if err != nil {
