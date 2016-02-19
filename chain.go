@@ -204,6 +204,10 @@ func GetChainHead(chainid string) (string, error) {
 		return "", fmt.Errorf(resp.Error.Message)
 	}
 
+	if resp.Result == nil {
+		return "",fmt.Errorf("Chain Undefined")
+	}
+	
 	return resp.Result.(*wsapi.ChainHeadResponse).ChainHead, nil
 }
 
