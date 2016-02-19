@@ -181,7 +181,7 @@ func RevealChain(c *Chain) error {
 		r.Entry = hex.EncodeToString(p)
 	}
 
-	resp, err := CallV2("reveal-chain", true, r)
+	resp, err := CallV2("reveal-chain", true, r, new(wsapi.RevealChainResponse))
 	if err != nil {
 		return err
 	}
@@ -195,7 +195,7 @@ func RevealChain(c *Chain) error {
 }
 
 func GetChainHead(chainid string) (string, error) {
-	resp, err := CallV2("chain-head", false, chainid)
+	resp, err := CallV2("chain-head", false, chainid, new(wsapi.ChainHeadResponse))
 	if err != nil {
 		return "", err
 	}
@@ -205,9 +205,9 @@ func GetChainHead(chainid string) (string, error) {
 	}
 
 	if resp.Result == nil {
-		return "",fmt.Errorf("Chain Undefined")
+		return "", fmt.Errorf("Chain Undefined")
 	}
-	
+
 	return resp.Result.(*wsapi.ChainHeadResponse).ChainHead, nil
 }
 

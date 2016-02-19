@@ -15,7 +15,7 @@ import (
 )
 
 func ECBalance(key string) (int64, error) {
-	resp, err := CallV2("entry-credit-balance", false, key)
+	resp, err := CallV2("entry-credit-balance", false, key, new(wsapi.EntryCreditBalanceResponse))
 	if err != nil {
 		return 0, err
 	}
@@ -28,7 +28,7 @@ func ECBalance(key string) (int64, error) {
 }
 
 func FctBalance(key string) (int64, error) {
-	resp, err := CallV2("factoid-balance", false, key)
+	resp, err := CallV2("factoid-balance", false, key, new(wsapi.FactoidBalanceResponse))
 	if err != nil {
 		return 0, err
 	}

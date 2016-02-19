@@ -8,7 +8,7 @@ import (
 )
 
 func GetRaw(keymr string) ([]byte, error) {
-	resp, err := CallV2("get-raw-data", false, keymr)
+	resp, err := CallV2("get-raw-data", false, keymr, new(wsapi.GetRawDataResponse))
 	if err != nil {
 		return nil, err
 	}

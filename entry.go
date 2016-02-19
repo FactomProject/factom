@@ -149,7 +149,7 @@ func RevealEntry(e *Entry) (*wsapi.RevealEntryResponse, error) {
 		r.Entry = hex.EncodeToString(p)
 	}
 
-	resp, err := CallV2("reveal-entry", false, r)
+	resp, err := CallV2("reveal-entry", false, r, new(wsapi.RevealEntryResponse))
 	if err != nil {
 		return nil, err
 	}
@@ -162,7 +162,7 @@ func RevealEntry(e *Entry) (*wsapi.RevealEntryResponse, error) {
 }
 
 func GetEntry(hash string) (*Entry, error) {
-	resp, err := CallV2("entry-by-hash", false, hash)
+	resp, err := CallV2("entry-by-hash", false, hash, new(Entry))
 	if err != nil {
 		return nil, err
 	}

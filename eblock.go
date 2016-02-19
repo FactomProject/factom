@@ -30,7 +30,7 @@ func GetAllEBlockEntries(ebhash string) ([]*Entry, error) {
 }
 
 func GetEBlock(keymr string) (*wsapi.EntryBlockResponse, error) {
-	resp, err := CallV2("entry-block-by-keymr", false, keymr)
+	resp, err := CallV2("entry-block-by-keymr", false, keymr, new(wsapi.EntryBlockResponse))
 	if err != nil {
 		return nil, err
 	}

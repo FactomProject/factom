@@ -7,7 +7,7 @@ import (
 )
 
 func GetDBlockHeight() (int, error) {
-	resp, err := CallV2("directory-block-height", false, nil)
+	resp, err := CallV2("directory-block-height", false, nil, new(wsapi.DirectoryBlockHeightResponse))
 	if err != nil {
 		return 0, err
 	}
@@ -36,7 +36,7 @@ type DBlock struct {
 */
 
 func GetDBlock(keymr string) (*wsapi.DirectoryBlockResponse, error) {
-	resp, err := CallV2("directory-block-by-keymr", false, keymr)
+	resp, err := CallV2("directory-block-by-keymr", false, keymr, new(wsapi.DirectoryBlockResponse))
 	if err != nil {
 		return nil, err
 	}
@@ -49,7 +49,7 @@ func GetDBlock(keymr string) (*wsapi.DirectoryBlockResponse, error) {
 }
 
 func GetDBlockHead() (string, error) {
-	resp, err := CallV2("directory-block-head", false, nil)
+	resp, err := CallV2("directory-block-head", false, nil, new(wsapi.DirectoryBlockHeadResponse))
 	if err != nil {
 		return "", err
 	}

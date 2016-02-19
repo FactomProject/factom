@@ -66,7 +66,7 @@ func sha52(data []byte) []byte {
 	return h2[:]
 }
 
-func CallV2(method string, post bool, params interface{}) (*primitives.JSON2Response, error) {
+func CallV2(method string, post bool, params interface{}, dst interface{}) (*primitives.JSON2Response, error) {
 	j := primitives.NewJSON2RequestBlank()
 	j.Method = method
 	j.Params = params
@@ -103,6 +103,9 @@ func CallV2(method string, post bool, params interface{}) (*primitives.JSON2Resp
 	}
 
 	jResp := new(primitives.JSON2Response)
+	jResp.Result = dst
+
+	//fmt.Printf("resp body - %v\n", string(body))
 
 	err = json.Unmarshal(body, jResp)
 	if err != nil {
