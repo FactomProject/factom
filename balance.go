@@ -60,6 +60,9 @@ func GenerateFactoidAddress(name string) (string, error) {
 		Response string
 		Success  bool
 	}
+	
+	fmt.Println(body)
+	
 	b := new(x)
 	if err := json.Unmarshal(body, b); err != nil {
 		return "", fmt.Errorf("Error attempting to create %s - %v", name, err)
@@ -92,6 +95,9 @@ func GenerateEntryCreditAddress(name string) (string, error) {
 		Response string
 		Success  bool
 	}
+
+	fmt.Println(string(body))
+	
 	b := new(x)
 	if err := json.Unmarshal(body, b); err != nil {
 		return "", fmt.Errorf("Error attempting to create %s - %v", name, err)
