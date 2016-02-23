@@ -6,15 +6,11 @@ import (
 	"io"
 	"log"
 	"strings"
-	//	"io/ioutil"
-	//	"net/http"
-	//	"strconv"
 	"testing"
 
 	"github.com/FactomProject/FactomCode/database"
 	"github.com/FactomProject/FactomCode/database/ldb"
-	"github.com/FactomProject/btcd/wire"
-	//	"github.com/FactomProject/FactomCode/wsapi"
+	"github.com/FactomProject/FactomCode/wire"
 )
 
 /*******************************************************************************
