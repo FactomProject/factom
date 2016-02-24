@@ -21,8 +21,19 @@ var (
 	serverFct = "localhost:8089"
 )
 
+// SetServer sets the gloabal target for the factomd server
 func SetServer(s string) {
 	server = s
+}
+
+// SetWallet sets the global target for the fctwallet server
+func SetWallet(s string) {
+	serverFct = s
+}
+
+// Server() returns the global server string for debugging
+func Server() string {
+	return server
 }
 
 // milliTime returns a 6 byte slice representing the unix time in milliseconds

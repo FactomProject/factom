@@ -12,6 +12,8 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+
+	ed "github.com/FactomProject/ed25519"
 )
 
 type Chain struct {
@@ -26,8 +28,7 @@ func NewChain(e *Entry) *Chain {
 	// create the chainid from a series of hashes of the Entries ExtIDs
 	hs := sha256.New()
 	for _, id := range e.ExtIDs {
-		p, _ := hex.DecodeString(id)
-		h := sha256.Sum256(p)
+		h := sha256.Sum256(id)
 		hs.Write(h[:])
 	}
 	c.ChainID = hex.EncodeToString(hs.Sum(nil))
@@ -111,6 +112,66 @@ func CommitChain(c *Chain, name string) error {
 	return nil
 }
 
+func ComposeChainCommit(pub *[32]byte, pri *[64]byte, c *Chain) ([]byte, error) {
+	type commit struct {
+		CommitChainMsg string
+	}
+
+	buf := new(bytes.Buffer)
+
+	// 1 byte version
+	buf.Write([]byte{0})
+
+	// 6 byte milliTimestamp
+	buf.Write(milliTime())
+
+	e := c.FirstEntry
+
+	// 32 byte ChainID Hash
+	if p, err := hex.DecodeString(c.ChainID); err != nil {
+		return nil, err
+	} else {
+		// double sha256 hash of ChainID
+		buf.Write(shad(p))
+	}
+
+	// 32 byte Weld; sha256(sha256(EntryHash + ChainID))
+	if cid, err := hex.DecodeString(c.ChainID); err != nil {
+		return nil, err
+	} else {
+		s := append(e.Hash(), cid...)
+		buf.Write(shad(s))
+	}
+
+	// 32 byte Entry Hash of the First Entry
+	buf.Write(e.Hash())
+
+	// 1 byte number of Entry Credits to pay
+	if d, err := entryCost(e); err != nil {
+		return nil, err
+	} else {
+		buf.WriteByte(byte(d + 10))
+	}
+
+	// sign the commit
+	sig := ed.Sign(pri, buf.Bytes())
+
+	// 32 byte pubkey
+	buf.Write(pub[:])
+
+	// 64 byte Signature
+	buf.Write(sig[:])
+
+	com := new(commit)
+	com.CommitChainMsg = hex.EncodeToString(buf.Bytes())
+	j, err := json.Marshal(com)
+	if err != nil {
+		return nil, err
+	}
+
+	return j, nil
+}
+
 func RevealChain(c *Chain) error {
 	type reveal struct {
 		Entry string
@@ -184,7 +245,7 @@ func GetAllChainEntries(chainid string) ([]*Entry, error) {
 	if err != nil {
 		return es, err
 	}
-	
+
 	for ebhash := head.ChainHead; ebhash != ZeroHash; {
 		eb, err := GetEBlock(ebhash)
 		if err != nil {
@@ -195,26 +256,26 @@ func GetAllChainEntries(chainid string) ([]*Entry, error) {
 			return es, err
 		}
 		es = append(s, es...)
-		
+
 		ebhash = eb.Header.PrevKeyMR
 	}
-	
+
 	return es, nil
 }
 
 func GetFirstEntry(chainid string) (*Entry, error) {
 	e := NewEntry()
-	
+
 	head, err := GetChainHead(chainid)
 	if err != nil {
 		return e, err
 	}
-	
+
 	eb, err := GetEBlock(head.ChainHead)
 	if err != nil {
 		return e, err
 	}
-	
+
 	for eb.Header.PrevKeyMR != ZeroHash {
 		ebhash := eb.Header.PrevKeyMR
 		eb, err = GetEBlock(ebhash)
@@ -222,9 +283,6 @@ func GetFirstEntry(chainid string) (*Entry, error) {
 			return e, err
 		}
 	}
-	if len(eb.EntryList) > 1 {
-		return e, fmt.Errorf("Processing Error: More than 1 Entry in the first Bnery Block (this shouldn't happen!)")
-	}
-	
+
 	return GetEntry(eb.EntryList[0].EntryHash)
 }
