@@ -82,43 +82,15 @@ func FctBalance(key string) (int64, error) {
 }
 
 func DnsBalance(addr string) (int64, int64, error) {
-	str := fmt.Sprintf("http://%s/v1/resolve-address/%s", serverFct, addr)
-	resp, err := http.Get(str)
+	fct, ec, err := ResolveDnsName(addr)
 	if err != nil {
 		return 0, 0, err
 	}
 
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return 0, 0, err
-	}
-	resp.Body.Close()
-
-	type x struct {
-		Response string
-		Success  bool
-	}
-	a := new(x)
-	if err := json.Unmarshal(body, a); err != nil {
-		return 0, 0, fmt.Errorf("Error getting the balance of %s", addr)
-	}
-
-	if !a.Success {
-		return 0, 0, fmt.Errorf(a.Response)
-	}
-
-	type y struct {
-		Fct, Ec string
-	}
-	b := new(y)
-	if err := json.Unmarshal([]byte(a.Response), b); err != nil {
-		return 0, 0, fmt.Errorf("Error getting the balance of %s", addr)
-	}
-	
-	f, err1 := FctBalance(b.Fct)
-	e, err2 := ECBalance(b.Ec)
+	f, err1 := FctBalance(fct)
+	e, err2 := ECBalance(ec)
 	if err1 != nil || err2 != nil {
-		return f, e, err1
+		return f, e, fmt.Errorf("%s\n%s\n", err1, err2)
 	}
 
 	return f, e, nil
