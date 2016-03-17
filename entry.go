@@ -315,13 +315,16 @@ func (e *Entry) UnmarshalJSON(data []byte) error {
 
 	for _, v := range j.ExtIDs {
 		if p, err := hex.DecodeString(v); err != nil {
-			break
+			return err
 		} else {
 			e.ExtIDs = append(e.ExtIDs, p)
 		}
 	}
 
-	p, _ := hex.DecodeString(j.Content)
+	p, err := hex.DecodeString(j.Content)
+	if err != nil {
+		return err
+	}
 	e.Content = p
 
 	return nil
