@@ -78,7 +78,7 @@ func FctBalance(key string) (int64, error) {
 		return 0, fmt.Errorf("Error getting the balance of %s", key)
 	}
 
-	return v/1e8, nil
+	return v, nil
 }
 
 func DnsBalance(addr string) (int64, int64, error) {
