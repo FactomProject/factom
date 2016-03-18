@@ -10,7 +10,7 @@ import (
 var (
 	s = fmt.Sprint("testing")
 	badAddr = "bad.factom.bit"
-//	goodAddr = "michael.factom.bit"
+	goodAddr = "factom.michaeljbeam.me"
 )
 
 func TestDnsBalance(t *testing.T) {
@@ -20,9 +20,9 @@ func TestDnsBalance(t *testing.T) {
 		t.Errorf("bad address %s did not return error", badAddr)
 	}
 	
-//	f2, e2, err2 := DnsBalance(goodAddr)
-//	t.Logf("fct: %d\nec: %d\n", f2, e2)
-//	if err2 != nil {
-//		t.Error(err)
-//	}
+	f2, e2, err2 := DnsBalance(goodAddr)
+	t.Logf("fct: %d\nec: %d\n", f2, e2)
+	if err2 != nil {
+		t.Error(err2)
+	}
 }
