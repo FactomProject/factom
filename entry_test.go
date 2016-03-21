@@ -23,12 +23,12 @@ var jsonentry = []byte(`
 
 var jsonentry2 = []byte(`
 {
-	"ChainName":["foo", "bar"],
+	"ChainName":["aaaa", "bbbb"],
 	"ExtIDs":[
-		"foo",
-		"bar"
+		"cccc",
+		"dddd"
 	],
-	"Content":"Hello Factom!"
+	"Content":"111111111111111111"
 }`)
 
 func TestUnmarshalJSON(t *testing.T) {

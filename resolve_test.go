@@ -17,5 +17,5 @@ func TestResolveDnsName(t *testing.T) {
 	if err2 == nil {
 		t.Errorf("bad address %s did not return error", badAddr)
 	}
-	t.Logf("fct: %d\nec: %d\n", f2, e2)
+	t.Logf("fct: %s\nec: %s\n", f2, e2)
 }
