@@ -270,10 +270,10 @@ func (e *Entry) MarshalJSON() ([]byte, error) {
 	j.ChainID = e.ChainID
 
 	for _, id := range e.ExtIDs {
-		j.ExtIDs = append(j.ExtIDs, string(id))
+		j.ExtIDs = append(j.ExtIDs, hex.EncodeToString(id))
 	}
 
-	j.Content = string(e.Content)
+	j.Content = hex.EncodeToString(e.Content)
 
 	return json.Marshal(j)
 }
@@ -307,17 +307,29 @@ func (e *Entry) UnmarshalJSON(data []byte) error {
 	if e.ChainID == "" {
 		n := NewEntry()
 		for _, v := range j.ChainName {
-			n.ExtIDs = append(n.ExtIDs, []byte(v))
+			if p, err := hex.DecodeString(v); err != nil {
+				return fmt.Errorf("Could not decode ChainName %s: %s", v, err)
+			} else {
+				n.ExtIDs = append(n.ExtIDs, p)
+			}
 		}
 		m := NewChain(n)
 		e.ChainID = m.ChainID
 	}
 
 	for _, v := range j.ExtIDs {
-		e.ExtIDs = append(e.ExtIDs, []byte(v))
+		if p, err := hex.DecodeString(v); err != nil {
+			return fmt.Errorf("Could not decode ExtID %s: %s", v, err)
+		} else {
+			e.ExtIDs = append(e.ExtIDs, p)
+		}
 	}
 
-	e.Content = []byte(j.Content)
+	p, err := hex.DecodeString(j.Content)
+	if err != nil {
+		return fmt.Errorf("Could not decode Content %s: %s", j.Content, err)
+	}
+	e.Content = p
 
 	return nil
 }
