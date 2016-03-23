@@ -14,17 +14,17 @@ import (
 func ResolveDnsName(addr string) (fct, ec string, err error) {
 	resp, err := http.Get(
 		fmt.Sprintf("http://%s/v1/resolve-address/%s",
-		serverFct,
-		addr))
+			serverFct,
+			addr))
 	if err != nil {
 		return
 	}
-	
+
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		return
 	}
-	
+
 	type x struct {
 		Response string
 		Success  bool
@@ -45,6 +45,6 @@ func ResolveDnsName(addr string) (fct, ec string, err error) {
 	if err = json.Unmarshal([]byte(a.Response), b); err != nil {
 		return
 	}
-	
+
 	return b.Fct, b.Ec, nil
 }
