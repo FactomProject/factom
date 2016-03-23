@@ -40,6 +40,21 @@ func FctBalance(key string) (int64, error) {
 	return resp.Result.(*wsapi.FactoidBalanceResponse).Balance, nil
 }
 
+func DnsBalance(addr string) (int64, int64, error) {
+	fct, ec, err := ResolveDnsName(addr)
+	if err != nil {
+		return 0, 0, err
+	}
+
+	f, err1 := FctBalance(fct)
+	e, err2 := ECBalance(ec)
+	if err1 != nil || err2 != nil {
+		return f, e, fmt.Errorf("%s\n%s\n", err1, err2)
+	}
+
+	return f, e, nil
+}
+
 func GenerateFactoidAddress(name string) (string, error) {
 	name = strings.TrimSpace(name)
 

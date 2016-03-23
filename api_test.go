@@ -6,9 +6,6 @@ import (
 	"io"
 	"log"
 	"strings"
-	//	"io/ioutil"
-	//	"net/http"
-	//	"strconv"
 	"testing"
 
 	"github.com/FactomProject/btcd/wire"
