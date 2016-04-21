@@ -30,4 +30,15 @@ func TestNewJSON2Request(t *testing.T) {
 	} else {
 		t.Log(string(p))
 	}
+	
+	x3 := NewEntry()
+	x3.ChainID = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+	x3.ExtIDs = append(x3.ExtIDs, []byte("test01"))
+	x3.Content = []byte("hello factom")
+	j3 := NewJSON2Request("testing", counter(), x3)
+	if p, err := json.Marshal(j3); err != nil {
+		t.Error(err)
+	} else {
+		t.Log(string(p))
+	}
 }

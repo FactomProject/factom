@@ -55,7 +55,7 @@ func shad(data []byte) []byte {
 	return h2[:]
 }
 
-// sha52
+// sha52 Sha512+Sha256 Hash; sha256(sha512(data)+data)
 func sha52(data []byte) []byte {
 	h1 := sha512.Sum512(data)
 	h2 := sha256.Sum256(append(h1[:], data...))
