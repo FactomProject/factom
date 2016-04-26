@@ -25,13 +25,13 @@ func TestUnmarshalJSON(t *testing.T) {
 		"Content":"111111111111111111"
 	}`)
 	
-	e1 := NewEntry()
+	e1 := new(Entry)
 	if err := e1.UnmarshalJSON(jsonentry1); err != nil {
 		t.Error(err)
 	}
 	t.Log(e1)
 
-	e2 := NewEntry()
+	e2 := new(Entry)
 	if err := e2.UnmarshalJSON(jsonentry2); err != nil {
 		t.Error(err)
 	}

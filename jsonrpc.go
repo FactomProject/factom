@@ -18,6 +18,14 @@ type JSONError struct {
 	Data    interface{} `json:"data,omitempty"`
 }
 
+func (j *JSONError) Error() string {
+	s := fmt.Sprint(j.Message)
+	if j.Data != nil {
+		s += fmt.Sprint(": ", j.Data)
+	}
+	return s
+}
+
 type JSON2Request struct {
 	JSONRPC string      `json:"jsonrpc"`
 	ID      interface{} `json:"id"`
@@ -82,3 +90,5 @@ func newCounter() func() int {
 		return count
 	}
 }
+
+var apiCounter = newCounter()

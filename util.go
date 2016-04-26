@@ -9,14 +9,13 @@ import (
 	"crypto/sha256"
 	"crypto/sha512"
 	"encoding/binary"
+	"fmt"
 	"time"
 )
 
 var (
 	factomdServer = "localhost:8088"
 	walletServer  = "localhost:8089"
-	
-	counter = newCounter()
 )
 
 // SetFactomdServer sets the gloabal target for the factomd server
@@ -60,4 +59,30 @@ func sha52(data []byte) []byte {
 	h1 := sha512.Sum512(data)
 	h2 := sha256.Sum256(append(h1[:], data...))
 	return h2[:]
+}
+
+func entryCost(e *Entry) (int8, error) {
+	p, err := e.MarshalBinary()
+	if err != nil {
+		return 0, err
+	}
+
+	// caulculate the length exluding the header size 35 for Milestone 1
+	l := len(p) - 35
+
+	if l > 10240 {
+		return 10, fmt.Errorf("Entry cannot be larger than 10KB")
+	}
+
+	// n is the capacity of the entry payment in KB
+	n := int8(l / 1024)
+
+	if r := l % 1024; r > 0 {
+		n += 1
+	}
+
+	if n < 1 {
+		n = 1
+	}
+	return n, nil
 }
