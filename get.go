@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 )
 
+// GetDBlock requests a Directory Block from factomd by its Key Merkel Root
 func GetDBlock(keymr string) (*DBlock, error) {
 	req := NewJSON2Request("directory-block-by-keymr", apiCounter(), keymr)
 	resp, err := factomdRequest(req)
@@ -39,6 +40,7 @@ func GetDBlock(keymr string) (*DBlock, error) {
 //	return resp.Result.KeyMR, nil
 //}
 
+// GetEntry requests an Entry from factomd by its Entry Hash
 func GetEntry(hash string) (*Entry, error) {
 	req := NewJSON2Request("entry-by-hash", apiCounter(), hash)
 	resp, err := factomdRequest(req)
@@ -57,6 +59,7 @@ func GetEntry(hash string) (*Entry, error) {
 	return e, nil
 }
 
+// GetAllEBlockEntries requests every Entry in a specific Entry Block
 func GetAllEBlockEntries(keymr string) ([]*Entry, error) {
 	es := make([]*Entry, 0)
 
@@ -76,6 +79,7 @@ func GetAllEBlockEntries(keymr string) ([]*Entry, error) {
 	return es, nil
 }
 
+// GetEBlock requests an Entry Block from factomd by its Key Merkel Root
 func GetEBlock(keymr string) (*EBlock, error) {
 	req := NewJSON2Request("entry-block-by-keymr", apiCounter(), keymr)
 	resp, err := factomdRequest(req)
