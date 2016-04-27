@@ -43,10 +43,10 @@ func NewJSON2Request(method string, id, params interface{}) *JSON2Request {
 }
 
 type JSON2Response struct {
-	JSONRPC string      `json:"jsonrpc"`
-	ID      interface{} `json:"id"`
-	Error   *JSONError  `json:"error,omitempty"`
-	Result  interface{} `json:"result,omitempty"`
+	JSONRPC string          `json:"jsonrpc"`
+	ID      interface{}     `json:"id"`
+	Error   *JSONError      `json:"error,omitempty"`
+	Result  json.RawMessage `json:"result,omitempty"`
 }
 
 func NewJSON2Response() *JSON2Response {

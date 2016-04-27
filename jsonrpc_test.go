@@ -44,44 +44,20 @@ func TestNewJSON2Request(t *testing.T) {
 }
 
 func TestJSON2Response(t *testing.T) {
-	j1 := []byte(`{"jsonrpc":"2.0","id":1,"result":{"A":1,"B":"hello"}}`)
-	j2 := []byte(`{"jsonrpc":"2.0","id":2,"result":"hello"}`)
-	j3 := []byte(`{"jsonrpc":"2.0","id":3,"result":{"ChainID":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","ExtIDs":["746573743031"],"Content":"68656c6c6f20666163746f6d"},"method":"testing"}`)
-	j4 := []byte(`{"jsonrpc":"2.0","id":4,"error": {"code": -4, "message": "Method not found"},"result":{"A":1,"B":"hello"}}`)
+	j1 := []byte(`{"jsonrpc":"2.0","id":2,"result":"hello"}`)
+	j2 := []byte(`{"jsonrpc":"2.0","id":3,"result":{"ChainID":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","ExtIDs":["746573743031"],"Content":"68656c6c6f20666163746f6d"},"method":"testing"}`)
 
 	resp := NewJSON2Response()
 	if err := json.Unmarshal(j1, resp); err != nil {
 		t.Error(err)
 	}
-	t.Log(resp.Result)
+	t.Log(string(resp.Result))
 
 	resp = NewJSON2Response()
 	if err := json.Unmarshal(j2, resp); err != nil {
 		t.Error(err)
 	}
-	t.Log(resp.Result)
-
-	resp = NewJSON2Response()
-	if err := json.Unmarshal(j3, resp); err != nil {
-		t.Error(err)
-	}
 	e := new(Entry)
-	if p, err := json.Marshal(resp.Result); err != nil {
-		t.Error(err)
-	} else {
-		if err := e.UnmarshalJSON(p); err != nil {
-			t.Error(err)
-		}
-	}
+	e.UnmarshalJSON(resp.Result)
 	t.Log(e)
-
-	resp = NewJSON2Response()
-	if err := json.Unmarshal(j4, resp); err != nil {
-		t.Error(err)
-	}
-	if resp.Error != nil {
-		t.Log(resp.Error)
-	} else {
-		t.Error("Expecting Error but no error found!", resp)
-	}
 }

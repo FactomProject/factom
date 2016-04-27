@@ -17,10 +17,13 @@ func GetDBlock(keymr string) (*DBlock, error) {
 	if resp.Error != nil {
 		return nil, resp.Error
 	}
-	
-	dblock := resp.Result.(*DBlock)
 
-	return dblock, nil
+	db := new(DBlock)
+	if err := json.Unmarshal(resp.Result, db); err != nil {
+		return nil, err
+	}
+
+	return db, nil
 }
 
 //func GetDBlockHead() (string, error) {
@@ -45,15 +48,12 @@ func GetEntry(hash string) (*Entry, error) {
 	if resp.Error != nil {
 		return nil, resp.Error
 	}
-	
+
 	e := new(Entry)
-	if p, err := json.Marshal(resp.Result); err != nil {
+	if err := json.Unmarshal(resp.Result, e); err != nil {
 		return nil, err
-	} else {
-		if err := e.UnmarshalJSON(p); err != nil {
-			return nil, err
-		}
 	}
+
 	return e, nil
 }
 
@@ -86,5 +86,10 @@ func GetEBlock(keymr string) (*EBlock, error) {
 		return nil, resp.Error
 	}
 
-	return resp.Result.(*EBlock), nil
+	eb := new(EBlock)
+	if err := json.Unmarshal(resp.Result, eb); err != nil {
+		return nil, err
+	}
+
+	return eb, nil
 }
