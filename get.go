@@ -27,18 +27,23 @@ func GetDBlock(keymr string) (*DBlock, error) {
 	return db, nil
 }
 
-//func GetDBlockHead() (string, error) {
-//	req := NewJSON2Request("directory-block-head", apiCounter(), "")
-//	resp, err := factomdRequest(req)
-//	if err != nil {
-//		return "", err
-//	}
-//	if resp.Error != nil {
-//		return "", resp.Error
-//	}
-//
-//	return resp.Result.KeyMR, nil
-//}
+func GetDBlockHead() (string, error) {
+	req := NewJSON2Request("directory-block-head", apiCounter(), nil)
+	resp, err := factomdRequest(req)
+	if err != nil {
+		return "", err
+	}
+	if resp.Error != nil {
+		return "", resp.Error
+	}
+
+	head := new(DBHead)
+	if err := json.Unmarshal(resp.Result, head); err != nil {
+		return "", err
+	}
+
+	return head.KeyMR, nil
+}
 
 // GetEntry requests an Entry from factomd by its Entry Hash
 func GetEntry(hash string) (*Entry, error) {
@@ -96,4 +101,22 @@ func GetEBlock(keymr string) (*EBlock, error) {
 	}
 
 	return eb, nil
+}
+
+func GetRaw(keymr string) ([]byte, error) {
+	req := NewJSON2Request("get-raw-data", apiCounter(), keymr)
+	resp, err := factomdRequest(req)
+	if err != nil {
+		return nil, err
+	}
+	if resp.Error != nil {
+		return nil, resp.Error
+	}
+
+	raw := new(RawData)
+	if err := json.Unmarshal(resp.Result, raw); err != nil {
+		return nil, err
+	}
+
+	return raw.GetDataBytes()
 }

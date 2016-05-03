@@ -34,3 +34,7 @@ func (d *DBlock) String() string {
 	}
 	return s
 }
+
+type DBHead struct {
+	KeyMR string
+}
