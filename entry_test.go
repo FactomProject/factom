@@ -14,7 +14,7 @@ func TestUnmarshalJSON(t *testing.T) {
 		],
 		"Content":"111111111111111111"
 	}`)
-	
+
 	jsonentry2 := []byte(`
 	{
 		"ChainName":["aaaa", "bbbb"],
@@ -24,7 +24,7 @@ func TestUnmarshalJSON(t *testing.T) {
 		],
 		"Content":"111111111111111111"
 	}`)
-	
+
 	e1 := new(Entry)
 	if err := e1.UnmarshalJSON(jsonentry1); err != nil {
 		t.Error(err)

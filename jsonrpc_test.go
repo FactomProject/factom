@@ -14,7 +14,7 @@ func TestNewJSON2Request(t *testing.T) {
 		A int
 		B string
 	}
-	
+
 	x1 := &t1{A: 1, B: "hello"}
 	j1 := NewJSON2Request("testing", apiCounter(), x1)
 	if p, err := json.Marshal(j1); err != nil {
@@ -22,7 +22,7 @@ func TestNewJSON2Request(t *testing.T) {
 	} else {
 		t.Log(string(p))
 	}
-	
+
 	x2 := "hello"
 	j2 := NewJSON2Request("testing", apiCounter(), x2)
 	if p, err := json.Marshal(j2); err != nil {
@@ -30,7 +30,7 @@ func TestNewJSON2Request(t *testing.T) {
 	} else {
 		t.Log(string(p))
 	}
-	
+
 	x3 := new(Entry)
 	x3.ChainID = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
 	x3.ExtIDs = append(x3.ExtIDs, []byte("test01"))
