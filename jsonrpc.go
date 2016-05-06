@@ -92,3 +92,37 @@ func newCounter() func() int {
 }
 
 var apiCounter = newCounter()
+
+//Requests
+
+type AddressRequest struct {
+	Address string
+}
+
+type ChainIDRequest struct {
+	ChainID string
+}
+
+type EntryRequest struct {
+	Entry string
+}
+
+type HashRequest struct {
+	Hash string
+}
+
+type KeyMRRequest struct {
+	KeyMR string
+}
+
+type KeyRequest struct {
+	Key string
+}
+
+type MessageRequest struct {
+	Message string
+}
+
+type TransactionRequest struct {
+	Transaction string
+}
