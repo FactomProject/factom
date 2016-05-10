@@ -120,3 +120,39 @@ func GetRaw(keymr string) ([]byte, error) {
 
 	return raw.GetDataBytes()
 }
+
+func GetECBalance(key string) (int64, error) {
+	req := NewJSON2Request("entry-credit-balance", apiCounter(), key)
+	resp, err := factomdRequest(req)
+	if err != nil {
+		return -1, err
+	}
+	if resp.Error != nil {
+		return -1, resp.Error
+	}
+
+	balance := new(BalanceResponse)
+	if err := json.Unmarshal(resp.Result, balance); err != nil {
+		return -1, err
+	}
+
+	return balance.Balance, nil
+}
+
+func GetFctBalance(key string) (int64, error) {
+	req := NewJSON2Request("factoid-balance", apiCounter(), key)
+	resp, err := factomdRequest(req)
+	if err != nil {
+		return -1, err
+	}
+	if resp.Error != nil {
+		return -1, resp.Error
+	}
+
+	balance := new(BalanceResponse)
+	if err := json.Unmarshal(resp.Result, balance); err != nil {
+		return -1, err
+	}
+
+	return balance.Balance, nil
+}
