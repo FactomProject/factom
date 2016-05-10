@@ -29,3 +29,7 @@ func NewChain(e *Entry) *Chain {
 
 	return c
 }
+
+type CHead struct {
+	ChainHead string
+}

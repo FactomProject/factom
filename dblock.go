@@ -38,3 +38,7 @@ func (d *DBlock) String() string {
 type DBHead struct {
 	KeyMR string
 }
+
+type DirectoryBlockHeightResponse struct {
+	Height int64
+}

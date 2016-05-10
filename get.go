@@ -45,6 +45,24 @@ func GetDBlockHead() (string, error) {
 	return head.KeyMR, nil
 }
 
+func GetDBlockHeight() (int, error) {
+	req := NewJSON2Request("directory-block-height", apiCounter(), nil)
+	resp, err := factomdRequest(req)
+	if err != nil {
+		return 0, err
+	}
+	if resp.Error != nil {
+		return 0, resp.Error
+	}
+
+	height := new(DirectoryBlockHeightResponse)
+	if err := json.Unmarshal(resp.Result, height); err != nil {
+		return 0, err
+	}
+
+	return int(height.Height), nil
+}
+
 // GetEntry requests an Entry from factomd by its Entry Hash
 func GetEntry(hash string) (*Entry, error) {
 	req := NewJSON2Request("entry-by-hash", apiCounter(), hash)
@@ -62,6 +80,24 @@ func GetEntry(hash string) (*Entry, error) {
 	}
 
 	return e, nil
+}
+
+func GetChainHead(chainid string) (string, error) {
+	req := NewJSON2Request("chain-head", apiCounter(), nil)
+	resp, err := factomdRequest(req)
+	if err != nil {
+		return "", err
+	}
+	if resp.Error != nil {
+		return "", resp.Error
+	}
+
+	head := new(CHead)
+	if err := json.Unmarshal(resp.Result, head); err != nil {
+		return "", err
+	}
+
+	return head.ChainHead, nil
 }
 
 // GetAllEBlockEntries requests every Entry in a specific Entry Block
