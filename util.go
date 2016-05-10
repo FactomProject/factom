@@ -13,6 +13,10 @@ import (
 	"time"
 )
 
+const (
+	ZeroHash = "0000000000000000000000000000000000000000000000000000000000000000"
+)
+
 var (
 	factomdServer = "localhost:8088"
 	walletServer  = "localhost:8089"
