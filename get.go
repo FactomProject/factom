@@ -163,7 +163,8 @@ func GetRaw(keymr string) ([]byte, error) {
 }
 
 func GetECBalance(key string) (int64, error) {
-	req := NewJSON2Request("entry-credit-balance", apiCounter(), key)
+	param := AddressRequest{Address: key}
+	req := NewJSON2Request("entry-credit-balance", apiCounter(), param)
 	resp, err := factomdRequest(req)
 	if err != nil {
 		return -1, err
@@ -181,7 +182,8 @@ func GetECBalance(key string) (int64, error) {
 }
 
 func GetFctBalance(key string) (int64, error) {
-	req := NewJSON2Request("factoid-balance", apiCounter(), key)
+	param := AddressRequest{Address: key}
+	req := NewJSON2Request("factoid-balance", apiCounter(), param)
 	resp, err := factomdRequest(req)
 	if err != nil {
 		return -1, err

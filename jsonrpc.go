@@ -122,6 +122,10 @@ var apiCounter = newCounter()
 
 //Requests
 
+type NameRequest struct {
+	Name string
+}
+
 type AddressRequest struct {
 	Address string
 }

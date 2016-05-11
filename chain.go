@@ -81,7 +81,8 @@ func CommitChain(c *Chain, name string) error {
 		buf.WriteByte(byte(d + 10))
 	}
 
-	req := NewJSON2Request("commit-chain", apiCounter(), hex.EncodeToString(buf.Bytes()))
+	param := MessageRequest{Message: hex.EncodeToString(buf.Bytes())}
+	req := NewJSON2Request("commit-chain", apiCounter(), param)
 	resp, err := factomdRequest(req)
 	if err != nil {
 		return err
@@ -105,7 +106,8 @@ func RevealChain(c *Chain) error {
 		return err
 	}
 
-	req := NewJSON2Request("reveal-chain", apiCounter(), hex.EncodeToString(p))
+	param := EntryRequest{Entry: hex.EncodeToString(p)}
+	req := NewJSON2Request("reveal-chain", apiCounter(), param)
 	resp, err := factomdRequest(req)
 	if err != nil {
 		return err

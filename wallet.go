@@ -22,7 +22,8 @@ type GenerateAddressFromPrivateKeyRequest struct {
 func GenerateFactoidAddress(name string) (string, error) {
 	name = strings.TrimSpace(name)
 
-	req := NewJSON2Request("factoid-generate-address", apiCounter(), name)
+	param := NameRequest{Name: name}
+	req := NewJSON2Request("factoid-generate-address", apiCounter(), param)
 	resp, err := walletRequest(req)
 	if err != nil {
 		return "", err
@@ -42,7 +43,8 @@ func GenerateFactoidAddress(name string) (string, error) {
 func GenerateEntryCreditAddress(name string) (string, error) {
 	name = strings.TrimSpace(name)
 
-	req := NewJSON2Request("factoid-generate-ec-address", apiCounter(), name)
+	param := NameRequest{Name: name}
+	req := NewJSON2Request("factoid-generate-ec-address", apiCounter(), param)
 	resp, err := walletRequest(req)
 	if err != nil {
 		return "", err

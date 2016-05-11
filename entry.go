@@ -322,7 +322,8 @@ func CommitEntry(e *Entry, name string) error {
 		buf.WriteByte(byte(c))
 	}
 
-	req := NewJSON2Request("commit-entry", apiCounter(), hex.EncodeToString(buf.Bytes()))
+	param := EntryRequest{Entry: hex.EncodeToString(buf.Bytes())}
+	req := NewJSON2Request("commit-entry", apiCounter(), param)
 	resp, err := walletRequest(req)
 	if err != nil {
 		return err
@@ -351,7 +352,8 @@ func RevealEntry(e *Entry) (*RevealEntryResponse, error) {
 		return nil, err
 	}
 
-	req := NewJSON2Request("reveal-entry", apiCounter(), hex.EncodeToString(p))
+	param := EntryRequest{Entry: hex.EncodeToString(p)}
+	req := NewJSON2Request("reveal-entry", apiCounter(), param)
 	resp, err := factomdRequest(req)
 	if err != nil {
 		return nil, err
