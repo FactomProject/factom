@@ -13,6 +13,33 @@ import (
 	ed "github.com/FactomProject/ed25519"
 )
 
+type EntryStrings struct {
+	ChainID string
+	ExtIDs  []string
+	Content string
+}
+
+func (es *EntryStrings) ToEntry() (*Entry, error) {
+	e := new(Entry)
+	e.ChainID = es.ChainID
+
+	for _, v := range es.ExtIDs {
+		if p, err := hex.DecodeString(v); err != nil {
+			return nil, fmt.Errorf("Could not decode ExtID %s: %s", v, err)
+		} else {
+			e.ExtIDs = append(e.ExtIDs, p)
+		}
+	}
+
+	p, err := hex.DecodeString(es.Content)
+	if err != nil {
+		return nil, fmt.Errorf("Could not decode Content %s: %s", es.Content, err)
+	}
+	e.Content = p
+
+	return e, nil
+}
+
 type Entry struct {
 	ChainID string
 	ExtIDs  [][]byte
@@ -271,4 +298,72 @@ func ComposeChainCommit(pub *[32]byte, pri *[64]byte, c *Chain) ([]byte, error) 
 	}
 
 	return j, nil
+}
+
+// CommitEntry sends the signed Entry Hash and the Entry Credit public key to
+// the factom network. Once the payment is verified and the network is commited
+// to publishing the Entry it may be published with a call to RevealEntry.
+func CommitEntry(e *Entry, name string) error {
+	buf := new(bytes.Buffer)
+
+	// 1 byte version
+	buf.Write([]byte{0})
+
+	// 6 byte milliTimestamp (truncated unix time)
+	buf.Write(milliTime())
+
+	// 32 byte Entry Hash
+	buf.Write(e.Hash())
+
+	// 1 byte number of entry credits to pay
+	if c, err := entryCost(e); err != nil {
+		return err
+	} else {
+		buf.WriteByte(byte(c))
+	}
+
+	req := NewJSON2Request("commit-entry", apiCounter(), hex.EncodeToString(buf.Bytes()))
+	resp, err := walletRequest(req)
+	if err != nil {
+		return err
+	}
+	if resp.Error != nil {
+		return resp.Error
+	}
+	/*
+		rer := new(RevealEntryResponse)
+		if err := json.Unmarshal(resp.Result, rer); err != nil {
+			return nil, err
+		}
+	*/
+
+	return nil
+}
+
+type RevealEntryResponse struct {
+	Message string
+	TxID    string
+}
+
+func RevealEntry(e *Entry) (*RevealEntryResponse, error) {
+	p, err := e.MarshalBinary()
+	if err != nil {
+		return nil, err
+	}
+
+	req := NewJSON2Request("reveal-entry", apiCounter(), hex.EncodeToString(p))
+	resp, err := factomdRequest(req)
+	if err != nil {
+		return nil, err
+	}
+	if resp.Error != nil {
+		return nil, resp.Error
+	}
+
+	rer := new(RevealEntryResponse)
+	if err := json.Unmarshal(resp.Result, rer); err != nil {
+		return nil, err
+	}
+
+	return rer, nil
 }

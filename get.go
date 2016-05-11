@@ -6,6 +6,7 @@ package factom
 
 import (
 	"encoding/json"
+	"fmt"
 )
 
 // GetDBlock requests a Directory Block from factomd by its Key Merkel Root
@@ -46,6 +47,24 @@ func GetDBlockHead() (string, error) {
 	return head.KeyMR, nil
 }
 
+func GetDBlockHeight() (int, error) {
+	req := NewJSON2Request("directory-block-height", apiCounter(), nil)
+	resp, err := factomdRequest(req)
+	if err != nil {
+		return 0, err
+	}
+	if resp.Error != nil {
+		return 0, resp.Error
+	}
+
+	height := new(DirectoryBlockHeightResponse)
+	if err := json.Unmarshal(resp.Result, height); err != nil {
+		return 0, err
+	}
+
+	return int(height.Height), nil
+}
+
 // GetEntry requests an Entry from factomd by its Entry Hash
 func GetEntry(hash string) (*Entry, error) {
 	param := HashRequest{Hash: hash}
@@ -64,6 +83,24 @@ func GetEntry(hash string) (*Entry, error) {
 	}
 
 	return e, nil
+}
+
+func GetChainHead(chainid string) (string, error) {
+	req := NewJSON2Request("chain-head", apiCounter(), nil)
+	resp, err := factomdRequest(req)
+	if err != nil {
+		return "", err
+	}
+	if resp.Error != nil {
+		return "", resp.Error
+	}
+
+	head := new(CHead)
+	if err := json.Unmarshal(resp.Result, head); err != nil {
+		return "", err
+	}
+
+	return head.ChainHead, nil
 }
 
 // GetAllEBlockEntries requests every Entry in a specific Entry Block
@@ -123,4 +160,104 @@ func GetRaw(keymr string) ([]byte, error) {
 	}
 
 	return raw.GetDataBytes()
+}
+
+func GetECBalance(key string) (int64, error) {
+	req := NewJSON2Request("entry-credit-balance", apiCounter(), key)
+	resp, err := factomdRequest(req)
+	if err != nil {
+		return -1, err
+	}
+	if resp.Error != nil {
+		return -1, resp.Error
+	}
+
+	balance := new(BalanceResponse)
+	if err := json.Unmarshal(resp.Result, balance); err != nil {
+		return -1, err
+	}
+
+	return balance.Balance, nil
+}
+
+func GetFctBalance(key string) (int64, error) {
+	req := NewJSON2Request("factoid-balance", apiCounter(), key)
+	resp, err := factomdRequest(req)
+	if err != nil {
+		return -1, err
+	}
+	if resp.Error != nil {
+		return -1, resp.Error
+	}
+
+	balance := new(BalanceResponse)
+	if err := json.Unmarshal(resp.Result, balance); err != nil {
+		return -1, err
+	}
+
+	return balance.Balance, nil
+}
+
+func DnsBalance(addr string) (int64, int64, error) {
+	fct, ec, err := ResolveDnsName(addr)
+	if err != nil {
+		return -1, -1, err
+	}
+
+	f, err1 := GetFctBalance(fct)
+	e, err2 := GetECBalance(ec)
+	if err1 != nil || err2 != nil {
+		return f, e, fmt.Errorf("%s\n%s\n", err1, err2)
+	}
+
+	return f, e, nil
+}
+
+func GetAllChainEntries(chainid string) ([]*Entry, error) {
+	es := make([]*Entry, 0)
+
+	head, err := GetChainHead(chainid)
+	if err != nil {
+		return es, err
+	}
+
+	for ebhash := head; ebhash != ZeroHash; {
+		eb, err := GetEBlock(ebhash)
+		if err != nil {
+			return es, err
+		}
+		s, err := GetAllEBlockEntries(ebhash)
+		if err != nil {
+			return es, err
+		}
+		es = append(s, es...)
+
+		ebhash = eb.Header.PrevKeyMR
+	}
+
+	return es, nil
+}
+
+func GetFirstEntry(chainid string) (*Entry, error) {
+	e := new(Entry)
+
+	head, err := GetChainHead(chainid)
+	if err != nil {
+		return e, err
+	}
+
+	eb, err := GetEBlock(head)
+	if err != nil {
+		return e, err
+	}
+
+	for eb.Header.PrevKeyMR != ZeroHash {
+		ebhash := eb.Header.PrevKeyMR
+		eb, err = GetEBlock(ebhash)
+		if err != nil {
+			return e, err
+		}
+	}
+
+	return GetEntry(eb.EntryList[0].EntryHash)
 }

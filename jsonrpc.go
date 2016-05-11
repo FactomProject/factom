@@ -82,6 +82,33 @@ func factomdRequest(req *JSON2Request) (*JSON2Response, error) {
 	return r, nil
 }
 
+func walletRequest(req *JSON2Request) (*JSON2Response, error) {
+	j, err := json.Marshal(req)
+	if err != nil {
+		return nil, err
+	}
+
+	resp, err := http.Post(
+		fmt.Sprintf("http://%s/v2", walletServer),
+		"application/json",
+		bytes.NewBuffer(j))
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+	r := NewJSON2Response()
+	if err := json.Unmarshal(body, r); err != nil {
+		return nil, err
+	}
+
+	return r, nil
+}
+
 // newCounter is used to generate the ID field for the JSON2Request
 func newCounter() func() int {
 	count := 0
