@@ -14,9 +14,9 @@ import (
 )
 
 type EntryStrings struct {
-	ChainID string
-	ExtIDs  []string
-	Content string
+	ChainID string   `json:"chainid"`
+	ExtIDs  []string `json:"extids"`
+	Content string   `json:"content"`
 }
 
 func (es *EntryStrings) ToEntry() (*Entry, error) {
@@ -41,9 +41,9 @@ func (es *EntryStrings) ToEntry() (*Entry, error) {
 }
 
 type Entry struct {
-	ChainID string
-	ExtIDs  [][]byte
-	Content []byte
+	ChainID string   `json:"chainid"`
+	ExtIDs  [][]byte `json:"extids"`
+	Content []byte   `json:"content"`
 }
 
 func (e *Entry) Hash() []byte {
@@ -104,9 +104,9 @@ func (e *Entry) MarshalExtIDsBinary() ([]byte, error) {
 
 func (e *Entry) MarshalJSON() ([]byte, error) {
 	type js struct {
-		ChainID string
-		ExtIDs  []string
-		Content string
+		ChainID string   `json:"chainid"`
+		ExtIDs  []string `json:"extids"`
+		Content string   `json:"content"`
 	}
 
 	j := new(js)
@@ -135,10 +135,10 @@ func (e *Entry) String() string {
 
 func (e *Entry) UnmarshalJSON(data []byte) error {
 	type js struct {
-		ChainID   string
-		ChainName []string
-		ExtIDs    []string
-		Content   string
+		ChainID   string   `json:"chainid"`
+		ChainName []string `json:"chainname"`
+		ExtIDs    []string `json:"extids"`
+		Content   string   `json:"content"`
 	}
 
 	j := new(js)
@@ -222,7 +222,7 @@ func ComposeEntryCommit(pub *[32]byte, pri *[64]byte, e *Entry) ([]byte, error) 
 
 func ComposeEntryReveal(e *Entry) ([]byte, error) {
 	type reveal struct {
-		Entry string
+		Entry string `json:"entry"`
 	}
 
 	r := new(reveal)
@@ -242,7 +242,7 @@ func ComposeEntryReveal(e *Entry) ([]byte, error) {
 
 func ComposeChainCommit(pub *[32]byte, pri *[64]byte, c *Chain) ([]byte, error) {
 	type commit struct {
-		CommitChainMsg string
+		CommitChainMsg string `json:"commitchainmsg"`
 	}
 
 	buf := new(bytes.Buffer)
@@ -342,8 +342,8 @@ func CommitEntry(e *Entry, name string) error {
 }
 
 type RevealEntryResponse struct {
-	Message string
-	TxID    string
+	Message string `json:"message"`
+	TxID    string `json:"txid"`
 }
 
 func RevealEntry(e *Entry) (*RevealEntryResponse, error) {

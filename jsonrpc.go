@@ -123,37 +123,37 @@ var apiCounter = newCounter()
 //Requests
 
 type NameRequest struct {
-	Name string
+	Name string `json:"name"`
 }
 
 type AddressRequest struct {
-	Address string
+	Address string `json:"address"`
 }
 
 type ChainIDRequest struct {
-	ChainID string
+	ChainID string `json:"chainid"`
 }
 
 type EntryRequest struct {
-	Entry string
+	Entry string `json:"entry"`
 }
 
 type HashRequest struct {
-	Hash string
+	Hash string `json:"hash"`
 }
 
 type KeyMRRequest struct {
-	KeyMR string
+	KeyMR string `json:"keymr"`
 }
 
 type KeyRequest struct {
-	Key string
+	Key string `json:"key"`
 }
 
 type MessageRequest struct {
-	Message string
+	Message string `json:"message"`
 }
 
 type TransactionRequest struct {
-	Transaction string
+	Transaction string `json:"transaction"`
 }

@@ -9,16 +9,16 @@ import (
 )
 
 type DBlock struct {
-	DBHash string
+	DBHash string `json:"dbhash"`
 	Header struct {
-		PrevBlockKeyMR string
-		Timestamp      uint64
-		SequenceNumber int
-	}
+		PrevBlockKeyMR string `json:"prevblockkeymr"`
+		SequenceNumber int64  `json:"sequencenumber"`
+		Timestamp      int64  `json:"timestamp"`
+	} `json:"header"`
 	EntryBlockList []struct {
-		ChainID string
-		KeyMR   string
-	}
+		ChainID string `json:"chainid"`
+		KeyMR   string `json:"keymr"`
+	} `json:"entryblocklist"`
 }
 
 func (d *DBlock) String() string {
@@ -36,9 +36,9 @@ func (d *DBlock) String() string {
 }
 
 type DBHead struct {
-	KeyMR string
+	KeyMR string `json:"keymr"`
 }
 
 type DirectoryBlockHeightResponse struct {
-	Height int64
+	Height int64 `json:"height"`
 }

@@ -9,8 +9,8 @@ import (
 )
 
 type ResolveAddressResponse struct {
-	FactoidAddress     string
-	EntryCreditAddress string
+	FactoidAddress     string `json:"factoidaddress"`
+	EntryCreditAddress string `json:"entrycreditaddress"`
 }
 
 func ResolveDnsName(addr string) (fct, ec string, err error) {

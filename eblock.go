@@ -10,17 +10,18 @@ import (
 
 type EBlock struct {
 	Header struct {
-		BlockSequenceNumber int
-		ChainID             string
-		PrevKeyMR           string
-		Timestamp           uint64
-	}
-	EntryList []EBEntry
+		BlockSequenceNumber uint32 `json:"blocksequencenumber"`
+		ChainID             string `json:"chainid"`
+		PrevKeyMR           string `json:"prevkeymr"`
+		Timestamp           uint32 `json:"timestamp"`
+		DBHeight            uint32 `json:"dbheight"`
+	} `json:"header"`
+	EntryList []EBEntry `json:"entrylist"`
 }
 
 type EBEntry struct {
-	Timestamp int64
-	EntryHash string
+	EntryHash string `json:"entryhash"`
+	Timestamp uint32 `json:"timestamp"`
 }
 
 func (e *EBlock) String() string {

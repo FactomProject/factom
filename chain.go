@@ -11,8 +11,8 @@ import (
 )
 
 type Chain struct {
-	ChainID    string
-	FirstEntry *Entry
+	ChainID    string `json:"chainid"`
+	FirstEntry *Entry `json:"firstentry"`
 }
 
 func NewChain(e *Entry) *Chain {
@@ -32,12 +32,12 @@ func NewChain(e *Entry) *Chain {
 }
 
 type CHead struct {
-	ChainHead string
+	ChainHead string `json:"chainhead"`
 }
 
 type CommitChainResponse struct {
-	Message string
-	TxID    string
+	Message string `json:"message"`
+	TxID    string `json:"txid"`
 }
 
 // CommitChain sends the signed ChainID, the Entry Hash, and the Entry Credit

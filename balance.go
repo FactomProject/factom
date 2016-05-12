@@ -7,5 +7,5 @@ package factom
 import ()
 
 type BalanceResponse struct {
-	Balance int64
+	Balance int64 `json:"balance"`
 }

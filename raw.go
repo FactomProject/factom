@@ -9,7 +9,7 @@ import (
 )
 
 type RawData struct {
-	Data string
+	Data string `json:"data"`
 }
 
 func (r *RawData) GetDataBytes() ([]byte, error) {

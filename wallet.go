@@ -10,7 +10,7 @@ import (
 )
 
 type GenerateAddressResponse struct {
-	Address string
+	Address string `json:"address"`
 }
 
 type GenerateAddressFromPrivateKeyRequest struct {
