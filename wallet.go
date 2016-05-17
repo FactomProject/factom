@@ -33,7 +33,7 @@ func GenerateFactoidAddress(name string) (string, error) {
 	}
 
 	add := new(GenerateAddressResponse)
-	if err := json.Unmarshal(resp.Result, add); err != nil {
+	if err := json.Unmarshal(resp.JSONResult(), add); err != nil {
 		return "", err
 	}
 
@@ -54,7 +54,7 @@ func GenerateEntryCreditAddress(name string) (string, error) {
 	}
 
 	add := new(GenerateAddressResponse)
-	if err := json.Unmarshal(resp.Result, add); err != nil {
+	if err := json.Unmarshal(resp.JSONResult(), add); err != nil {
 		return "", err
 	}
 
@@ -75,7 +75,7 @@ func GenerateFactoidAddressFromPrivateKey(name string, privateKey string) (strin
 	}
 
 	add := new(GenerateAddressResponse)
-	if err := json.Unmarshal(resp.Result, add); err != nil {
+	if err := json.Unmarshal(resp.JSONResult(), add); err != nil {
 		return "", err
 	}
 
@@ -96,7 +96,7 @@ func GenerateEntryCreditAddressFromPrivateKey(name string, privateKey string) (s
 	}
 
 	add := new(GenerateAddressResponse)
-	if err := json.Unmarshal(resp.Result, add); err != nil {
+	if err := json.Unmarshal(resp.JSONResult(), add); err != nil {
 		return "", err
 	}
 
@@ -117,7 +117,7 @@ func GenerateFactoidAddressFromHumanReadablePrivateKey(name string, privateKey s
 	}
 
 	add := new(GenerateAddressResponse)
-	if err := json.Unmarshal(resp.Result, add); err != nil {
+	if err := json.Unmarshal(resp.JSONResult(), add); err != nil {
 		return "", err
 	}
 
@@ -138,7 +138,7 @@ func GenerateEntryCreditAddressFromHumanReadablePrivateKey(name string, privateK
 	}
 
 	add := new(GenerateAddressResponse)
-	if err := json.Unmarshal(resp.Result, add); err != nil {
+	if err := json.Unmarshal(resp.JSONResult(), add); err != nil {
 		return "", err
 	}
 
@@ -159,7 +159,7 @@ func GenerateFactoidAddressFromMnemonic(name string, mnemonic string) (string, e
 	}
 
 	add := new(GenerateAddressResponse)
-	if err := json.Unmarshal(resp.Result, add); err != nil {
+	if err := json.Unmarshal(resp.JSONResult(), add); err != nil {
 		return "", err
 	}
 

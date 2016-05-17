@@ -101,12 +101,11 @@ func CommitChain(c *Chain, name string) error {
 
 func RevealChain(c *Chain) error {
 	p, err := c.FirstEntry.MarshalBinary()
-
 	if err != nil {
 		return err
 	}
-
 	param := EntryRequest{Entry: hex.EncodeToString(p)}
+	
 	req := NewJSON2Request("reveal-chain", apiCounter(), param)
 	resp, err := factomdRequest(req)
 	if err != nil {
@@ -116,6 +115,5 @@ func RevealChain(c *Chain) error {
 		return resp.Error
 	}
 
-	//return resp.Result.(*wsapi.RevealChainResponse)., nil
 	return nil
 }

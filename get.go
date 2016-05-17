@@ -22,7 +22,7 @@ func GetDBlock(keymr string) (*DBlock, error) {
 	}
 
 	db := new(DBlock)
-	if err := json.Unmarshal(resp.Result, db); err != nil {
+	if err := json.Unmarshal(resp.JSONResult(), db); err != nil {
 		return nil, err
 	}
 
@@ -40,7 +40,7 @@ func GetDBlockHead() (string, error) {
 	}
 
 	head := new(DBHead)
-	if err := json.Unmarshal(resp.Result, head); err != nil {
+	if err := json.Unmarshal(resp.JSONResult(), head); err != nil {
 		return "", err
 	}
 
@@ -58,7 +58,7 @@ func GetDBlockHeight() (int, error) {
 	}
 
 	height := new(DirectoryBlockHeightResponse)
-	if err := json.Unmarshal(resp.Result, height); err != nil {
+	if err := json.Unmarshal(resp.JSONResult(), height); err != nil {
 		return 0, err
 	}
 
@@ -78,7 +78,7 @@ func GetEntry(hash string) (*Entry, error) {
 	}
 
 	e := new(Entry)
-	if err := json.Unmarshal(resp.Result, e); err != nil {
+	if err := json.Unmarshal(resp.JSONResult(), e); err != nil {
 		return nil, err
 	}
 
@@ -96,7 +96,7 @@ func GetChainHead(chainid string) (string, error) {
 	}
 
 	head := new(CHead)
-	if err := json.Unmarshal(resp.Result, head); err != nil {
+	if err := json.Unmarshal(resp.JSONResult(), head); err != nil {
 		return "", err
 	}
 
@@ -136,7 +136,7 @@ func GetEBlock(keymr string) (*EBlock, error) {
 	}
 
 	eb := new(EBlock)
-	if err := json.Unmarshal(resp.Result, eb); err != nil {
+	if err := json.Unmarshal(resp.JSONResult(), eb); err != nil {
 		return nil, err
 	}
 
@@ -155,7 +155,7 @@ func GetRaw(keymr string) ([]byte, error) {
 	}
 
 	raw := new(RawData)
-	if err := json.Unmarshal(resp.Result, raw); err != nil {
+	if err := json.Unmarshal(resp.JSONResult(), raw); err != nil {
 		return nil, err
 	}
 
@@ -174,7 +174,7 @@ func GetECBalance(key string) (int64, error) {
 	}
 
 	balance := new(BalanceResponse)
-	if err := json.Unmarshal(resp.Result, balance); err != nil {
+	if err := json.Unmarshal(resp.JSONResult(), balance); err != nil {
 		return -1, err
 	}
 
@@ -193,7 +193,7 @@ func GetFctBalance(key string) (int64, error) {
 	}
 
 	balance := new(BalanceResponse)
-	if err := json.Unmarshal(resp.Result, balance); err != nil {
+	if err := json.Unmarshal(resp.JSONResult(), balance); err != nil {
 		return -1, err
 	}
 

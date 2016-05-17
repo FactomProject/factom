@@ -24,7 +24,7 @@ func ResolveDnsName(addr string) (fct, ec string, err error) {
 	}
 
 	b := new(ResolveAddressResponse)
-	if err := json.Unmarshal(resp.Result, b); err != nil {
+	if err := json.Unmarshal(resp.JSONResult(), b); err != nil {
 		return "", "", err
 	}
 

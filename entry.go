@@ -363,7 +363,7 @@ func RevealEntry(e *Entry) (*RevealEntryResponse, error) {
 	}
 
 	rer := new(RevealEntryResponse)
-	if err := json.Unmarshal(resp.Result, rer); err != nil {
+	if err := json.Unmarshal(resp.JSONResult(), rer); err != nil {
 		return nil, err
 	}
 

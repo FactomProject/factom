@@ -12,10 +12,34 @@ import (
 	"net/http"
 )
 
+func EncodeJSON(data interface{}) ([]byte, error) {
+	encoded, err := json.Marshal(data)
+	if err != nil {
+		return nil, err
+	}
+	return encoded, nil
+}
+
+func EncodeJSONString(data interface{}) (string, error) {
+	encoded, err := EncodeJSON(data)
+	if err != nil {
+		return "", err
+	}
+	return string(encoded), err
+}
+
 type JSONError struct {
 	Code    int         `json:"code"`
 	Message string      `json:"message"`
 	Data    interface{} `json:"data,omitempty"`
+}
+
+func NewJSONError(code int, message string, data interface{}) *JSONError {
+	j := new(JSONError)
+	j.Code = code
+	j.Message = message
+	j.Data = data
+	return j
 }
 
 func (j *JSONError) Error() string {
@@ -42,11 +66,23 @@ func NewJSON2Request(method string, id, params interface{}) *JSON2Request {
 	return j
 }
 
+func ParseJSON2Request(request string) (*JSON2Request, error) {
+	j := new(JSON2Request)
+	err := json.Unmarshal([]byte(request), j)
+	if err != nil {
+		return nil, err
+	}
+	if j.JSONRPC != "2.0" {
+		return nil, fmt.Errorf("Invalid JSON RPC version - `%v`, should be `2.0`", j.JSONRPC)
+	}
+	return j, nil
+}
+
 type JSON2Response struct {
-	JSONRPC string          `json:"jsonrpc"`
-	ID      interface{}     `json:"id"`
-	Error   *JSONError      `json:"error,omitempty"`
-	Result  json.RawMessage `json:"result,omitempty"`
+	JSONRPC string      `json:"jsonrpc"`
+	ID      interface{} `json:"id"`
+	Error   *JSONError  `json:"error,omitempty"`
+	Result  interface{} `json:"result,omitempty"`
 }
 
 func NewJSON2Response() *JSON2Response {
@@ -54,6 +90,21 @@ func NewJSON2Response() *JSON2Response {
 	j.JSONRPC = "2.0"
 	return j
 }
+
+func (e *JSON2Response) JSONString() (string, error) {
+	return EncodeJSONString(e)
+}
+
+func (e *JSON2Response) JSONResult() []byte {
+	p, _ := json.Marshal(e.Result)
+	return p
+}
+
+func (e *JSON2Response) String() string {
+	str, _ := e.JSONString()
+	return str
+}
+
 
 func factomdRequest(req *JSON2Request) (*JSON2Response, error) {
 	j, err := json.Marshal(req)
