@@ -25,10 +25,6 @@ func Stop() {
 	server.Close()
 }
 
-func HandleTest(params interface{}) (interface{}, *factom.JSONError) {
-	return "Hello Factom!", nil
-}
-
 func HandleV2(ctx *web.Context) {
 	body, err := ioutil.ReadAll(ctx.Request.Body)
 	if err != nil {
@@ -71,4 +67,8 @@ func HandleV2Request(j *factom.JSON2Request) (*factom.JSON2Response, *factom.JSO
 	jsonResp.Result = resp
 
 	return jsonResp, nil
+}
+
+func HandleTest(params interface{}) (interface{}, *factom.JSONError) {
+	return "Hello Factom!", nil
 }
