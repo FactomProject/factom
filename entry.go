@@ -10,7 +10,6 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
-	ed "github.com/FactomProject/ed25519"
 )
 
 type EntryStrings struct {

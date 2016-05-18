@@ -51,13 +51,13 @@ func TestJSON2Response(t *testing.T) {
 	if err := json.Unmarshal(j1, resp); err != nil {
 		t.Error(err)
 	}
-	t.Log(string(resp.Result))
+	t.Log(string(resp.JSONResult()))
 
 	resp = NewJSON2Response()
 	if err := json.Unmarshal(j2, resp); err != nil {
 		t.Error(err)
 	}
 	e := new(Entry)
-	e.UnmarshalJSON(resp.Result)
+	e.UnmarshalJSON(resp.JSONResult())
 	t.Log(e)
 }
