@@ -6,6 +6,7 @@ package factom
 
 import (
 	"testing"
+	ed "github.com/FactomProject/ed25519"
 )
 
 var (
@@ -74,5 +75,11 @@ func TestGetECAddress(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	t.Log(e)
+	
+	// verify that the keys work
+	msg := []byte("Hello Factom!")
+	sig := ed.Sign(e.SecFixed(), msg)
+	if !ed.Verify(e.PubFixed(), msg, sig) {
+		t.Errorf("Key signature did not match")
+	}
 }

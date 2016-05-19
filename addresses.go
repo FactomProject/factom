@@ -9,8 +9,8 @@ import (
 	"fmt"
 	"io"
 	
-	ed "github.com/FactomProject/ed25519"
 	"github.com/FactomProject/btcutil/base58"
+	ed "github.com/FactomProject/ed25519"
 )
 
 var (
@@ -51,11 +51,12 @@ type ECAddress struct {
 
 func NewECAddress() *ECAddress {
 	e := new(ECAddress)
-	e.pub = new([32]byte)
-	e.sec = new([64]byte)
+	e.pub = new([ed.PublicKeySize]byte)
+	e.sec = new([ed.PrivateKeySize]byte)
 	return e
 }
 
+// GetECAddress takes a private address 'Es...' and returns 
 func GetECAddress(s string) (*ECAddress, error) {
 	if !IsValidAddress(s) {
 		return nil, fmt.Errorf("Invalid Address")
@@ -67,6 +68,22 @@ func GetECAddress(s string) (*ECAddress, error) {
 	e.pub = ed.GetPublicKey(e.sec)
 	
 	return e, nil
+}
+
+func (e *ECAddress) IsValid() bool {
+	if !IsValidAddress(e.PubString()) {
+		return false
+	} else if !bytes.Equal(e.pub[:2], ecPubPrefix) {
+		return false
+	} else if !IsValidAddress(e.SecString()) {
+		return false
+	} else if !bytes.Equal(e.sec[:2], ecSecPrefix) {
+		return false
+	} else {
+		return true
+	}
+	// should never reach here
+	return false
 }
 
 func (e *ECAddress) PubBytes() []byte {
