@@ -73,6 +73,21 @@ func TestIsValidECAddress(t *testing.T) {
 	}
 }
 
+func TestGetECAddress(t *testing.T) {
+	zSec := "Es2Rf7iM6PdsqfYCo3D1tnAR65SkLENyWJG1deUzpRMQmbh9F3eG"
+	e, err := GetECAddress(zSec)
+	if err != nil {
+		t.Error(err)
+	}
+	
+	// verify that the keys work
+	msg := []byte("Hello Factom!")
+	sig := ed.Sign(e.SecFixed(), msg)
+	if !ed.Verify(e.PubFixed(), msg, sig) {
+		t.Errorf("Key signature did not match")
+	}
+}
+
 func TestIsValidFactoidAddress(t *testing.T) {
 	zPub := "EC1m9mouvUQeEidmqpUYpYtXg8fvTYi6GNHaKg8KMLbdMBrFfmUa"
 	zSec := "Es2Rf7iM6PdsqfYCo3D1tnAR65SkLENyWJG1deUzpRMQmbh9F3eG"
@@ -110,17 +125,13 @@ func TestIsValidFactoidAddress(t *testing.T) {
 	}
 }
 
-func TestGetECAddress(t *testing.T) {
-	zSec := "Es2Rf7iM6PdsqfYCo3D1tnAR65SkLENyWJG1deUzpRMQmbh9F3eG"
-	e, err := GetECAddress(zSec)
-	if err != nil {
+func TestGetFactoidAddress(t *testing.T) {
+	zSec := "Fs1KWJrpLdfucvmYwN2nWrwepLn8ercpMbzXshd1g8zyhKXLVLWj"
+
+	if _, err := GetFactoidAddress(zSec); err != nil {
 		t.Error(err)
 	}
 	
-	// verify that the keys work
-	msg := []byte("Hello Factom!")
-	sig := ed.Sign(e.SecFixed(), msg)
-	if !ed.Verify(e.PubFixed(), msg, sig) {
-		t.Errorf("Key signature did not match")
-	}
+	// ? test factoid key validity here
 }
+

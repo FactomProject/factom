@@ -28,6 +28,6 @@ func (r *RCD1) Type() byte {
 }
 
 func (r *RCD1) Hash() []byte {
-	p := append([]byte{r.Type()}, r.Hash()...)
+	p := append([]byte{r.Type()}, r.pub[:]...)
 	return shad(p)
 }
