@@ -180,7 +180,7 @@ func (e *Entry) UnmarshalJSON(data []byte) error {
 // CommitEntry sends the signed Entry Hash and the Entry Credit public key to
 // the factom network. Once the payment is verified and the network is commited
 // to publishing the Entry it may be published with a call to RevealEntry.
-func CommitEntry(e *Entry, name string) error {
+func CommitEntry(e *Entry, ec *ECAddress) error {
 	buf := new(bytes.Buffer)
 
 	// 1 byte version
@@ -198,6 +198,11 @@ func CommitEntry(e *Entry, name string) error {
 	} else {
 		buf.WriteByte(byte(c))
 	}
+
+	// 32 byte Entry Credit Address Public Key + 64 byte Signature
+	sig := ec.Sign(buf.Bytes())
+	buf.Write(ec.PubBytes())
+	buf.Write(sig[:])
 
 	param := EntryRequest{Entry: hex.EncodeToString(buf.Bytes())}
 	req := NewJSON2Request("commit-entry", apiCounter(), param)
