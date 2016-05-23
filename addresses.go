@@ -68,8 +68,14 @@ func GetECAddress(s string) (*ECAddress, error) {
 		return nil, fmt.Errorf("Invalid Address")
 	}
 	
+	p := base58.Decode(s)
+	
+	if !bytes.Equal(p[:2], ecSecPrefix) {
+		return nil, fmt.Errorf("Invalid Entry Credit Private Address")
+	}
+	
 	a := NewECAddress()
-	copy(a.sec[:], base58.Decode(s)[2:34])
+	copy(a.sec[:], p[2:34])
 	// GetPublicKey will overwrite the pubkey portion of 'a.sec'
 	a.pub = ed.GetPublicKey(a.sec)
 	
@@ -153,8 +159,14 @@ func GetFactoidAddress(s string) (*FactoidAddress, error) {
 		return nil, fmt.Errorf("Invalid Address")
 	}
 	
+	p := base58.Decode(s)
+	
+	if !bytes.Equal(p[:2], fcSecPrefix) {
+		return nil, fmt.Errorf("Invalid Factoid Private Address")
+	}
+	
 	a := NewFactoidAddress()
-	copy(a.sec[:], base58.Decode(s)[2:34])
+	copy(a.sec[:], p[2:34])
 	// GetPublicKey will overwrite the pubkey portion of 'a.sec'
 	r := NewRCD1()
 	r.pub = ed.GetPublicKey(a.sec)
