@@ -95,7 +95,7 @@ func GetChainHead(chainid string) (string, error) {
 		return "", resp.Error
 	}
 
-	head := new(CHead)
+	head := new(ChainHead)
 	if err := json.Unmarshal(resp.JSONResult(), head); err != nil {
 		return "", err
 	}

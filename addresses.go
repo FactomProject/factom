@@ -56,7 +56,7 @@ func NewECAddress() *ECAddress {
 	return e
 }
 
-// GetECAddress takes a private address 'Es...' and returns 
+// GetECAddress takes a private address string (Es...) and returns an ECAddress.
 func GetECAddress(s string) (*ECAddress, error) {
 	if !IsValidAddress(s) {
 		return nil, fmt.Errorf("Invalid Address")
@@ -90,16 +90,8 @@ func (e *ECAddress) PubBytes() []byte {
 	return e.pub[:]
 }
 
-func (e *ECAddress) SecBytes() []byte {
-	return e.sec[:]
-}
-
 func (e *ECAddress) PubFixed() *[32]byte {
 	return e.pub
-}
-
-func (e *ECAddress) SecFixed() *[64]byte {
-	return e.sec
 }
 
 func (e *ECAddress) PubString() string {
@@ -118,6 +110,14 @@ func (e *ECAddress) PubString() string {
 	return base58.Encode(buf.Bytes())
 }
 
+func (e *ECAddress) SecBytes() []byte {
+	return e.sec[:]
+}
+
+func (e *ECAddress) SecFixed() *[64]byte {
+	return e.sec
+}
+
 func (e *ECAddress) SecString() string {
 	buf := new(bytes.Buffer)
 	
@@ -132,6 +132,10 @@ func (e *ECAddress) SecString() string {
 	buf.Write(check)
 	
 	return base58.Encode(buf.Bytes())
+}
+
+func (e *ECAddress) Sign(msg []byte) *[ed.SignatureSize]byte {
+	return ed.Sign(e.SecFixed(), msg)
 }
 
 func (e *ECAddress) String() string {

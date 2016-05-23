@@ -31,7 +31,7 @@ func NewChain(e *Entry) *Chain {
 	return c
 }
 
-type CHead struct {
+type ChainHead struct {
 	ChainHead string `json:"chainhead"`
 }
 
@@ -44,7 +44,7 @@ type CommitChainResponse struct {
 // public key to the factom network. Once the payment is verified and the
 // network is commited to publishing the Chain it may be published by revealing
 // the First Entry in the Chain.
-func CommitChain(c *Chain, name string) error {
+func CommitChain(c *Chain, ec *ECAddress) error {
 	buf := new(bytes.Buffer)
 
 	// 1 byte version
@@ -80,6 +80,11 @@ func CommitChain(c *Chain, name string) error {
 	} else {
 		buf.WriteByte(byte(d + 10))
 	}
+	
+	// 32 byte Entry Credit Address Public Key + 64 byte Signature
+	sig := ec.Sign(buf.Bytes())
+	buf.Write(ec.PubBytes())
+	buf.Write(sig[:])
 
 	param := MessageRequest{Message: hex.EncodeToString(buf.Bytes())}
 	req := NewJSON2Request("commit-chain", apiCounter(), param)
@@ -90,11 +95,6 @@ func CommitChain(c *Chain, name string) error {
 	if resp.Error != nil {
 		return resp.Error
 	}
-	/*
-		ccr := new(CommitChainResponse)
-		if err := json.Unmarshal(resp.Result, ccr); err != nil {
-			return nil, err
-		}*/
 
 	return nil
 }
