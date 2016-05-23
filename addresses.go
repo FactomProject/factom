@@ -7,7 +7,6 @@ package factom
 import (
 	"bytes"
 	"fmt"
-	"io"
 	
 	"github.com/FactomProject/btcutil/base58"
 	ed "github.com/FactomProject/ed25519"
@@ -16,28 +15,35 @@ import (
 var (
 	ecPubPrefix = []byte{0x59, 0x2a}
 	ecSecPrefix = []byte{0x5d, 0xb6}
+	fcPubPrefix = []byte{0x5f, 0xb1}
+	fcSecPrefix = []byte{0x64, 0x78}
 )
 
 func IsValidAddress(s string) bool {
-	buf := bytes.NewBuffer(base58.Decode(s))
+	p := base58.Decode(s)
 
-	p := make([]byte, 34)
-	if _, err := io.ReadFull(buf, p); err != nil {
+	if len(p) != 38 {
 		return false
 	}
 	
 	prefix := p[:2]
-	if !bytes.Equal(prefix, ecPubPrefix) && !bytes.Equal(prefix, ecSecPrefix) {
+	switch {
+	case bytes.Equal(prefix, ecPubPrefix):
+		break
+	case bytes.Equal(prefix, ecSecPrefix):
+		break
+	case bytes.Equal(prefix, fcPubPrefix):
+		break
+	case bytes.Equal(prefix, fcSecPrefix):
+		break
+	default:
 		return false
 	}
-	
-	check := make([]byte, 4)
-	if _, err := io.ReadFull(buf, check); err != nil {
-		return false
-	}
-	
-	// return true iff the checksum matches
-	if bytes.Equal(shad(p)[:4], check) {
+
+	// verify the address checksum
+	body := p[:len(p)-4]
+	check := p[len(p)-4:]
+	if bytes.Equal(shad(body)[:4], check) {
 		return true
 	}
 	
