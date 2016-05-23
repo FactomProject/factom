@@ -56,10 +56,10 @@ type ECAddress struct {
 }
 
 func NewECAddress() *ECAddress {
-	e := new(ECAddress)
-	e.pub = new([ed.PublicKeySize]byte)
-	e.sec = new([ed.PrivateKeySize]byte)
-	return e
+	a := new(ECAddress)
+	a.pub = new([ed.PublicKeySize]byte)
+	a.sec = new([ed.PrivateKeySize]byte)
+	return a
 }
 
 // GetECAddress takes a private address string (Es...) and returns an ECAddress.
@@ -68,46 +68,30 @@ func GetECAddress(s string) (*ECAddress, error) {
 		return nil, fmt.Errorf("Invalid Address")
 	}
 	
-	e := NewECAddress()
-	copy(e.sec[:], base58.Decode(s)[2:34])
-	// GetPublicKey will overwrite the pubkey portion of 'key'
-	e.pub = ed.GetPublicKey(e.sec)
+	a := NewECAddress()
+	copy(a.sec[:], base58.Decode(s)[2:34])
+	// GetPublicKey will overwrite the pubkey portion of 'a.sec'
+	a.pub = ed.GetPublicKey(a.sec)
 	
-	return e, nil
+	return a, nil
 }
 
-func (e *ECAddress) IsValid() bool {
-	if !IsValidAddress(e.PubString()) {
-		return false
-	} else if !bytes.Equal(e.pub[:2], ecPubPrefix) {
-		return false
-	} else if !IsValidAddress(e.SecString()) {
-		return false
-	} else if !bytes.Equal(e.sec[:2], ecSecPrefix) {
-		return false
-	} else {
-		return true
-	}
-	// should never reach here
-	return false
+func (a *ECAddress) PubBytes() []byte {
+	return a.pub[:]
 }
 
-func (e *ECAddress) PubBytes() []byte {
-	return e.pub[:]
+func (a *ECAddress) PubFixed() *[32]byte {
+	return a.pub
 }
 
-func (e *ECAddress) PubFixed() *[32]byte {
-	return e.pub
-}
-
-func (e *ECAddress) PubString() string {
+func (a *ECAddress) PubString() string {
 	buf := new(bytes.Buffer)
 	
 	// EC address prefix
 	buf.Write(ecPubPrefix)
 	
 	// Public key
-	buf.Write(e.PubBytes())
+	buf.Write(a.PubBytes())
 	
 	// Checksum
 	check := shad(buf.Bytes())[:4]
@@ -116,22 +100,22 @@ func (e *ECAddress) PubString() string {
 	return base58.Encode(buf.Bytes())
 }
 
-func (e *ECAddress) SecBytes() []byte {
-	return e.sec[:]
+func (a *ECAddress) SecBytes() []byte {
+	return a.sec[:]
 }
 
-func (e *ECAddress) SecFixed() *[64]byte {
-	return e.sec
+func (a *ECAddress) SecFixed() *[64]byte {
+	return a.sec
 }
 
-func (e *ECAddress) SecString() string {
+func (a *ECAddress) SecString() string {
 	buf := new(bytes.Buffer)
 	
 	// EC address prefix
 	buf.Write(ecSecPrefix)
 	
 	// Secret key
-	buf.Write(e.SecBytes()[:32])
+	buf.Write(a.SecBytes()[:32])
 	
 	// Checksum
 	check := shad(buf.Bytes())[:4]
@@ -140,10 +124,89 @@ func (e *ECAddress) SecString() string {
 	return base58.Encode(buf.Bytes())
 }
 
-func (e *ECAddress) Sign(msg []byte) *[ed.SignatureSize]byte {
-	return ed.Sign(e.SecFixed(), msg)
+func (a *ECAddress) Sign(msg []byte) *[ed.SignatureSize]byte {
+	return ed.Sign(a.SecFixed(), msg)
 }
 
-func (e *ECAddress) String() string {
-	return e.PubString()
+func (a *ECAddress) String() string {
+	return a.PubString()
+}
+
+type FactoidAddress struct {
+	rcd RCD
+	sec *[ed.PrivateKeySize]byte
+}
+
+func NewFactoidAddress() *FactoidAddress {
+	a := new(FactoidAddress)
+	r := NewRCD1()
+	r.pub = new([ed.PublicKeySize]byte)
+	a.rcd = r
+	a.sec = new([ed.PrivateKeySize]byte)
+	return a
+}
+
+// GetFactoidAddress takes a private address string (Fs...) and returns a
+// FactoidAddress.
+func GetFactoidAddress(s string) (*FactoidAddress, error) {
+	if !IsValidAddress(s) {
+		return nil, fmt.Errorf("Invalid Address")
+	}
+	
+	a := NewFactoidAddress()
+	copy(a.sec[:], base58.Decode(s)[2:34])
+	// GetPublicKey will overwrite the pubkey portion of 'a.sec'
+	r := NewRCD1()
+	r.pub = ed.GetPublicKey(a.sec)
+	a.rcd = r
+	
+	return a, nil
+}
+
+func (a *FactoidAddress) RCDHash() []byte {
+	return a.rcd.Hash()
+}
+
+func (a *FactoidAddress) PubString() string {
+	buf := new(bytes.Buffer)
+	
+	// FC address prefix
+	buf.Write(fcPubPrefix)
+	
+	// RCD Hash
+	buf.Write(a.RCDHash())
+	
+	// Checksum
+	check := shad(buf.Bytes())[:4]
+	buf.Write(check)
+	
+	return base58.Encode(buf.Bytes())
+}
+
+func (a *FactoidAddress) SecBytes() []byte {
+	return a.sec[:]
+}
+
+func (a *FactoidAddress) SecFixed() *[64]byte {
+	return a.sec
+}
+
+func (a *FactoidAddress) SecString() string {
+	buf := new(bytes.Buffer)
+	
+	// Factoid address prefix
+	buf.Write(fcSecPrefix)
+	
+	// Secret key
+	buf.Write(a.SecBytes()[:32])
+	
+	// Checksum
+	check := shad(buf.Bytes())[:4]
+	buf.Write(check)
+	
+	return base58.Encode(buf.Bytes())
+}
+
+func (a *FactoidAddress) String() string {
+	return a.PubString()
 }
