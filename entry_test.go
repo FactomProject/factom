@@ -29,11 +29,9 @@ func TestUnmarshalJSON(t *testing.T) {
 	if err := e1.UnmarshalJSON(jsonentry1); err != nil {
 		t.Error(err)
 	}
-	t.Log(e1)
 
 	e2 := new(Entry)
 	if err := e2.UnmarshalJSON(jsonentry2); err != nil {
 		t.Error(err)
 	}
-	t.Log(e2)
 }

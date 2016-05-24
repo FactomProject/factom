@@ -42,10 +42,10 @@ func NewJSONError(code int, message string, data interface{}) *JSONError {
 	return j
 }
 
-func (j *JSONError) Error() string {
-	s := fmt.Sprint(j.Message)
-	if j.Data != nil {
-		s += fmt.Sprint(": ", j.Data)
+func (e *JSONError) Error() string {
+	s := fmt.Sprint(e.Message)
+	if e.Data != nil {
+		s += fmt.Sprint(": ", e.Data)
 	}
 	return s
 }
@@ -91,17 +91,17 @@ func NewJSON2Response() *JSON2Response {
 	return j
 }
 
-func (e *JSON2Response) JSONString() (string, error) {
-	return EncodeJSONString(e)
+func (j *JSON2Response) JSONString() (string, error) {
+	return EncodeJSONString(j)
 }
 
-func (e *JSON2Response) JSONResult() []byte {
-	p, _ := json.Marshal(e.Result)
+func (j *JSON2Response) JSONResult() []byte {
+	p, _ := json.Marshal(j.Result)
 	return p
 }
 
-func (e *JSON2Response) String() string {
-	str, _ := e.JSONString()
+func (j *JSON2Response) String() string {
+	str, _ := j.JSONString()
 	return str
 }
 

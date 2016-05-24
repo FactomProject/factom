@@ -146,7 +146,7 @@ type FactoidAddress struct {
 func NewFactoidAddress() *FactoidAddress {
 	a := new(FactoidAddress)
 	r := NewRCD1()
-	r.pub = new([ed.PublicKeySize]byte)
+	r.Pub = new([ed.PublicKeySize]byte)
 	a.rcd = r
 	a.sec = new([ed.PrivateKeySize]byte)
 	return a
@@ -169,7 +169,7 @@ func GetFactoidAddress(s string) (*FactoidAddress, error) {
 	copy(a.sec[:], p[2:34])
 	// GetPublicKey will overwrite the pubkey portion of 'a.sec'
 	r := NewRCD1()
-	r.pub = ed.GetPublicKey(a.sec)
+	r.Pub = ed.GetPublicKey(a.sec)
 	a.rcd = r
 	
 	return a, nil
@@ -177,6 +177,10 @@ func GetFactoidAddress(s string) (*FactoidAddress, error) {
 
 func (a *FactoidAddress) RCDHash() []byte {
 	return a.rcd.Hash()
+}
+
+func (a *FactoidAddress) RCDType() uint8 {
+	return a.rcd.Type()
 }
 
 func (a *FactoidAddress) PubString() string {

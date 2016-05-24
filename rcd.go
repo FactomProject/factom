@@ -14,20 +14,20 @@ type RCD interface {
 }
 
 type RCD1 struct {
-	pub *[ed.PublicKeySize]byte
+	Pub *[ed.PublicKeySize]byte
 }
 
 func NewRCD1() *RCD1 {
 	r := new(RCD1)
-	r.pub = new([ed.PublicKeySize]byte)
+	r.Pub = new([ed.PublicKeySize]byte)
 	return r
 }
 
-func (r *RCD1) Type() byte {
+func (r *RCD1) Type() uint8 {
 	return byte(1)
 }
 
 func (r *RCD1) Hash() []byte {
-	p := append([]byte{r.Type()}, r.pub[:]...)
+	p := append([]byte{r.Type()}, r.Pub[:]...)
 	return shad(p)
 }
