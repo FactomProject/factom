@@ -86,11 +86,11 @@ func MakeECAddress(sec []byte) (*ECAddress, error) {
 	if len(sec) != 32 {
 		return nil, fmt.Errorf("secret key portion must be 32 bytes")
 	}
-	
+
 	a := NewECAddress()
 	copy(a.sec[:], sec)
 	a.pub = ed.GetPublicKey(a.sec)
-	
+
 	return a, nil
 }
 
@@ -191,13 +191,13 @@ func MakeFactoidAddress(sec []byte) (*FactoidAddress, error) {
 	if len(sec) != 32 {
 		return nil, fmt.Errorf("secret key portion must be 32 bytes")
 	}
-	
+
 	a := NewFactoidAddress()
 	copy(a.sec[:], sec)
 	r := NewRCD1()
 	r.Pub = ed.GetPublicKey(a.sec)
 	a.rcd = r
-	
+
 	return a, nil
 }
 

@@ -174,5 +174,4 @@ func TestGenerateFCTAddress(t *testing.T) {
 	if err := os.RemoveAll(dbpath); err != nil {
 		t.Error(err)
 	}
-
 }
