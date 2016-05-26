@@ -7,7 +7,7 @@ package factom
 import (
 	"bytes"
 	"fmt"
-	
+
 	"github.com/FactomProject/btcutil/base58"
 	ed "github.com/FactomProject/ed25519"
 )
@@ -25,7 +25,7 @@ func IsValidAddress(s string) bool {
 	if len(p) != 38 {
 		return false
 	}
-	
+
 	prefix := p[:2]
 	switch {
 	case bytes.Equal(prefix, ecPubPrefix):
@@ -46,7 +46,7 @@ func IsValidAddress(s string) bool {
 	if bytes.Equal(shad(body)[:4], check) {
 		return true
 	}
-	
+
 	return false
 }
 
@@ -67,18 +67,18 @@ func GetECAddress(s string) (*ECAddress, error) {
 	if !IsValidAddress(s) {
 		return nil, fmt.Errorf("Invalid Address")
 	}
-	
+
 	p := base58.Decode(s)
-	
+
 	if !bytes.Equal(p[:2], ecSecPrefix) {
 		return nil, fmt.Errorf("Invalid Entry Credit Private Address")
 	}
-	
+
 	a := NewECAddress()
 	copy(a.sec[:], p[2:34])
 	// GetPublicKey will overwrite the pubkey portion of 'a.sec'
 	a.pub = ed.GetPublicKey(a.sec)
-	
+
 	return a, nil
 }
 
@@ -92,17 +92,17 @@ func (a *ECAddress) PubFixed() *[32]byte {
 
 func (a *ECAddress) PubString() string {
 	buf := new(bytes.Buffer)
-	
+
 	// EC address prefix
 	buf.Write(ecPubPrefix)
-	
+
 	// Public key
 	buf.Write(a.PubBytes())
-	
+
 	// Checksum
 	check := shad(buf.Bytes())[:4]
 	buf.Write(check)
-	
+
 	return base58.Encode(buf.Bytes())
 }
 
@@ -116,17 +116,17 @@ func (a *ECAddress) SecFixed() *[64]byte {
 
 func (a *ECAddress) SecString() string {
 	buf := new(bytes.Buffer)
-	
+
 	// EC address prefix
 	buf.Write(ecSecPrefix)
-	
+
 	// Secret key
 	buf.Write(a.SecBytes()[:32])
-	
+
 	// Checksum
 	check := shad(buf.Bytes())[:4]
 	buf.Write(check)
-	
+
 	return base58.Encode(buf.Bytes())
 }
 
@@ -158,20 +158,20 @@ func GetFactoidAddress(s string) (*FactoidAddress, error) {
 	if !IsValidAddress(s) {
 		return nil, fmt.Errorf("Invalid Address")
 	}
-	
+
 	p := base58.Decode(s)
-	
+
 	if !bytes.Equal(p[:2], fcSecPrefix) {
 		return nil, fmt.Errorf("Invalid Factoid Private Address")
 	}
-	
+
 	a := NewFactoidAddress()
 	copy(a.sec[:], p[2:34])
 	// GetPublicKey will overwrite the pubkey portion of 'a.sec'
 	r := NewRCD1()
 	r.Pub = ed.GetPublicKey(a.sec)
 	a.rcd = r
-	
+
 	return a, nil
 }
 
@@ -185,17 +185,17 @@ func (a *FactoidAddress) RCDType() uint8 {
 
 func (a *FactoidAddress) PubString() string {
 	buf := new(bytes.Buffer)
-	
+
 	// FC address prefix
 	buf.Write(fcPubPrefix)
-	
+
 	// RCD Hash
 	buf.Write(a.RCDHash())
-	
+
 	// Checksum
 	check := shad(buf.Bytes())[:4]
 	buf.Write(check)
-	
+
 	return base58.Encode(buf.Bytes())
 }
 
@@ -209,17 +209,17 @@ func (a *FactoidAddress) SecFixed() *[64]byte {
 
 func (a *FactoidAddress) SecString() string {
 	buf := new(bytes.Buffer)
-	
+
 	// Factoid address prefix
 	buf.Write(fcSecPrefix)
-	
+
 	// Secret key
 	buf.Write(a.SecBytes()[:32])
-	
+
 	// Checksum
 	check := shad(buf.Bytes())[:4]
 	buf.Write(check)
-	
+
 	return base58.Encode(buf.Bytes())
 }
 

@@ -4,7 +4,7 @@
 
 package factom
 
-import(
+import (
 	ed "github.com/FactomProject/ed25519"
 )
 
@@ -30,4 +30,8 @@ func (r *RCD1) Type() uint8 {
 func (r *RCD1) Hash() []byte {
 	p := append([]byte{r.Type()}, r.Pub[:]...)
 	return shad(p)
+}
+
+func (r *RCD1) PubBytes() []byte {
+	return r.Pub[:]
 }
