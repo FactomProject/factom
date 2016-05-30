@@ -177,8 +177,10 @@ func TestGenerateFCTAddress(t *testing.T) {
 }
 
 func TestGetAllAddresses(t *testing.T) {
-	ezSec := "Es2Rf7iM6PdsqfYCo3D1tnAR65SkLENyWJG1deUzpRMQmbh9F3eG"
-	fzSec := "Fs1KWJrpLdfucvmYwN2nWrwepLn8ercpMbzXshd1g8zyhKXLVLWj"
+	e1Sec := "Es2Rf7iM6PdsqfYCo3D1tnAR65SkLENyWJG1deUzpRMQmbh9F3eG"
+	f1Sec := "Fs1KWJrpLdfucvmYwN2nWrwepLn8ercpMbzXshd1g8zyhKXLVLWj"
+	e2Sec := "Es4NQHwo8F4Z4oMnVwndtjV1rzZN3t5pP5u5jtdgiR1RA6FH4Tmc"
+	f2Sec := "Fs3GFV6GNV6ar4b8eGcQWpGFbFtkNWKfEPdbywmha8ez5p7XMJyk"
 	dbpath := os.TempDir() + "/ldb1"
 	
 	// create a new database
@@ -188,20 +190,34 @@ func TestGetAllAddresses(t *testing.T) {
 	}
 	
 	// write a new ec address to the db
-	e, err := factom.GetECAddress(ezSec)
+	e1, err := factom.GetECAddress(e1Sec)
 	if err != nil {
 		t.Error(err)
 	}
-	if err := w.PutECAddress(e); err != nil {
+	if err := w.PutECAddress(e1); err != nil {
+		t.Error(err)
+	}
+	e2, err := factom.GetECAddress(e2Sec)
+	if err != nil {
+		t.Error(err)
+	}
+	if err := w.PutECAddress(e2); err != nil {
 		t.Error(err)
 	}
 	
 	// write a new fct address to the db
-	f, err := factom.GetFactoidAddress(fzSec)
+	f1, err := factom.GetFactoidAddress(f1Sec)
 	if err != nil {
 		t.Error(err)
 	}
-	if err := w.PutFCTAddress(f); err != nil {
+	if err := w.PutFCTAddress(f1); err != nil {
+		t.Error(err)
+	}
+	f2, err := factom.GetFactoidAddress(f2Sec)
+	if err != nil {
+		t.Error(err)
+	}
+	if err := w.PutFCTAddress(f2); err != nil {
 		t.Error(err)
 	}
 
