@@ -13,6 +13,7 @@ import (
 	"github.com/FactomProject/factom"
 	"github.com/FactomProject/goleveldb/leveldb"
 	"github.com/FactomProject/goleveldb/leveldb/opt"
+	"github.com/FactomProject/goleveldb/leveldb/util"
 )
 
 var (
@@ -49,7 +50,7 @@ func NewWalletDB(path string) (*WalletDB, error) {
 	return wdb, nil
 }
 
-func OpenFile(path string) (*WalletDB, error) {
+func OpenWalletDB(path string) (*WalletDB, error) {
 	o := &opt.Options{ErrorIfMissing: true}
 	wdb := new(WalletDB)
 	if l, err := leveldb.OpenFile(path, o); err != nil {
@@ -66,6 +67,80 @@ func (w *WalletDB) Close() error {
 	defer w.lock.Unlock()
 
 	return w.ldb.Close()
+}
+
+func (w *WalletDB) GenerateECAddress() (*factom.ECAddress, error) {
+	// get the next seed from the db
+	seed, err := w.getNextSeed()
+	if err != nil {
+		return nil, err
+	}
+
+	// create the new seed
+	newseed := sha512.Sum512(seed)
+	a, err := factom.MakeECAddress(newseed[:32])
+	if err != nil {
+		return nil, err
+	}
+
+	// save the new seed and the address in the db
+	if err := w.putNextSeed(newseed[:]); err != nil {
+		return nil, err
+	}
+
+	if err := w.PutECAddress(a); err != nil {
+		return nil, err
+	}
+
+	return a, nil
+}
+
+func (w *WalletDB) GenerateFCTAddress() (*factom.FactoidAddress, error) {
+	// get the next seed from the db
+	seed, err := w.getNextSeed()
+	if err != nil {
+		return nil, err
+	}
+
+	// create the new seed
+	newseed := sha512.Sum512(seed)
+	a, err := factom.MakeFactoidAddress(newseed[:32])
+	if err != nil {
+		return nil, err
+	}
+
+	// save the new seed and the address in the db
+	if err := w.putNextSeed(newseed[:]); err != nil {
+		return nil, err
+	}
+
+	if err := w.PutFCTAddress(a); err != nil {
+		return nil, err
+	}
+
+	return a, nil
+}
+
+func (w *WalletDB) GetAllAddresses() ([]*factom.FactoidAddress, []*factom.ECAddress, error) {
+	fcs := make([]*factom.FactoidAddress, 0)
+	for iter := w.ldb.NewIterator(util.BytesPrefix(fcDBPrefix), nil); iter.Next(); {
+		f, err := factom.GetFactoidAddress(string(iter.Value()))
+		if err != nil {
+			return nil, nil, err
+		}
+		fcs = append(fcs, f)
+	}
+	
+	ecs := make([]*factom.ECAddress, 0)
+	for iter := w.ldb.NewIterator(util.BytesPrefix(ecDBPrefix), nil); iter.Next(); {
+		e, err := factom.GetECAddress(string(iter.Value()))
+		if err != nil {
+			return nil, nil, err
+		}
+		ecs = append(ecs, e)
+	}
+
+	return fcs, ecs, nil
 }
 
 func (w *WalletDB) GetECAddress(a string) (*factom.ECAddress, error) {
@@ -100,64 +175,6 @@ func (w *WalletDB) GetFCTAddress(a string) (*factom.FactoidAddress, error) {
 	return f, nil
 }
 
-func (w *WalletDB) GenerateECAddress() (*factom.ECAddress, error) {
-	w.lock.Lock()
-	defer w.lock.Unlock()
-
-	// get the next seed from the db
-	seed, err := w.ldb.Get(nextSeedDBKey, nil)
-	if err != nil {
-		return nil, err
-	}
-
-	// create the new seed
-	newseed := sha512.Sum512(seed)
-	a, err := factom.MakeECAddress(newseed[:32])
-	if err != nil {
-		return nil, err
-	}
-
-	// save the new seed and the address in the db
-	if err := w.ldb.Put(nextSeedDBKey, newseed[:], nil); err != nil {
-		return nil, err
-	}
-
-	if err := w.PutECAddress(a); err != nil {
-		return nil, err
-	}
-
-	return a, nil
-}
-
-func (w *WalletDB) GenerateFCTAddress() (*factom.FactoidAddress, error) {
-	w.lock.Lock()
-	defer w.lock.Unlock()
-
-	// get the next seed from the db
-	seed, err := w.ldb.Get(nextSeedDBKey, nil)
-	if err != nil {
-		return nil, err
-	}
-
-	// create the new seed
-	newseed := sha512.Sum512(seed)
-	a, err := factom.MakeFactoidAddress(newseed[:32])
-	if err != nil {
-		return nil, err
-	}
-
-	// save the new seed and the address in the db
-	if err := w.ldb.Put(nextSeedDBKey, newseed[:], nil); err != nil {
-		return nil, err
-	}
-
-	if err := w.PutFCTAddress(a); err != nil {
-		return nil, err
-	}
-
-	return a, nil
-}
-
 func (w *WalletDB) PutECAddress(e *factom.ECAddress) error {
 	key := append(ecDBPrefix, e.PubString()...)
 	return w.ldb.Put(key, []byte(e.SecString()), nil)
@@ -166,4 +183,24 @@ func (w *WalletDB) PutECAddress(e *factom.ECAddress) error {
 func (w *WalletDB) PutFCTAddress(f *factom.FactoidAddress) error {
 	key := append(fcDBPrefix, f.PubString()...)
 	return w.ldb.Put(key, []byte(f.SecString()), nil)
+}
+
+func (w *WalletDB) getSeed() ([]byte, error) {
+	w.lock.Lock()
+	defer w.lock.Unlock()
+	return w.ldb.Get(seedDBKey, nil)
+}
+
+func (w *WalletDB) getNextSeed() ([]byte, error) {
+	w.lock.Lock()
+	defer w.lock.Unlock()
+	return w.ldb.Get(nextSeedDBKey, nil)
+}
+
+func (w *WalletDB) putSeed(seed []byte) error {
+	return w.ldb.Put(seedDBKey, seed, nil)
+}
+
+func (w *WalletDB) putNextSeed(seed []byte) error {
+	return w.ldb.Put(nextSeedDBKey, seed, nil)
 }

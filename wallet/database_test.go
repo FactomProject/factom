@@ -175,3 +175,52 @@ func TestGenerateFCTAddress(t *testing.T) {
 		t.Error(err)
 	}
 }
+
+func TestGetAllAddresses(t *testing.T) {
+	ezSec := "Es2Rf7iM6PdsqfYCo3D1tnAR65SkLENyWJG1deUzpRMQmbh9F3eG"
+	fzSec := "Fs1KWJrpLdfucvmYwN2nWrwepLn8ercpMbzXshd1g8zyhKXLVLWj"
+	dbpath := os.TempDir() + "/ldb1"
+	
+	// create a new database
+	w, err := NewWalletDB(dbpath)
+	if err != nil {
+		t.Error(err)
+	}
+	
+	// write a new ec address to the db
+	e, err := factom.GetECAddress(ezSec)
+	if err != nil {
+		t.Error(err)
+	}
+	if err := w.PutECAddress(e); err != nil {
+		t.Error(err)
+	}
+	
+	// write a new fct address to the db
+	f, err := factom.GetFactoidAddress(fzSec)
+	if err != nil {
+		t.Error(err)
+	}
+	if err := w.PutFCTAddress(f); err != nil {
+		t.Error(err)
+	}
+
+	// get all addresses out of db
+	fs, es, err := w.GetAllAddresses()
+	if err != nil {
+		t.Error(err)
+	} else if fs == nil {
+		t.Errorf("No Factoid address was retrived")
+	} else if es == nil {
+		t.Errorf("No EC address was retrived")
+	}
+	t.Logf("FCs:%s\nECs:%s", fs, es)
+
+	// close and remove the testing db
+	if err := w.Close(); err != nil {
+		t.Error(err)
+	}
+	if err := os.RemoveAll(dbpath); err != nil {
+		t.Error(err)
+	}
+}
