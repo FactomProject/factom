@@ -66,6 +66,8 @@ func handleV2Request(j *factom.JSON2Request) (*factom.JSON2Response, *factom.JSO
 		resp, jsonError = handleTest(params)
 	case "address":
 		resp, jsonError = handleAddress(params)
+	case "all-addresses":
+		resp, jsonError = handleAllAddresses(params)
 	default:
 		jsonError = newMethodNotFoundError()
 	}
@@ -105,6 +107,29 @@ func handleAddress(params interface{}) (interface{}, *factom.JSONError) {
 	}
 	if resp.Secret == "" {
 		return nil, newCustomInternalError("No Addresses Found")
+	}
+
+	return resp, nil
+}
+
+func handleAllAddresses(params interface{}) (interface{}, *factom.JSONError) {
+	resp := new(allAddressesResponse)
+
+	fs, es, err := fctWallet.GetAllAddresses()
+	if err != nil {
+		newCustomInternalError(err)
+	}
+	for _, f := range fs {
+		a := new(addressResponse)
+		a.Public = f.PubString()
+		a.Secret = f.SecString()
+		resp.Addresses = append(resp.Addresses, a)
+	}
+	for _, e := range es {
+		a := new(addressResponse)
+		a.Public = e.PubString()
+		a.Secret = e.SecString()
+		resp.Addresses = append(resp.Addresses, a)
 	}
 
 	return resp, nil

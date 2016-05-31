@@ -12,3 +12,7 @@ type addressResponse struct {
 	Public string `json:"public"`
 	Secret string `json:"secret"`
 }
+
+type allAddressesResponse struct {
+	Addresses []*addressResponse `json:"addresses"`
+}
