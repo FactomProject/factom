@@ -23,14 +23,14 @@ var (
 	nextSeedDBKey = []byte("Next Seed")
 )
 
-type WalletDB struct {
+type Wallet struct {
 	lock sync.RWMutex
 	ldb  *leveldb.DB
 }
 
-func NewWalletDB(path string) (*WalletDB, error) {
+func NewWallet(path string) (*Wallet, error) {
 	o := &opt.Options{ErrorIfExist: true}
-	wdb := new(WalletDB)
+	wdb := new(Wallet)
 	if l, err := leveldb.OpenFile(path, o); err != nil {
 		return nil, err
 	} else {
@@ -50,9 +50,9 @@ func NewWalletDB(path string) (*WalletDB, error) {
 	return wdb, nil
 }
 
-func OpenWalletDB(path string) (*WalletDB, error) {
+func OpenWallet(path string) (*Wallet, error) {
 	o := &opt.Options{ErrorIfMissing: true}
-	wdb := new(WalletDB)
+	wdb := new(Wallet)
 	if l, err := leveldb.OpenFile(path, o); err != nil {
 		wdb.ldb = l
 		return nil, err
@@ -62,14 +62,14 @@ func OpenWalletDB(path string) (*WalletDB, error) {
 	return wdb, nil
 }
 
-func (w *WalletDB) Close() error {
+func (w *Wallet) Close() error {
 	w.lock.Lock()
 	defer w.lock.Unlock()
 
 	return w.ldb.Close()
 }
 
-func (w *WalletDB) GenerateECAddress() (*factom.ECAddress, error) {
+func (w *Wallet) GenerateECAddress() (*factom.ECAddress, error) {
 	// get the next seed from the db
 	seed, err := w.getNextSeed()
 	if err != nil {
@@ -95,7 +95,7 @@ func (w *WalletDB) GenerateECAddress() (*factom.ECAddress, error) {
 	return a, nil
 }
 
-func (w *WalletDB) GenerateFCTAddress() (*factom.FactoidAddress, error) {
+func (w *Wallet) GenerateFCTAddress() (*factom.FactoidAddress, error) {
 	// get the next seed from the db
 	seed, err := w.getNextSeed()
 	if err != nil {
@@ -121,7 +121,7 @@ func (w *WalletDB) GenerateFCTAddress() (*factom.FactoidAddress, error) {
 	return a, nil
 }
 
-func (w *WalletDB) GetAllAddresses() ([]*factom.FactoidAddress, []*factom.ECAddress, error) {
+func (w *Wallet) GetAllAddresses() ([]*factom.FactoidAddress, []*factom.ECAddress, error) {
 	fcs := make([]*factom.FactoidAddress, 0)
 	for iter := w.ldb.NewIterator(util.BytesPrefix(fcDBPrefix), nil); iter.Next(); {
 		f, err := factom.GetFactoidAddress(string(iter.Value()))
@@ -143,7 +143,7 @@ func (w *WalletDB) GetAllAddresses() ([]*factom.FactoidAddress, []*factom.ECAddr
 	return fcs, ecs, nil
 }
 
-func (w *WalletDB) GetECAddress(a string) (*factom.ECAddress, error) {
+func (w *Wallet) GetECAddress(a string) (*factom.ECAddress, error) {
 	w.lock.RLock()
 	defer w.lock.RUnlock()
 
@@ -159,7 +159,7 @@ func (w *WalletDB) GetECAddress(a string) (*factom.ECAddress, error) {
 	return e, nil
 }
 
-func (w *WalletDB) GetFCTAddress(a string) (*factom.FactoidAddress, error) {
+func (w *Wallet) GetFCTAddress(a string) (*factom.FactoidAddress, error) {
 	w.lock.RLock()
 	defer w.lock.RUnlock()
 
@@ -175,32 +175,32 @@ func (w *WalletDB) GetFCTAddress(a string) (*factom.FactoidAddress, error) {
 	return f, nil
 }
 
-func (w *WalletDB) PutECAddress(e *factom.ECAddress) error {
+func (w *Wallet) PutECAddress(e *factom.ECAddress) error {
 	key := append(ecDBPrefix, e.PubString()...)
 	return w.ldb.Put(key, []byte(e.SecString()), nil)
 }
 
-func (w *WalletDB) PutFCTAddress(f *factom.FactoidAddress) error {
+func (w *Wallet) PutFCTAddress(f *factom.FactoidAddress) error {
 	key := append(fcDBPrefix, f.PubString()...)
 	return w.ldb.Put(key, []byte(f.SecString()), nil)
 }
 
-func (w *WalletDB) getSeed() ([]byte, error) {
+func (w *Wallet) getSeed() ([]byte, error) {
 	w.lock.Lock()
 	defer w.lock.Unlock()
 	return w.ldb.Get(seedDBKey, nil)
 }
 
-func (w *WalletDB) getNextSeed() ([]byte, error) {
+func (w *Wallet) getNextSeed() ([]byte, error) {
 	w.lock.Lock()
 	defer w.lock.Unlock()
 	return w.ldb.Get(nextSeedDBKey, nil)
 }
 
-func (w *WalletDB) putSeed(seed []byte) error {
+func (w *Wallet) putSeed(seed []byte) error {
 	return w.ldb.Put(seedDBKey, seed, nil)
 }
 
-func (w *WalletDB) putNextSeed(seed []byte) error {
+func (w *Wallet) putNextSeed(seed []byte) error {
 	return w.ldb.Put(nextSeedDBKey, seed, nil)
 }

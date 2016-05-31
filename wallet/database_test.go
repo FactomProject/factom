@@ -12,11 +12,11 @@ import (
 	"github.com/FactomProject/factom"
 )
 
-func TestNewWalletDB(t *testing.T) {
+func TestNewWallet(t *testing.T) {
 	dbpath := os.TempDir() + "/ldb1"
 	
 	// create a new database
-	w1, err := NewWalletDB(dbpath)
+	w1, err := NewWallet(dbpath)
 	if err != nil {
 		t.Error(err)
 	}
@@ -40,8 +40,8 @@ func TestNewWalletDB(t *testing.T) {
 	}
 	
 	// try and create a new database where one already exists 
-	if _, err := NewWalletDB(dbpath); err == nil {
-		t.Errorf("NewWalletDB did not report error on existing path: %s", dbpath)
+	if _, err := NewWallet(dbpath); err == nil {
+		t.Errorf("NewWallet did not report error on existing path: %s", dbpath)
 	}
 	
 	// remove the testing db
@@ -56,7 +56,7 @@ func TestPutECAddress(t *testing.T) {
 	dbpath := os.TempDir() + "/ldb1"
 	
 	// create a new database
-	w, err := NewWalletDB(dbpath)
+	w, err := NewWallet(dbpath)
 	if err != nil {
 		t.Error(err)
 	}
@@ -90,7 +90,7 @@ func TestPutFCTAddress(t *testing.T) {
 	dbpath := os.TempDir() + "/ldb1"
 	
 	// create a new database
-	w, err := NewWalletDB(dbpath)
+	w, err := NewWallet(dbpath)
 	if err != nil {
 		t.Error(err)
 	}
@@ -122,7 +122,7 @@ func TestGenerateECAddress(t *testing.T) {
 	dbpath := os.TempDir() + "/ldb1"
 	
 	// create a new database
-	w, err := NewWalletDB(dbpath)
+	w, err := NewWallet(dbpath)
 	if err != nil {
 		t.Error(err)
 	}
@@ -151,7 +151,7 @@ func TestGenerateFCTAddress(t *testing.T) {
 	dbpath := os.TempDir() + "/ldb1"
 	
 	// create a new database
-	w, err := NewWalletDB(dbpath)
+	w, err := NewWallet(dbpath)
 	if err != nil {
 		t.Error(err)
 	}
@@ -181,10 +181,11 @@ func TestGetAllAddresses(t *testing.T) {
 	f1Sec := "Fs1KWJrpLdfucvmYwN2nWrwepLn8ercpMbzXshd1g8zyhKXLVLWj"
 	e2Sec := "Es4NQHwo8F4Z4oMnVwndtjV1rzZN3t5pP5u5jtdgiR1RA6FH4Tmc"
 	f2Sec := "Fs3GFV6GNV6ar4b8eGcQWpGFbFtkNWKfEPdbywmha8ez5p7XMJyk"
+	correctLen := 2
 	dbpath := os.TempDir() + "/ldb1"
 	
 	// create a new database
-	w, err := NewWalletDB(dbpath)
+	w, err := NewWallet(dbpath)
 	if err != nil {
 		t.Error(err)
 	}
@@ -230,7 +231,13 @@ func TestGetAllAddresses(t *testing.T) {
 	} else if es == nil {
 		t.Errorf("No EC address was retrived")
 	}
-	t.Logf("FCs:%s\nECs:%s", fs, es)
+	// check that all the addresses are there
+	if len(fs) != correctLen {
+		t.Errorf("Wrong number of factoid addesses were retrived: %v", fs)
+	}
+	if len(es) != correctLen {
+		t.Errorf("Wrong number of ec addesses were retrived: %v", es)
+	}
 
 	// close and remove the testing db
 	if err := w.Close(); err != nil {
