@@ -68,6 +68,10 @@ func handleV2Request(j *factom.JSON2Request) (*factom.JSON2Response, *factom.JSO
 		resp, jsonError = handleAddress(params)
 	case "all-addresses":
 		resp, jsonError = handleAllAddresses(params)
+	case "generate-ec-address":
+		resp, jsonError = handleGenerateECAddress(params)
+	case "generate-factoid-address":
+		resp, jsonError = handleGenerateFactoidAddress(params)
 	default:
 		jsonError = newMethodNotFoundError()
 	}
@@ -117,7 +121,7 @@ func handleAllAddresses(params interface{}) (interface{}, *factom.JSONError) {
 
 	fs, es, err := fctWallet.GetAllAddresses()
 	if err != nil {
-		newCustomInternalError(err)
+		return nil, newCustomInternalError(err)
 	}
 	for _, f := range fs {
 		a := new(addressResponse)
@@ -134,6 +138,34 @@ func handleAllAddresses(params interface{}) (interface{}, *factom.JSONError) {
 
 	return resp, nil
 }
+
+func handleGenerateFactoidAddress(params interface{}) (interface{}, *factom.JSONError) {
+	a, err := fctWallet.GenerateFCTAddress()
+	if err != nil {
+		return nil, newCustomInternalError(err)
+	}
+	
+	resp := new(addressResponse)
+	resp.Public = a.PubString()
+	resp.Secret = a.SecString()
+	
+	return resp, nil
+}
+
+func handleGenerateECAddress(params interface{}) (interface{}, *factom.JSONError) {
+	a, err := fctWallet.GenerateECAddress()
+	if err != nil {
+		return nil, newCustomInternalError(err)
+	}
+	
+	resp := new(addressResponse)
+	resp.Public = a.PubString()
+	resp.Secret = a.SecString()
+	
+	return resp, nil
+}
+
+// utility functions
 
 func mapToObject(source interface{}, dst interface{}) error {
 	b, err := json.Marshal(source)

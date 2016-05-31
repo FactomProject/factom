@@ -238,6 +238,14 @@ func TestGetAllAddresses(t *testing.T) {
 	if len(es) != correctLen {
 		t.Errorf("Wrong number of ec addesses were retrived: %v", es)
 	}
+	
+	// print the addresses
+	for _, f := range fs {
+		t.Logf("%s %s", f, f.SecString())
+	}
+	for _, e := range es {
+		t.Logf("%s %s", e, e.SecString())
+	}
 
 	// close and remove the testing db
 	if err := w.Close(); err != nil {

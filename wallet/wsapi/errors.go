@@ -11,7 +11,7 @@ import (
 
 const httpBad = 400
 
-// HandleV2Error handles the error responses to RPC calls
+// handleV2Error handles the error responses to RPC calls
 func handleV2Error(ctx *web.Context, j *factom.JSON2Request, err *factom.JSONError) {
 	resp := factom.NewJSON2Response()
 	if j != nil {
