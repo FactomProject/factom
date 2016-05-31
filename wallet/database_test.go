@@ -50,6 +50,46 @@ func TestNewWallet(t *testing.T) {
 	}
 }
 
+func TestOpenWallet(t *testing.T) {
+	dbpath := os.TempDir() + "/ldb1"
+	
+	// create a new database
+	w1, err := NewWallet(dbpath)
+	if err != nil {
+		t.Error(err)
+	}
+	w1.Close()
+	
+	// make sure we can open the db
+	w2, err := OpenWallet(dbpath)
+	if err != nil {
+		t.Error(err)
+	}
+	
+	// check that the seed is there
+	w1.lock.RLock()
+	seed, err := w1.ldb.Get(seedDBKey, nil)
+	if err != nil {
+		t.Error(err)
+	}
+	w1.lock.RUnlock()
+	if len(seed) != 64 {
+		t.Errorf("stored db seed is the wrong length: %x", seed)
+	}
+	if bytes.Equal(seed, make([]byte, 64)) {
+		t.Errorf("stored db seed is blank")
+	}
+	
+	if err := w2.Close(); err != nil {
+		t.Error(err)
+	}
+	
+	// remove the testing db
+	if err := os.RemoveAll(dbpath); err != nil {
+		t.Error(err)
+	}
+}
+
 func TestPutECAddress(t *testing.T) {
 	zSec := "Es2Rf7iM6PdsqfYCo3D1tnAR65SkLENyWJG1deUzpRMQmbh9F3eG"
 	

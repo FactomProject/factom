@@ -54,9 +54,11 @@ func OpenWallet(path string) (*Wallet, error) {
 	o := &opt.Options{ErrorIfMissing: true}
 	wdb := new(Wallet)
 	if l, err := leveldb.OpenFile(path, o); err != nil {
-		wdb.ldb = l
 		return nil, err
+	} else {
+		wdb.ldb = l
 	}
+
 	// TODO - validate database
 	// ? - check if db is corrrupt and recover
 	return wdb, nil
