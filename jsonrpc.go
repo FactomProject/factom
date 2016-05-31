@@ -30,7 +30,7 @@ type JSON2Request struct {
 	JSONRPC string      `json:"jsonrpc"`
 	ID      interface{} `json:"id"`
 	Params  interface{} `json:"params,omitempty"`
-	Method  string      `json:"method,omitempty"`
+	Method  string      `json:"method"`
 }
 
 func NewJSON2Request(method string, id, params interface{}) *JSON2Request {
