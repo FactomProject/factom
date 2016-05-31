@@ -12,7 +12,7 @@ import (
 const httpBad = 400
 
 // HandleV2Error handles the error responses to RPC calls
-func HandleV2Error(ctx *web.Context, j *factom.JSON2Request, err *factom.JSONError) {
+func handleV2Error(ctx *web.Context, j *factom.JSON2Request, err *factom.JSONError) {
 	resp := factom.NewJSON2Response()
 	if j != nil {
 		resp.ID = j.ID
@@ -40,32 +40,32 @@ code				message						meaning
 
 // RPC Errors
 
-func NewParseError() *factom.JSONError {
+func newParseError() *factom.JSONError {
 	return factom.NewJSONError(-32700, "Parse error", nil)
 }
 
-func NewInvalidRequestError() *factom.JSONError {
+func newInvalidRequestError() *factom.JSONError {
 	return factom.NewJSONError(-32600, "Invalid Request", nil)
 }
 
-func NewMethodNotFoundError() *factom.JSONError {
+func newMethodNotFoundError() *factom.JSONError {
 	return factom.NewJSONError(-32601, "Method not found", nil)
 }
 
-func NewInvalidParamsError() *factom.JSONError {
+func newInvalidParamsError() *factom.JSONError {
 	return factom.NewJSONError(-32602, "Invalid params", nil)
 }
 
-func NewInternalError() *factom.JSONError {
+func newInternalError() *factom.JSONError {
 	return factom.NewJSONError(-32603, "Internal error", nil)
 }
 
 // Custom Errors
 
-func NewCustomInternalError(data interface{}) *factom.JSONError {
+func newCustomInternalError(data interface{}) *factom.JSONError {
 	return factom.NewJSONError(-32603, "Internal error", data)
 }
 
-func NewCustomInvalidParamsError(data interface{}) *factom.JSONError {
+func newCustomInvalidParamsError(data interface{}) *factom.JSONError {
 	return factom.NewJSONError(-32602, "Invalid params", data)
 }

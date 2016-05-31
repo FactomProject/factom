@@ -5,58 +5,69 @@
 package wsapi
 
 import (
+	"encoding/json"
 	"io/ioutil"
 	
 	"github.com/FactomProject/factom"
+	"github.com/FactomProject/factom/wallet"
 	"github.com/FactomProject/web"
 )
 
 const API_VERSION string = "2.0"
 
-var server = web.NewServer()
+var (
+	webServer *web.Server
+	fctWallet *wallet.Wallet
+)
 
-func Start(net string) {
-	server.Post("/v2", HandleV2)
-	server.Get("/v2", HandleV2)
-	server.Run(net)
+func Start(w *wallet.Wallet, net string) {
+	webServer = web.NewServer()
+	fctWallet = w
+	
+	webServer.Post("/v2", handleV2)
+	webServer.Get("/v2", handleV2)
+	webServer.Run(net)
 }
 
 func Stop() {
-	server.Close()
+	fctWallet.Close()
+	webServer.Close()
 }
 
-func HandleV2(ctx *web.Context) {
+func handleV2(ctx *web.Context) {
 	body, err := ioutil.ReadAll(ctx.Request.Body)
 	if err != nil {
-		HandleV2Error(ctx, nil, NewInvalidRequestError())
+		handleV2Error(ctx, nil, newInvalidRequestError())
 		return
 	}
 
 	j, err := factom.ParseJSON2Request(string(body))
 	if err != nil {
-		HandleV2Error(ctx, nil, NewInvalidRequestError())
+		handleV2Error(ctx, nil, newInvalidRequestError())
 		return
 	}
 
-	jsonResp, jsonError := HandleV2Request(j)
+	jsonResp, jsonError := handleV2Request(j)
 
 	if jsonError != nil {
-		HandleV2Error(ctx, j, jsonError)
+		handleV2Error(ctx, j, jsonError)
 		return
 	}
 
 	ctx.Write([]byte(jsonResp.String()))
 }
 
-func HandleV2Request(j *factom.JSON2Request) (*factom.JSON2Response, *factom.JSONError) {
+func handleV2Request(j *factom.JSON2Request) (*factom.JSON2Response, *factom.JSONError) {
 	var resp interface{}
 	var jsonError *factom.JSONError
 	params := j.Params
 	switch j.Method {
 	case "test":
-		resp, jsonError = HandleTest(params)
+		resp, jsonError = handleTest(params)
+	case "address":
+		resp, jsonError = handleAddress(params)
 	default:
-		jsonError = NewMethodNotFoundError()
+		jsonError = newMethodNotFoundError()
 	}
 	if jsonError != nil {
 		return nil, jsonError
@@ -69,6 +80,40 @@ func HandleV2Request(j *factom.JSON2Request) (*factom.JSON2Response, *factom.JSO
 	return jsonResp, nil
 }
 
-func HandleTest(params interface{}) (interface{}, *factom.JSONError) {
+func handleTest(params interface{}) (interface{}, *factom.JSONError) {
 	return "Hello Factom!", nil
+}
+
+func handleAddress(params interface{}) (interface{}, *factom.JSONError) {
+	req := new(addressRequest)
+	if err := mapToObject(params, req); err != nil {
+		return nil, newInvalidParamsError()
+	}
+	
+	resp := new(addressResponse)
+	if e, err := fctWallet.GetECAddress(req.Address); err != nil {
+		return nil, newCustomInternalError(err)
+	} else if e != nil {
+		resp.Public = e.PubString()
+		resp.Secret = e.SecString()
+	}		
+	if f, err := fctWallet.GetFCTAddress(req.Address); err != nil {
+		return nil, newCustomInternalError(err)
+	} else if f != nil {
+		resp.Public = f.PubString()
+		resp.Secret = f.SecString()
+	}
+	if resp.Secret == "" {
+		return nil, newCustomInternalError("No Addresses Found")
+	}
+	
+	return resp, nil
+}
+
+func mapToObject(source interface{}, dst interface{}) error {
+	b, err := json.Marshal(source)
+	if err != nil {
+		return err
+	}
+	return json.Unmarshal(b, dst)
 }
