@@ -7,7 +7,7 @@ package wsapi
 import (
 	"encoding/json"
 	"io/ioutil"
-	
+
 	"github.com/FactomProject/factom"
 	"github.com/FactomProject/factom/wallet"
 	"github.com/FactomProject/web"
@@ -23,7 +23,7 @@ var (
 func Start(w *wallet.Wallet, net string) {
 	webServer = web.NewServer()
 	fctWallet = w
-	
+
 	webServer.Post("/v2", handleV2)
 	webServer.Get("/v2", handleV2)
 	webServer.Run(net)
@@ -89,14 +89,14 @@ func handleAddress(params interface{}) (interface{}, *factom.JSONError) {
 	if err := mapToObject(params, req); err != nil {
 		return nil, newInvalidParamsError()
 	}
-	
+
 	resp := new(addressResponse)
 	if e, err := fctWallet.GetECAddress(req.Address); err != nil {
 		return nil, newCustomInternalError(err)
 	} else if e != nil {
 		resp.Public = e.PubString()
 		resp.Secret = e.SecString()
-	}		
+	}
 	if f, err := fctWallet.GetFCTAddress(req.Address); err != nil {
 		return nil, newCustomInternalError(err)
 	} else if f != nil {
@@ -106,7 +106,7 @@ func handleAddress(params interface{}) (interface{}, *factom.JSONError) {
 	if resp.Secret == "" {
 		return nil, newCustomInternalError("No Addresses Found")
 	}
-	
+
 	return resp, nil
 }
 
