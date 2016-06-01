@@ -72,6 +72,8 @@ func handleV2Request(j *factom.JSON2Request) (*factom.JSON2Response, *factom.JSO
 		resp, jsonError = handleGenerateECAddress(params)
 	case "generate-factoid-address":
 		resp, jsonError = handleGenerateFactoidAddress(params)
+	case "import-addresses":
+		resp, jsonError = handleImportAddresses(params)
 	default:
 		jsonError = newMethodNotFoundError()
 	}
