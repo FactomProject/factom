@@ -67,12 +67,12 @@ func TestOpenWallet(t *testing.T) {
 	}
 	
 	// check that the seed is there
-	w1.lock.RLock()
-	seed, err := w1.ldb.Get(seedDBKey, nil)
+	w2.lock.RLock()
+	seed, err := w2.ldb.Get(seedDBKey, nil)
 	if err != nil {
 		t.Error(err)
 	}
-	w1.lock.RUnlock()
+	w2.lock.RUnlock()
 	if len(seed) != 64 {
 		t.Errorf("stored db seed is the wrong length: %x", seed)
 	}
