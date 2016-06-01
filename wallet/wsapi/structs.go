@@ -8,11 +8,17 @@ type addressRequest struct {
 	Address string `json:"address"`
 }
 
+type importRequest struct {
+	Addresses []struct {
+		Secret string `json:secret`
+	} `json:addresses`
+}
+
 type addressResponse struct {
 	Public string `json:"public"`
 	Secret string `json:"secret"`
 }
 
-type allAddressesResponse struct {
+type multiAddressesResponse struct {
 	Addresses []*addressResponse `json:"addresses"`
 }

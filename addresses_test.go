@@ -12,6 +12,32 @@ import (
 var (
 )
 
+func TestAddressStringType(t *testing.T) {
+	var (
+		a0 = "FX1zT4aFpEvcnPqPCigB3fvGu4Q4mTXY22iiuV69DqE1pNhdF2MX"
+		a1 = "FA1zT4aFpEvcnPqPCigB3fvGu4Q4mTXY22iiuV69DqE1pNhdF2MC"
+		a2 = "Fs1KWJrpLdfucvmYwN2nWrwepLn8ercpMbzXshd1g8zyhKXLVLWj"
+		a3 = "EC2DKSYyRcNWf7RS963VFYgMExoHRYLHVeCfQ9PGPmNzwrcmgm2r"
+		a4 = "Es2Rf7iM6PdsqfYCo3D1tnAR65SkLENyWJG1deUzpRMQmbh9F3eG"
+	)
+	
+	if v := AddressStringType(a0); v != InvalidAddress {
+		t.Errorf("invalid address has wrong type %s %#v", a0, v)
+	}
+	if v := AddressStringType(a1); v != FactoidPub {
+		t.Errorf("wrong address type %s %#v", a1, v)
+	}
+	if v := AddressStringType(a2); v != FactoidSec {
+		t.Errorf("wrong address type %s %#v", a1, v)
+	}
+	if v := AddressStringType(a3); v != ECPub {
+		t.Errorf("wrong address type %s %#v", a1, v)
+	}
+	if v := AddressStringType(a4); v != ECSec {
+		t.Errorf("wrong address type %s %#v", a1, v)
+	}
+}
+
 func TestNewECAddress(t *testing.T) {
 	zPub := "EC1m9mouvUQeEidmqpUYpYtXg8fvTYi6GNHaKg8KMLbdMBrFfmUa"
 	e := NewECAddress()

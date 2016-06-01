@@ -12,12 +12,53 @@ import (
 	ed "github.com/FactomProject/ed25519"
 )
 
+type addressStringType byte
+
+const (
+	InvalidAddress addressStringType = iota
+	FactoidPub
+	FactoidSec
+	ECPub
+	ECSec
+)
+
 var (
 	ecPubPrefix = []byte{0x59, 0x2a}
 	ecSecPrefix = []byte{0x5d, 0xb6}
 	fcPubPrefix = []byte{0x5f, 0xb1}
 	fcSecPrefix = []byte{0x64, 0x78}
 )
+
+func AddressStringType(s string) addressStringType {
+	p := base58.Decode(s)
+
+	if len(p) != 38 {
+		return InvalidAddress
+	}
+
+	// verify the address checksum
+	body := p[:len(p)-4]
+	check := p[len(p)-4:]
+	if !bytes.Equal(shad(body)[:4], check) {
+		return InvalidAddress
+	}
+
+	prefix := p[:2]
+	switch {
+	case bytes.Equal(prefix, ecPubPrefix):
+		return ECPub
+	case bytes.Equal(prefix, ecSecPrefix):
+		return ECSec
+	case bytes.Equal(prefix, fcPubPrefix):
+		return FactoidPub
+	case bytes.Equal(prefix, fcSecPrefix):
+		return FactoidSec
+	default:
+		return InvalidAddress
+	}
+	// we should never reach here
+	return InvalidAddress
+}
 
 func IsValidAddress(s string) bool {
 	p := base58.Decode(s)

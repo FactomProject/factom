@@ -97,42 +97,39 @@ func handleAddress(params interface{}) (interface{}, *factom.JSONError) {
 	}
 
 	resp := new(addressResponse)
-	if e, err := fctWallet.GetECAddress(req.Address); err != nil {
-		return nil, newCustomInternalError(err)
-	} else if e != nil {
-		resp.Public = e.PubString()
-		resp.Secret = e.SecString()
-	}
-	if f, err := fctWallet.GetFCTAddress(req.Address); err != nil {
-		return nil, newCustomInternalError(err)
-	} else if f != nil {
-		resp.Public = f.PubString()
-		resp.Secret = f.SecString()
-	}
-	if resp.Secret == "" {
-		return nil, newCustomInternalError("No Addresses Found")
+	switch factom.AddressStringType(req.Address) {
+	case factom.ECPub:
+		e, err := fctWallet.GetECAddress(req.Address)
+		if err != nil {
+			return nil, newCustomInternalError(err)
+		}
+		resp = mkAddressResponse(e)
+	case factom.FactoidPub:
+		f, err := fctWallet.GetFCTAddress(req.Address)
+		if err != nil {
+			return nil, newCustomInternalError(err)
+		}
+		resp = mkAddressResponse(f)
+	default:
+		return nil, newCustomInternalError("Invalid address type")
 	}
 
 	return resp, nil
 }
 
 func handleAllAddresses(params interface{}) (interface{}, *factom.JSONError) {
-	resp := new(allAddressesResponse)
+	resp := new(multiAddressesResponse)
 
 	fs, es, err := fctWallet.GetAllAddresses()
 	if err != nil {
 		return nil, newCustomInternalError(err)
 	}
 	for _, f := range fs {
-		a := new(addressResponse)
-		a.Public = f.PubString()
-		a.Secret = f.SecString()
+		a := mkAddressResponse(f)
 		resp.Addresses = append(resp.Addresses, a)
 	}
 	for _, e := range es {
-		a := new(addressResponse)
-		a.Public = e.PubString()
-		a.Secret = e.SecString()
+		a := mkAddressResponse(e)
 		resp.Addresses = append(resp.Addresses, a)
 	}
 
@@ -145,9 +142,7 @@ func handleGenerateFactoidAddress(params interface{}) (interface{}, *factom.JSON
 		return nil, newCustomInternalError(err)
 	}
 	
-	resp := new(addressResponse)
-	resp.Public = a.PubString()
-	resp.Secret = a.SecString()
+	resp := mkAddressResponse(a)
 	
 	return resp, nil
 }
@@ -158,14 +153,60 @@ func handleGenerateECAddress(params interface{}) (interface{}, *factom.JSONError
 		return nil, newCustomInternalError(err)
 	}
 	
-	resp := new(addressResponse)
-	resp.Public = a.PubString()
-	resp.Secret = a.SecString()
+	resp := mkAddressResponse(a)
 	
 	return resp, nil
 }
 
+func handleImportAddresses(params interface{})  (interface{}, *factom.JSONError) {
+	req := new(importRequest)
+	if err := mapToObject(params, req); err != nil {
+		return nil, newInvalidParamsError()
+	}
+	
+	resp := new(multiAddressesResponse)
+	for _, v := range req.Addresses {
+		switch factom.AddressStringType(v.Secret) {
+		case factom.FactoidSec:
+			f, err := factom.GetFactoidAddress(v.Secret)
+			if err != nil {
+				return nil, newCustomInternalError(err)
+			}
+			if err := fctWallet.PutFCTAddress(f); err != nil {
+				return nil, newCustomInternalError(err)
+			}
+			a := mkAddressResponse(f)
+			resp.Addresses = append(resp.Addresses, a)
+		case factom.ECSec:
+			e, err := factom.GetECAddress(v.Secret)
+			if err != nil {
+				return nil, newCustomInternalError(err)
+			}
+			if err := fctWallet.PutECAddress(e); err != nil {
+				return nil, newCustomInternalError(err)
+			}
+			a := mkAddressResponse(e)
+			resp.Addresses = append(resp.Addresses, a)
+		default:
+			return nil, newCustomInternalError("address could not be imported")
+		}
+	}
+	return resp, nil
+}
+
 // utility functions
+
+type addressResponder interface {
+	PubString() string
+	SecString() string
+}
+
+func mkAddressResponse(a addressResponder) *addressResponse {
+	r := new(addressResponse)
+	r.Public = a.PubString()
+	r.Secret = a.SecString()
+	return r
+}
 
 func mapToObject(source interface{}, dst interface{}) error {
 	b, err := json.Marshal(source)
