@@ -16,6 +16,7 @@ import (
 	"github.com/FactomProject/goleveldb/leveldb/util"
 )
 
+// Database keys and key prefixes
 var (
 	fcDBPrefix    = []byte("Factoids")
 	ecDBPrefix    = []byte("Entry Credits")
@@ -187,22 +188,53 @@ func (w *Wallet) PutFCTAddress(f *factom.FactoidAddress) error {
 	return w.ldb.Put(key, []byte(f.SecString()), nil)
 }
 
+func (w *Wallet) GetSeed() (string, error) {
+	seed, err := w.getSeed()
+	if err != nil {
+		return "", err
+	}
+	
+	return seedString(seed), nil
+}
+
 func (w *Wallet) getSeed() ([]byte, error) {
 	w.lock.Lock()
 	defer w.lock.Unlock()
-	return w.ldb.Get(seedDBKey, nil)
+
+	p, err:=  w.ldb.Get(seedDBKey, nil)
+	if err != nil {
+		return nil, err
+	} else if len(p) != SeedLength {
+		return nil, fmt.Errorf("Wallet Seed is the wrong length: %d", len(p))
+	}
+
+	return p, nil
 }
 
 func (w *Wallet) getNextSeed() ([]byte, error) {
 	w.lock.Lock()
 	defer w.lock.Unlock()
-	return w.ldb.Get(nextSeedDBKey, nil)
+
+	p, err := w.ldb.Get(nextSeedDBKey, nil)
+	if err != nil {
+		return nil, err
+	} else if len(p) != SeedLength {
+		return nil, fmt.Errorf("Wallet Seed is the wrong length: %d", len(p))
+	}
+
+	return p, nil
 }
 
 func (w *Wallet) putSeed(seed []byte) error {
+	if len(seed) != SeedLength {
+		return fmt.Errorf("Provided Seed is the wrong length: %d", len(seed))
+	}
 	return w.ldb.Put(seedDBKey, seed, nil)
 }
 
 func (w *Wallet) putNextSeed(seed []byte) error {
+	if len(seed) != SeedLength {
+		return fmt.Errorf("Provided Seed is the wrong length: %d", len(seed))
+	}
 	return w.ldb.Put(nextSeedDBKey, seed, nil)
 }

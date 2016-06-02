@@ -19,6 +19,11 @@ type addressResponse struct {
 	Secret string `json:"secret"`
 }
 
-type multiAddressesResponse struct {
+type multiAddressResponse struct {
+	Addresses []*addressResponse `json:"addresses"`
+}
+
+type walletBackupResponse struct {
+	Seed      string             `json:wallet-seed`
 	Addresses []*addressResponse `json:"addresses"`
 }

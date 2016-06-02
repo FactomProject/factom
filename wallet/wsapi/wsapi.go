@@ -13,7 +13,7 @@ import (
 	"github.com/FactomProject/web"
 )
 
-const API_VERSION string = "2.0"
+const APIVersion string = "2.0"
 
 var (
 	webServer *web.Server
@@ -61,6 +61,7 @@ func handleV2Request(j *factom.JSON2Request) (*factom.JSON2Response, *factom.JSO
 	var resp interface{}
 	var jsonError *factom.JSONError
 	params := j.Params
+
 	switch j.Method {
 	case "test":
 		resp, jsonError = handleTest(params)
@@ -74,6 +75,8 @@ func handleV2Request(j *factom.JSON2Request) (*factom.JSON2Response, *factom.JSO
 		resp, jsonError = handleGenerateFactoidAddress(params)
 	case "import-addresses":
 		resp, jsonError = handleImportAddresses(params)
+	case "wallet-backup":
+		resp, jsonError = handleWalletBackup(params)
 	default:
 		jsonError = newMethodNotFoundError()
 	}
@@ -120,7 +123,7 @@ func handleAddress(params interface{}) (interface{}, *factom.JSONError) {
 }
 
 func handleAllAddresses(params interface{}) (interface{}, *factom.JSONError) {
-	resp := new(multiAddressesResponse)
+	resp := new(multiAddressResponse)
 
 	fs, es, err := fctWallet.GetAllAddresses()
 	if err != nil {
@@ -166,7 +169,7 @@ func handleImportAddresses(params interface{})  (interface{}, *factom.JSONError)
 		return nil, newInvalidParamsError()
 	}
 	
-	resp := new(multiAddressesResponse)
+	resp := new(multiAddressResponse)
 	for _, v := range req.Addresses {
 		switch factom.AddressStringType(v.Secret) {
 		case factom.FactoidSec:
@@ -196,6 +199,30 @@ func handleImportAddresses(params interface{})  (interface{}, *factom.JSONError)
 	return resp, nil
 }
 
+func handleWalletBackup(params interface{}) (interface{}, *factom.JSONError) {
+	resp := new(walletBackupResponse)
+
+	if seed, err := fctWallet.GetSeed(); err != nil {
+		return nil, newCustomInternalError(err)
+	} else {
+		resp.Seed = seed
+	}
+	
+	fs, es, err := fctWallet.GetAllAddresses()
+	if err != nil {
+		return nil, newCustomInternalError(err)
+	}
+	for _, f := range fs {
+		a := mkAddressResponse(f)
+		resp.Addresses = append(resp.Addresses, a)
+	}
+	for _, e := range es {
+		a := mkAddressResponse(e)
+		resp.Addresses = append(resp.Addresses, a)
+	}
+
+	return resp, nil
+}
 // utility functions
 
 type addressResponder interface {
