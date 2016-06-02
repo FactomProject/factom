@@ -12,7 +12,7 @@ import (
 // GetDBlock requests a Directory Block from factomd by its Key Merkel Root
 func GetDBlock(keymr string) (*DBlock, error) {
 	param := KeyMRRequest{KeyMR: keymr}
-	req := NewJSON2Request("directory-block-by-keymr", apiCounter(), param)
+	req := NewJSON2Request("directory-block", apiCounter(), param)
 	resp, err := factomdRequest(req)
 	if err != nil {
 		return nil, err
@@ -145,7 +145,7 @@ func GetEBlock(keymr string) (*EBlock, error) {
 
 func GetRaw(keymr string) ([]byte, error) {
 	param := HashRequest{Hash: keymr}
-	req := NewJSON2Request("get-raw-data", apiCounter(), param)
+	req := NewJSON2Request("raw-data", apiCounter(), param)
 	resp, err := factomdRequest(req)
 	if err != nil {
 		return nil, err
