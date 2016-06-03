@@ -177,29 +177,9 @@ func (e *Entry) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-// CommitEntry sends the signed Entry Hash and the Entry Credit public key to
-// the factom network. Once the payment is verified and the network is commited
-// to publishing the Entry it may be published with a call to RevealEntry.
-func CommitEntry(e *Entry, ec *ECAddress) error {
-	req, err := ComposeEntryReveal(e)
-	if err != nil {
-		return err
-	}
-
-	resp, err := walletRequest(req)
-	if err != nil {
-		return err
-	}
-	if resp.Error != nil {
-		return resp.Error
-	}
-
-	return nil
-}
-
-// ComposeEntryCommit creates a JSON2Request to commit a new Entry via the factomd
-// web api. The request includes the marshaled MessageRequest with the Entry
-// Credit Signature.
+// ComposeEntryCommit creates a JSON2Request to commit a new Entry via the
+// factomd web api. The request includes the marshaled MessageRequest with the
+// Entry Credit Signature.
 func ComposeEntryCommit(e *Entry, ec *ECAddress) (*JSON2Request, error) {
 	buf := new(bytes.Buffer)
 
@@ -242,6 +222,26 @@ func ComposeEntryReveal(e *Entry) (*JSON2Request, error) {
 	req := NewJSON2Request("reveal-entry", apiCounter(), param)
 
 	return req, nil
+}
+
+// CommitEntry sends the signed Entry Hash and the Entry Credit public key to
+// the factom network. Once the payment is verified and the network is commited
+// to publishing the Entry it may be published with a call to RevealEntry.
+func CommitEntry(e *Entry, ec *ECAddress) error {
+	req, err := ComposeEntryReveal(e)
+	if err != nil {
+		return err
+	}
+
+	resp, err := walletRequest(req)
+	if err != nil {
+		return err
+	}
+	if resp.Error != nil {
+		return resp.Error
+	}
+
+	return nil
 }
 
 func RevealEntry(e *Entry) error {
