@@ -45,6 +45,26 @@ type CommitChainResponse struct {
 // network is commited to publishing the Chain it may be published by revealing
 // the First Entry in the Chain.
 func CommitChain(c *Chain, ec *ECAddress) error {
+	req, err := ComposeChainCommit(c, ec)
+	if err != nil {
+		return err
+	}
+
+	resp, err := factomdRequest(req)
+	if err != nil {
+		return err
+	}
+	if resp.Error != nil {
+		return resp.Error
+	}
+
+	return nil
+}
+
+// ComposeChainCommit creates a JSON2Request to commit a new Chain via the factomd
+// web api. The request includes the marshaled MessageRequest with the Entry
+// Credit Signature.
+func ComposeChainCommit(c *Chain, ec *ECAddress) (*JSON2Request, error) {
 	buf := new(bytes.Buffer)
 
 	// 1 byte version
@@ -57,7 +77,7 @@ func CommitChain(c *Chain, ec *ECAddress) error {
 
 	// 32 byte ChainID Hash
 	if p, err := hex.DecodeString(c.ChainID); err != nil {
-		return err
+		return nil, err
 	} else {
 		// double sha256 hash of ChainID
 		buf.Write(shad(p))
@@ -65,7 +85,7 @@ func CommitChain(c *Chain, ec *ECAddress) error {
 
 	// 32 byte Weld; sha256(sha256(EntryHash + ChainID))
 	if cid, err := hex.DecodeString(c.ChainID); err != nil {
-		return err
+		return nil, err
 	} else {
 		s := append(e.Hash(), cid...)
 		buf.Write(shad(s))
@@ -76,11 +96,11 @@ func CommitChain(c *Chain, ec *ECAddress) error {
 
 	// 1 byte number of Entry Credits to pay
 	if d, err := entryCost(e); err != nil {
-		return err
+		return nil, err
 	} else {
 		buf.WriteByte(byte(d + 10))
 	}
-	
+
 	// 32 byte Entry Credit Address Public Key + 64 byte Signature
 	sig := ec.Sign(buf.Bytes())
 	buf.Write(ec.PubBytes())
@@ -88,25 +108,29 @@ func CommitChain(c *Chain, ec *ECAddress) error {
 
 	param := MessageRequest{Message: hex.EncodeToString(buf.Bytes())}
 	req := NewJSON2Request("commit-chain", apiCounter(), param)
-	resp, err := factomdRequest(req)
-	if err != nil {
-		return err
-	}
-	if resp.Error != nil {
-		return resp.Error
-	}
 
-	return nil
+	return req, nil
+}
+
+// ComposeChainReveal creates a JSON2Request to reveal the Chain via the factomd
+// web api.
+func ComposeChainReveal(c *Chain) (*JSON2Request, error) {
+	p, err := c.FirstEntry.MarshalBinary()
+	if err != nil {
+		return nil, err
+	}
+	param := EntryRequest{Entry: hex.EncodeToString(p)}
+
+	req := NewJSON2Request("reveal-chain", apiCounter(), param)
+	return req, nil
 }
 
 func RevealChain(c *Chain) error {
-	p, err := c.FirstEntry.MarshalBinary()
+	req, err := ComposeChainReveal(c)
 	if err != nil {
 		return err
 	}
-	param := EntryRequest{Entry: hex.EncodeToString(p)}
-	
-	req := NewJSON2Request("reveal-chain", apiCounter(), param)
+
 	resp, err := factomdRequest(req)
 	if err != nil {
 		return err

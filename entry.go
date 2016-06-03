@@ -181,6 +181,26 @@ func (e *Entry) UnmarshalJSON(data []byte) error {
 // the factom network. Once the payment is verified and the network is commited
 // to publishing the Entry it may be published with a call to RevealEntry.
 func CommitEntry(e *Entry, ec *ECAddress) error {
+	req, err := ComposeEntryReveal(e)
+	if err != nil {
+		return err
+	}
+
+	resp, err := walletRequest(req)
+	if err != nil {
+		return err
+	}
+	if resp.Error != nil {
+		return resp.Error
+	}
+
+	return nil
+}
+
+// ComposeEntryCommit creates a JSON2Request to commit a new Entry via the factomd
+// web api. The request includes the marshaled MessageRequest with the Entry
+// Credit Signature.
+func ComposeEntryCommit(e *Entry, ec *ECAddress) (*JSON2Request, error) {
 	buf := new(bytes.Buffer)
 
 	// 1 byte version
@@ -194,7 +214,7 @@ func CommitEntry(e *Entry, ec *ECAddress) error {
 
 	// 1 byte number of entry credits to pay
 	if c, err := entryCost(e); err != nil {
-		return err
+		return nil, err
 	} else {
 		buf.WriteByte(byte(c))
 	}
@@ -206,29 +226,13 @@ func CommitEntry(e *Entry, ec *ECAddress) error {
 
 	param := EntryRequest{Entry: hex.EncodeToString(buf.Bytes())}
 	req := NewJSON2Request("commit-entry", apiCounter(), param)
-	resp, err := walletRequest(req)
-	if err != nil {
-		return err
-	}
-	if resp.Error != nil {
-		return resp.Error
-	}
-	/*
-		rer := new(RevealEntryResponse)
-		if err := json.Unmarshal(resp.Result, rer); err != nil {
-			return nil, err
-		}
-	*/
 
-	return nil
+	return req, nil
 }
 
-type RevealEntryResponse struct {
-	Message string `json:"message"`
-	TxID    string `json:"txid"`
-}
-
-func RevealEntry(e *Entry) (*RevealEntryResponse, error) {
+// ComposeEntryReveal creates a JSON2Request to reveal the Entry via the factomd
+// web api.
+func ComposeEntryReveal(e *Entry) (*JSON2Request, error) {
 	p, err := e.MarshalBinary()
 	if err != nil {
 		return nil, err
@@ -236,18 +240,23 @@ func RevealEntry(e *Entry) (*RevealEntryResponse, error) {
 
 	param := EntryRequest{Entry: hex.EncodeToString(p)}
 	req := NewJSON2Request("reveal-entry", apiCounter(), param)
+
+	return req, nil
+}
+
+func RevealEntry(e *Entry) error {
+	req, err := ComposeEntryReveal(e)
+	if err != nil {
+		return err
+	}
+
 	resp, err := factomdRequest(req)
 	if err != nil {
-		return nil, err
+		return err
 	}
 	if resp.Error != nil {
-		return nil, resp.Error
+		return resp.Error
 	}
 
-	rer := new(RevealEntryResponse)
-	if err := json.Unmarshal(resp.JSONResult(), rer); err != nil {
-		return nil, err
-	}
-
-	return rer, nil
+	return nil
 }
