@@ -18,6 +18,8 @@ const (
 // seed address prefix
 var seedPrefix = []byte{0x13, 0xdd}
 
+// seedString returnes the string representation of a raw Wallet Seed or Next
+// Wallet Seed.
 func seedString(seed []byte) string {
 	if len(seed) != SeedLength {
 		return ""
