@@ -7,6 +7,7 @@ package wallet
 import (
 	"bytes"
 	"crypto/sha256"
+	"time"
 
 	"github.com/FactomProject/btcutil/base58"
 )
@@ -17,6 +18,11 @@ const (
 
 // seed address prefix
 var seedPrefix = []byte{0x13, 0xdd}
+
+// milliTime returns the unix time in milliseconds
+func milliTime() uint64 {
+	return uint64(time.Now().UnixNano()) / 1e6
+}
 
 // seedString returnes the string representation of a raw Wallet Seed or Next
 // Wallet Seed.

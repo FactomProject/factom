@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"sync"
 
+	"github.com/FactomProject/factoid"
 	"github.com/FactomProject/factom"
 	"github.com/FactomProject/goleveldb/leveldb"
 	"github.com/FactomProject/goleveldb/leveldb/opt"
@@ -26,8 +27,9 @@ var (
 
 // Wallet is a connection to a Factom Wallet Database
 type Wallet struct {
-	lock sync.RWMutex
-	ldb  *leveldb.DB
+	lock         sync.RWMutex
+	ldb          *leveldb.DB
+	transactions map[string]factoid.ITransaction
 }
 
 // NewWallet creates a new Factom Wallet Database. It will return an error if a
