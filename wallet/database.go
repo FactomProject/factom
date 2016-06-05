@@ -36,11 +36,12 @@ type Wallet struct {
 // database already exists at the specified path.
 func NewWallet(path string) (*Wallet, error) {
 	o := &opt.Options{ErrorIfExist: true}
-	wdb := new(Wallet)
+	w := new(Wallet)
+	w.transactions = make(map[string]factoid.ITransaction)
 	if l, err := leveldb.OpenFile(path, o); err != nil {
 		return nil, err
 	} else {
-		wdb.ldb = l
+		w.ldb = l
 	}
 
 	// generate a random seed for new address generation in this wallet
@@ -50,26 +51,27 @@ func NewWallet(path string) (*Wallet, error) {
 	} else if n != 64 {
 		return nil, fmt.Errorf("Wrong number of bytes read: %d", n)
 	}
-	wdb.ldb.Put(seedDBKey, seed, nil)
-	wdb.ldb.Put(nextSeedDBKey, seed, nil)
+	w.ldb.Put(seedDBKey, seed, nil)
+	w.ldb.Put(nextSeedDBKey, seed, nil)
 
-	return wdb, nil
+	return w, nil
 }
 
 // OpenWallet opens an existing Factom Wallet Database. It will return an error
 // if no database exists at the path.
 func OpenWallet(path string) (*Wallet, error) {
 	o := &opt.Options{ErrorIfMissing: true}
-	wdb := new(Wallet)
+	w := new(Wallet)
+	w.transactions = make(map[string]factoid.ITransaction)
 	if l, err := leveldb.OpenFile(path, o); err != nil {
 		return nil, err
 	} else {
-		wdb.ldb = l
+		w.ldb = l
 	}
 
 	// TODO - validate database
 	// ? - check if db is corrrupt and recover
-	return wdb, nil
+	return w, nil
 }
 
 // Close closes a Factom Wallet Database
