@@ -5,6 +5,7 @@
 package wallet
 
 import (
+	"encoding/hex"
 	"errors"
 	"fmt"
 
@@ -156,7 +157,7 @@ func (w *Wallet) SubFee(name, address string) (uint64, error) {
 		return 0, ErrTXNotExists
 	}
 	trans := w.transactions[name]
-	
+
 	if !factom.IsValidAddress(address) {
 		return 0, errors.New("Invalid Address")
 	}
@@ -190,7 +191,6 @@ func (w *Wallet) SubFee(name, address string) (uint64, error) {
 		return 0, err
 	}
 
-	
 	adr := factoid.NewAddress(base58.Decode(address)[2:34])
 
 	for _, output := range trans.GetOutputs() {
@@ -247,8 +247,28 @@ func (w *Wallet) GetTransactions() map[string]factoid.ITransaction {
 	return w.transactions
 }
 
+func (w *Wallet) ComposeTransaction(name string) (*factom.JSON2Request, error) {
+	if _, exists := w.transactions[name]; !exists {
+		return nil, ErrTXNotExists
+	}
+	trans := w.transactions[name]
+
+	type txreq struct {
+		Transaction string `json:"transaction"`
+	}
+
+	param := new(txreq)
+	if p, err := trans.MarshalBinary(); err != nil {
+		return nil, err
+	} else {
+		param.Transaction = hex.EncodeToString(p)
+	}
+
+	req := factom.NewJSON2Request("factoid-transaction", apiCounter(), param)
+
+	return req, nil
+}
+
 // TODO ---
-//
-//func (w *Wallet) ComposeTransaction
 //
 //func (w *Wallet) SendTransaction
