@@ -8,6 +8,7 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"regexp"
 
 	"github.com/FactomProject/btcutil/base58"
 	ed "github.com/FactomProject/ed25519"
@@ -16,14 +17,26 @@ import (
 )
 
 var (
-	ErrTXExists    = errors.New("wallet: Transaction name already exists")
-	ErrTXNotExists = errors.New("wallet: Transaction name was not found")
+	ErrTXExists      = errors.New("wallet: Transaction name already exists")
+	ErrTXNotExists   = errors.New("wallet: Transaction name was not found")
+	ErrInvalidTXName = errors.New("wallet: Transaction name is not valid")
 )
 
 func (w *Wallet) CreateTransaction(name string) error {
 	if _, exists := w.transactions[name]; exists {
 		return ErrTXExists
 	}
+	
+	// check that the transaction name is valid
+	if len(name) > 32 {
+		return ErrInvalidTXName
+	}
+	if match, err := regexp.MatchString("[^a-zA-Z0-9_-]", name); err != nil {
+		return err
+	} else if match {
+		return ErrInvalidTXName
+	}
+	
 	t := new(factoid.Transaction)
 	t.SetMilliTimestamp(milliTime())
 	w.transactions[name] = t
