@@ -247,7 +247,7 @@ func handleNewTransaction(params interface{}) (interface{}, *factom.JSONError) {
 	if err := fctWallet.NewTransaction(req.Name); err != nil {
 		return nil, newCustomInternalError(err)
 	}
-	return success, nil
+	return "success", nil
 }
 
 func handleDeleteTransaction(params interface{}) (interface{}, *factom.JSONError) {
@@ -306,7 +306,7 @@ func handleAddFee(params interface{}) (interface{}, *factom.JSONError) {
 	
 	rate, err := factom.GetRate()
 	if err != nil {
-		return newCustomInternalError(err)
+		return nil, newCustomInternalError(err)
 	}
 	if err := fctWallet.AddFee(req.Name, req.Address, rate); err != nil {
 		return nil, newCustomInternalError(err)
@@ -322,7 +322,7 @@ func handleSubFee(params interface{}) (interface{}, *factom.JSONError) {
 	
 	rate, err := factom.GetRate()
 	if err != nil {
-		return newCustomInternalError(err)
+		return nil, newCustomInternalError(err)
 	}
 	if err := fctWallet.SubFee(req.Name, req.Address, rate); err != nil {
 		return nil, newCustomInternalError(err)
@@ -348,7 +348,8 @@ func handleComposeTransaction(params interface{}) (interface{}, *factom.JSONErro
 		return nil, newInvalidParamsError()
 	}
 	
-	if t, err := fctWallet.ComposeTransaction(req.Name); err != nil {
+	t, err := fctWallet.ComposeTransaction(req.Name)
+	if err != nil {
 		return nil, newCustomInternalError(err)
 	}
 	return t, nil

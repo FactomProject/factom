@@ -21,10 +21,10 @@ type transactionRequest struct {
 type transactionValueRequest struct {
 	Name    string `json:"tx-name"`
 	Address string `json:"address"`
-	Amount  int    `json:"amount"`
+	Amount  uint64 `json:"amount"`
 }
 
-type transactionAddressRequest {
+type transactionAddressRequest struct {
 	Name    string `json:"tx-name"`
 	Address string `json:"address"`
 }

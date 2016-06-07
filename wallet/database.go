@@ -8,6 +8,7 @@ import (
 	"crypto/rand"
 	"crypto/sha512"
 	"fmt"
+	"os"
 	"sync"
 
 	"github.com/FactomProject/factoid"
@@ -63,15 +64,42 @@ func OpenWallet(path string) (*Wallet, error) {
 	o := &opt.Options{ErrorIfMissing: true}
 	w := new(Wallet)
 	w.transactions = make(map[string]factoid.ITransaction)
+	
+	// open the db file
 	if l, err := leveldb.OpenFile(path, o); err != nil {
-		return nil, err
+		// try an recover the file if there is an error
+		r, err := leveldb.RecoverFile(path, nil)
+		if err != nil {
+			return nil, err
+		}
+		w.ldb = r		
 	} else {
 		w.ldb = l
 	}
 
-	// TODO - validate database
-	// ? - check if db is corrrupt and recover
+	// make sure it is a wallet db
+	if s, err := w.ldb.Has(seedDBKey, nil); err != nil {
+		return nil, err
+	} else if !s {
+		return nil, fmt.Errorf("wallet is missing its seed")
+	} else if n, err := w.ldb.Has(nextSeedDBKey, nil); err != nil {
+		return nil, err
+	} else if !n {
+		return nil, fmt.Errorf("wallet is missing its next seed")
+	}
+	
 	return w, nil
+}
+
+func NewOrOpenWallet(path string) (*Wallet, error) {
+	w, err := NewWallet(path)
+	if err != nil {
+		if !os.IsExist(err) {
+			return nil, err
+		}
+		return OpenWallet(path)
+	}
+	return w, err
 }
 
 // Close closes a Factom Wallet Database
