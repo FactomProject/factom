@@ -63,8 +63,6 @@ func handleV2Request(j *factom.JSON2Request) (*factom.JSON2Response, *factom.JSO
 	params := j.Params
 
 	switch j.Method {
-	case "test":
-		resp, jsonError = handleTest(params)
 	case "address":
 		resp, jsonError = handleAddress(params)
 	case "all-addresses":
@@ -77,6 +75,24 @@ func handleV2Request(j *factom.JSON2Request) (*factom.JSON2Response, *factom.JSO
 		resp, jsonError = handleImportAddresses(params)
 	case "wallet-backup":
 		resp, jsonError = handleWalletBackup(params)
+	case "new-transaction":
+		resp, jsonError = handleNewTransaction(params)
+	case "delete-transaction":
+		resp, jsonError = handleDeleteTransaction(params)
+	case "add-input":
+		resp, jsonError = handleAddInput(params)
+	case "add-output":
+		resp, jsonError = handleAddOutput(params)
+	case "add-ec-output":
+		resp, jsonError = handleAddECOutput(params)
+	case "add-fee":
+		resp, jsonError = handleAddFee(params)
+	case "sub-fee":
+		resp, jsonError = handleSubFee(params)
+	case "sign-transaction":
+		resp, jsonError = handleSignTransaction(params)
+	case "compose-transaction":
+		resp, jsonError = handleComposeTransaction(params)
 	default:
 		jsonError = newMethodNotFoundError()
 	}
@@ -89,10 +105,6 @@ func handleV2Request(j *factom.JSON2Request) (*factom.JSON2Response, *factom.JSO
 	jsonResp.Result = resp
 
 	return jsonResp, nil
-}
-
-func handleTest(params interface{}) (interface{}, *factom.JSONError) {
-	return "Hello Factom!", nil
 }
 
 func handleAddress(params interface{}) (interface{}, *factom.JSONError) {
@@ -223,6 +235,125 @@ func handleWalletBackup(params interface{}) (interface{}, *factom.JSONError) {
 
 	return resp, nil
 }
+
+// transaction handlers
+
+func handleNewTransaction(params interface{}) (interface{}, *factom.JSONError) {
+	req := new(transactionRequest)
+	if err := mapToObject(params, req); err != nil {
+		return nil, newInvalidParamsError()
+	}
+	
+	if err := fctWallet.NewTransaction(req.Name); err != nil {
+		return nil, newCustomInternalError(err)
+	}
+	return success, nil
+}
+
+func handleDeleteTransaction(params interface{}) (interface{}, *factom.JSONError) {
+	req := new(transactionRequest)
+	if err := mapToObject(params, req); err != nil {
+		return nil, newInvalidParamsError()
+	}
+	
+	if err := fctWallet.DeleteTransaction(req.Name); err != nil {
+		return nil, newCustomInternalError(err)
+	}
+	return "success", nil
+}
+
+func handleAddInput(params interface{}) (interface{}, *factom.JSONError) {
+	req := new(transactionValueRequest)
+	if err := mapToObject(params, req); err != nil {
+		return nil, newInvalidParamsError()
+	}
+	
+	if err := fctWallet.AddInput(req.Name, req.Address, req.Amount); err != nil {
+		return nil, newCustomInternalError(err)
+	}
+	return "success", nil
+}
+
+func handleAddOutput(params interface{}) (interface{}, *factom.JSONError) {
+	req := new(transactionValueRequest)
+	if err := mapToObject(params, req); err != nil {
+		return nil, newInvalidParamsError()
+	}
+	
+	if err := fctWallet.AddOutput(req.Name, req.Address, req.Amount); err != nil {
+		return nil, newCustomInternalError(err)
+	}
+	return "success", nil
+}
+
+func handleAddECOutput(params interface{}) (interface{}, *factom.JSONError) {
+	req := new(transactionValueRequest)
+	if err := mapToObject(params, req); err != nil {
+		return nil, newInvalidParamsError()
+	}
+	
+	if err := fctWallet.AddECOutput(req.Name, req.Address, req.Amount); err != nil {
+		return nil, newCustomInternalError(err)
+	}
+	return "success", nil
+}
+
+func handleAddFee(params interface{}) (interface{}, *factom.JSONError) {
+	req := new(transactionAddressRequest)
+	if err := mapToObject(params, req); err != nil {
+		return nil, newInvalidParamsError()
+	}
+	
+	rate, err := factom.GetRate()
+	if err != nil {
+		return newCustomInternalError(err)
+	}
+	if err := fctWallet.AddFee(req.Name, req.Address, rate); err != nil {
+		return nil, newCustomInternalError(err)
+	}
+	return "success", nil
+}
+
+func handleSubFee(params interface{}) (interface{}, *factom.JSONError) {
+	req := new(transactionAddressRequest)
+	if err := mapToObject(params, req); err != nil {
+		return nil, newInvalidParamsError()
+	}
+	
+	rate, err := factom.GetRate()
+	if err != nil {
+		return newCustomInternalError(err)
+	}
+	if err := fctWallet.SubFee(req.Name, req.Address, rate); err != nil {
+		return nil, newCustomInternalError(err)
+	}
+	return "success", nil
+}
+
+func handleSignTransaction(params interface{}) (interface{}, *factom.JSONError) {
+	req := new(transactionRequest)
+	if err := mapToObject(params, req); err != nil {
+		return nil, newInvalidParamsError()
+	}
+	
+	if err := fctWallet.SignTransaction(req.Name); err != nil {
+		return nil, newCustomInternalError(err)
+	}
+	return "success", nil
+}
+
+func handleComposeTransaction(params interface{}) (interface{}, *factom.JSONError) {
+	req := new(transactionRequest)
+	if err := mapToObject(params, req); err != nil {
+		return nil, newInvalidParamsError()
+	}
+	
+	if t, err := fctWallet.ComposeTransaction(req.Name); err != nil {
+		return nil, newCustomInternalError(err)
+	}
+	return t, nil
+}
+
 // utility functions
 
 type addressResponder interface {

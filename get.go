@@ -215,22 +215,22 @@ func DnsBalance(addr string) (int64, int64, error) {
 	return f, e, nil
 }
 
-func GetFee() (int64, error) {
+func GetRate() (uint64, error) {
 	req := NewJSON2Request("factoid-fee", apiCounter(), nil)
 	resp, err := factomdRequest(req)
 	if err != nil {
-		return -1, err
+		return 0, err
 	}
 	if resp.Error != nil {
-		return -1, resp.Error
+		return 0, resp.Error
 	}
 
-	fee := new(FeeResponse)
-	if err := json.Unmarshal(resp.JSONResult(), fee); err != nil {
-		return -1, err
+	rate := new(RateResponse)
+	if err := json.Unmarshal(resp.JSONResult(), rate); err != nil {
+		return 0, err
 	}
 
-	return fee.Fee, nil
+	return rate.Rate, nil
 }
 
 func GetAllChainEntries(chainid string) ([]*Entry, error) {

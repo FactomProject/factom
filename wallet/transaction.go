@@ -19,22 +19,25 @@ import (
 var (
 	ErrTXExists      = errors.New("wallet: Transaction name already exists")
 	ErrTXNotExists   = errors.New("wallet: Transaction name was not found")
-	ErrInvalidTXName = errors.New("wallet: Transaction name is not valid")
+	ErrTXInvalidName = errors.New("wallet: Transaction name is not valid")
 )
 
-func (w *Wallet) CreateTransaction(name string) error {
+func (w *Wallet) NewTransaction(name string) error {
 	if _, exists := w.transactions[name]; exists {
 		return ErrTXExists
 	}
 	
 	// check that the transaction name is valid
+	if name == "" {
+		return ErrTXInvalidName
+	}
 	if len(name) > 32 {
-		return ErrInvalidTXName
+		return ErrTXInvalidName
 	}
 	if match, err := regexp.MatchString("[^a-zA-Z0-9_-]", name); err != nil {
 		return err
 	} else if match {
-		return ErrInvalidTXName
+		return ErrTXInvalidName
 	}
 	
 	t := new(factoid.Transaction)
@@ -111,44 +114,39 @@ func (w *Wallet) AddECOutput(name, address string, amount uint64) error {
 	return nil
 }
 
-func (w *Wallet) AddFee(name, address string) (uint64, error) {
+func (w *Wallet) AddFee(name, address string, rate uint64) error {
 	if _, exists := w.transactions[name]; !exists {
-		return 0, ErrTXNotExists
+		return ErrTXNotExists
 	}
 	trans := w.transactions[name]
 
 	{
 		ins, err := trans.TotalInputs()
 		if err != nil {
-			return 0, err
+			return err
 		}
 		outs, err := trans.TotalOutputs()
 		if err != nil {
-			return 0, err
+			return err
 		}
 		ecs, err := trans.TotalECs()
 		if err != nil {
-			return 0, err
+			return err
 		}
 
 		if ins != outs+ecs {
-			return 0, fmt.Errorf("Inputs and outputs don't add up")
+			return fmt.Errorf("Inputs and outputs don't add up")
 		}
 	}
 
-	fee, err := factom.GetFee()
+	transfee, err := trans.CalculateFee(rate)
 	if err != nil {
-		return 0, err
-	}
-
-	transfee, err := trans.CalculateFee(uint64(fee))
-	if err != nil {
-		return 0, err
+		return err
 	}
 
 	a, err := w.GetFCTAddress(address)
 	if err != nil {
-		return 0, err
+		return err
 	}
 	adr := factoid.NewAddress(a.RCDHash())
 
@@ -156,52 +154,47 @@ func (w *Wallet) AddFee(name, address string) (uint64, error) {
 		if input.GetAddress().IsSameAs(adr) {
 			amt, err := factoid.ValidateAmounts(input.GetAmount(), transfee)
 			if err != nil {
-				return 0, err
+				return err
 			}
 			input.SetAmount(amt)
-			return transfee, nil
+			return nil
 		}
 	}
-	return 0, fmt.Errorf("%s is not an input to the transaction.", address)
+	return fmt.Errorf("%s is not an input to the transaction.", address)
 }
 
-func (w *Wallet) SubFee(name, address string) (uint64, error) {
+func (w *Wallet) SubFee(name, address string, rate uint64) error {
 	if _, exists := w.transactions[name]; !exists {
-		return 0, ErrTXNotExists
+		return ErrTXNotExists
 	}
 	trans := w.transactions[name]
 
 	if !factom.IsValidAddress(address) {
-		return 0, errors.New("Invalid Address")
+		return errors.New("Invalid Address")
 	}
 
 	{
 		ins, err := trans.TotalInputs()
 		if err != nil {
-			return 0, err
+			return err
 		}
 		outs, err := trans.TotalOutputs()
 		if err != nil {
-			return 0, err
+			return err
 		}
 		ecs, err := trans.TotalECs()
 		if err != nil {
-			return 0, err
+			return err
 		}
 
 		if ins != outs+ecs {
-			return 0, fmt.Errorf("Inputs and outputs don't add up")
+			return fmt.Errorf("Inputs and outputs don't add up")
 		}
 	}
 
-	fee, err := factom.GetFee()
+	transfee, err := trans.CalculateFee(rate)
 	if err != nil {
-		return 0, err
-	}
-
-	transfee, err := trans.CalculateFee(uint64(fee))
-	if err != nil {
-		return 0, err
+		return err
 	}
 
 	adr := factoid.NewAddress(base58.Decode(address)[2:34])
@@ -209,10 +202,10 @@ func (w *Wallet) SubFee(name, address string) (uint64, error) {
 	for _, output := range trans.GetOutputs() {
 		if output.GetAddress().IsSameAs(adr) {
 			output.SetAmount(output.GetAmount() - transfee)
-			return transfee, nil
+			return nil
 		}
 	}
-	return 0, fmt.Errorf("%s is not an output to the transaction.", address)
+	return fmt.Errorf("%s is not an output to the transaction.", address)
 }
 
 func (w *Wallet) SignTransaction(name string) error {

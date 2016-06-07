@@ -10,8 +10,23 @@ type addressRequest struct {
 
 type importRequest struct {
 	Addresses []struct {
-		Secret string `json:secret`
+		Secret string `json:"secret"`
 	} `json:addresses`
+}
+
+type transactionRequest struct {
+	Name string `json:"tx-name"`
+}
+
+type transactionValueRequest struct {
+	Name    string `json:"tx-name"`
+	Address string `json:"address"`
+	Amount  int    `json:"amount"`
+}
+
+type transactionAddressRequest {
+	Name    string `json:"tx-name"`
+	Address string `json:"address"`
 }
 
 type addressResponse struct {

@@ -11,7 +11,7 @@ import (
 	"github.com/FactomProject/factom"
 )
 
-func TestCreateTransaction(t *testing.T) {
+func TestNewTransaction(t *testing.T) {
 	dbpath := os.TempDir() + "/test_wallet-01"
 	
 	// create a new database
@@ -22,10 +22,10 @@ func TestCreateTransaction(t *testing.T) {
 	}
 	
 	// create a new transaction
-	if err := w1.CreateTransaction("test_tx-01"); err != nil {
+	if err := w1.NewTransaction("test_tx-01"); err != nil {
 		t.Error(err)
 	}
-	if err := w1.CreateTransaction("test_tx-02"); err != nil {
+	if err := w1.NewTransaction("test_tx-02"); err != nil {
 		t.Error(err)
 	}
 	
@@ -76,7 +76,7 @@ func TestAddInput (t *testing.T) {
 	}
 	
 	// create a new transaction
-	if err := w1.CreateTransaction("tx-01"); err != nil {
+	if err := w1.NewTransaction("tx-01"); err != nil {
 		t.Error(err)
 	}
 	
@@ -144,7 +144,7 @@ func TestComposeTrasnaction(t *testing.T) {
 	}
 	
 	// create a new transaction
-	if err := w1.CreateTransaction("tx-01"); err != nil {
+	if err := w1.NewTransaction("tx-01"); err != nil {
 		t.Error(err)
 	}
 	if err := w1.AddInput("tx-01", f1.PubString(), 5e8); err != nil {
@@ -156,10 +156,8 @@ func TestComposeTrasnaction(t *testing.T) {
 	if err := w1.AddECOutput("tx-01", e1.PubString(), 2e8); err != nil {
 		t.Error(err)
 	}
-	if n, err := w1.AddFee("tx-01", f1.PubString()); err != nil {
+	if err := w1.AddFee("tx-01", f1.PubString(), 10000); err != nil {
 		t.Error(err)
-	} else if n == 0 {
-		t.Errorf("bad fee: %d", n)
 	}
 	if err := w1.SignTransaction("tx-01"); err != nil {
 		t.Error(err)

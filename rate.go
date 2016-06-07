@@ -6,6 +6,6 @@ package factom
 
 import ()
 
-type FeeResponse struct {
-	Fee int64 `json:"fee"`
+type RateResponse struct {
+	Rate uint64 `json:"rate"`
 }
