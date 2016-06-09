@@ -343,7 +343,7 @@ func CommitEntry(e *Entry, name string) error {
 
 type RevealEntryResponse struct {
 	Message string `json:"message"`
-	TxID    string `json:"entryhash"`
+	EntryHash string `json:"entryhash"`
 }
 
 func RevealEntry(e *Entry) (*RevealEntryResponse, error) {
