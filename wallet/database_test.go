@@ -13,7 +13,7 @@ import (
 )
 
 func TestNewWallet(t *testing.T) {
-	dbpath := os.TempDir() + "/ldb1"
+	dbpath := os.TempDir() + "/test_wallet-01"
 	
 	// create a new database
 	w1, err := NewWallet(dbpath)
@@ -51,7 +51,7 @@ func TestNewWallet(t *testing.T) {
 }
 
 func TestOpenWallet(t *testing.T) {
-	dbpath := os.TempDir() + "/ldb1"
+	dbpath := os.TempDir() + "/test_wallet-01"
 	
 	// create a new database
 	w1, err := NewWallet(dbpath)
@@ -93,7 +93,7 @@ func TestOpenWallet(t *testing.T) {
 func TestPutECAddress(t *testing.T) {
 	zSec := "Es2Rf7iM6PdsqfYCo3D1tnAR65SkLENyWJG1deUzpRMQmbh9F3eG"
 	
-	dbpath := os.TempDir() + "/ldb1"
+	dbpath := os.TempDir() + "/test_wallet-01"
 	
 	// create a new database
 	w, err := NewWallet(dbpath)
@@ -127,7 +127,7 @@ func TestPutECAddress(t *testing.T) {
 func TestPutFCTAddress(t *testing.T) {
 	zSec := "Fs1KWJrpLdfucvmYwN2nWrwepLn8ercpMbzXshd1g8zyhKXLVLWj"
 	
-	dbpath := os.TempDir() + "/ldb1"
+	dbpath := os.TempDir() + "/test_wallet-01"
 	
 	// create a new database
 	w, err := NewWallet(dbpath)
@@ -159,7 +159,7 @@ func TestPutFCTAddress(t *testing.T) {
 }
 
 func TestGenerateECAddress(t *testing.T) {
-	dbpath := os.TempDir() + "/ldb1"
+	dbpath := os.TempDir() + "/test_wallet-01"
 	
 	// create a new database
 	w, err := NewWallet(dbpath)
@@ -188,7 +188,7 @@ func TestGenerateECAddress(t *testing.T) {
 }
 
 func TestGenerateFCTAddress(t *testing.T) {
-	dbpath := os.TempDir() + "/ldb1"
+	dbpath := os.TempDir() + "/test_wallet-01"
 	
 	// create a new database
 	w, err := NewWallet(dbpath)
@@ -222,7 +222,7 @@ func TestGetAllAddresses(t *testing.T) {
 	e2Sec := "Es4NQHwo8F4Z4oMnVwndtjV1rzZN3t5pP5u5jtdgiR1RA6FH4Tmc"
 	f2Sec := "Fs3GFV6GNV6ar4b8eGcQWpGFbFtkNWKfEPdbywmha8ez5p7XMJyk"
 	correctLen := 2
-	dbpath := os.TempDir() + "/ldb1"
+	dbpath := os.TempDir() + "/test_wallet-01"
 	
 	// create a new database
 	w, err := NewWallet(dbpath)
