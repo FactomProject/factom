@@ -31,15 +31,6 @@ func NewChain(e *Entry) *Chain {
 	return c
 }
 
-type ChainHead struct {
-	ChainHead string `json:"chainhead"`
-}
-
-type CommitChainResponse struct {
-	Message string `json:"message"`
-	TxID    string `json:"txid"`
-}
-
 // ComposeChainCommit creates a JSON2Request to commit a new Chain via the
 // factomd web api. The request includes the marshaled MessageRequest with the
 // Entry Credit Signature.
@@ -85,7 +76,7 @@ func ComposeChainCommit(c *Chain, ec *ECAddress) (*JSON2Request, error) {
 	buf.Write(ec.PubBytes())
 	buf.Write(sig[:])
 
-	param := MessageRequest{Message: hex.EncodeToString(buf.Bytes())}
+	param := messageRequest{Message: hex.EncodeToString(buf.Bytes())}
 	req := NewJSON2Request("commit-chain", apiCounter(), param)
 
 	return req, nil
@@ -98,7 +89,7 @@ func ComposeChainReveal(c *Chain) (*JSON2Request, error) {
 	if err != nil {
 		return nil, err
 	}
-	param := EntryRequest{Entry: hex.EncodeToString(p)}
+	param := entryRequest{Entry: hex.EncodeToString(p)}
 
 	req := NewJSON2Request("reveal-chain", apiCounter(), param)
 	return req, nil
@@ -108,7 +99,7 @@ func ComposeChainReveal(c *Chain) (*JSON2Request, error) {
 // public key to the factom network. Once the payment is verified and the
 // network is commited to publishing the Chain it may be published by revealing
 // the First Entry in the Chain.
-func CommitChain(c *Chain, ec *ECAddress) error {
+func CommitChain(c *Chain, ec *ECAddress) error {	
 	req, err := ComposeChainCommit(c, ec)
 	if err != nil {
 		return err

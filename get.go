@@ -6,13 +6,84 @@ package factom
 
 import (
 	"encoding/json"
-	"fmt"
 )
+
+// GetECBalance returns the balance in factoshi (factoid * 1e8) of a given Entry
+// Credit Public Address.
+func GetECBalance(key string) (int64, error) {
+	type balanceResponse struct {
+		Balance int64 `json:"balance"`
+	}
+
+	param := addressRequest{Address: key}
+	req := NewJSON2Request("entry-credit-balance", apiCounter(), param)
+	resp, err := factomdRequest(req)
+	if err != nil {
+		return -1, err
+	}
+	if resp.Error != nil {
+		return -1, resp.Error
+	}
+
+	balance := new(balanceResponse)
+	if err := json.Unmarshal(resp.JSONResult(), balance); err != nil {
+		return -1, err
+	}
+
+	return balance.Balance, nil
+}
+
+// GetFactoidBalance returns the balance in factoshi (factoid * 1e8) of a given
+// Factoid Public Address.
+func GetFactoidBalance(key string) (int64, error) {
+	type balanceResponse struct {
+		Balance int64 `json:"balance"`
+	}
+
+	param := addressRequest{Address: key}
+	req := NewJSON2Request("factoid-balance", apiCounter(), param)
+	resp, err := factomdRequest(req)
+	if err != nil {
+		return -1, err
+	}
+	if resp.Error != nil {
+		return -1, resp.Error
+	}
+
+	balance := new(balanceResponse)
+	if err := json.Unmarshal(resp.JSONResult(), balance); err != nil {
+		return -1, err
+	}
+
+	return balance.Balance, nil
+}
+
+func GetFee() (uint64, error) {
+	type feeResponse struct {
+		Fee uint64 `json:"fee"`
+	}
+
+	req := NewJSON2Request("factoid-fee", apiCounter(), nil)
+	resp, err := factomdRequest(req)
+	if err != nil {
+		return 0, err
+	}
+	if resp.Error != nil {
+		return 0, resp.Error
+	}
+
+	fee := new(feeResponse)
+	if err := json.Unmarshal(resp.JSONResult(), fee); err != nil {
+		return 0, err
+	}
+
+	return fee.Fee, nil
+}
 
 // GetDBlock requests a Directory Block from factomd by its Key Merkel Root
 func GetDBlock(keymr string) (*DBlock, error) {
-	param := KeyMRRequest{KeyMR: keymr}
-	req := NewJSON2Request("directory-block", apiCounter(), param)
+	params := keyMRRequest{KeyMR: keymr}
+	req := NewJSON2Request("directory-block", apiCounter(), params)
 	resp, err := factomdRequest(req)
 	if err != nil {
 		return nil, err
@@ -67,8 +138,8 @@ func GetDBlockHeight() (int, error) {
 
 // GetEntry requests an Entry from factomd by its Entry Hash
 func GetEntry(hash string) (*Entry, error) {
-	param := HashRequest{Hash: hash}
-	req := NewJSON2Request("entry", apiCounter(), param)
+	params := hashRequest{Hash: hash}
+	req := NewJSON2Request("entry", apiCounter(), params)
 	resp, err := factomdRequest(req)
 	if err != nil {
 		return nil, err
@@ -86,7 +157,12 @@ func GetEntry(hash string) (*Entry, error) {
 }
 
 func GetChainHead(chainid string) (string, error) {
-	req := NewJSON2Request("chain-head", apiCounter(), nil)
+	type chainHeadResponse struct {
+		ChainHead string `json:"chainhead"`
+	}
+
+	params := chainIDRequest{ChainID: chainid}
+	req := NewJSON2Request("chain-head", apiCounter(), params)
 	resp, err := factomdRequest(req)
 	if err != nil {
 		return "", err
@@ -95,7 +171,7 @@ func GetChainHead(chainid string) (string, error) {
 		return "", resp.Error
 	}
 
-	head := new(ChainHead)
+	head := new(chainHeadResponse)
 	if err := json.Unmarshal(resp.JSONResult(), head); err != nil {
 		return "", err
 	}
@@ -125,8 +201,8 @@ func GetAllEBlockEntries(keymr string) ([]*Entry, error) {
 
 // GetEBlock requests an Entry Block from factomd by its Key Merkel Root
 func GetEBlock(keymr string) (*EBlock, error) {
-	param := KeyMRRequest{KeyMR: keymr}
-	req := NewJSON2Request("entry-block", apiCounter(), param)
+	params := keyMRRequest{KeyMR: keymr}
+	req := NewJSON2Request("entry-block", apiCounter(), params)
 	resp, err := factomdRequest(req)
 	if err != nil {
 		return nil, err
@@ -144,8 +220,8 @@ func GetEBlock(keymr string) (*EBlock, error) {
 }
 
 func GetRaw(keymr string) ([]byte, error) {
-	param := HashRequest{Hash: keymr}
-	req := NewJSON2Request("raw-data", apiCounter(), param)
+	params := hashRequest{Hash: keymr}
+	req := NewJSON2Request("raw-data", apiCounter(), params)
 	resp, err := factomdRequest(req)
 	if err != nil {
 		return nil, err
@@ -160,77 +236,6 @@ func GetRaw(keymr string) ([]byte, error) {
 	}
 
 	return raw.GetDataBytes()
-}
-
-func GetECBalance(key string) (int64, error) {
-	param := AddressRequest{Address: key}
-	req := NewJSON2Request("entry-credit-balance", apiCounter(), param)
-	resp, err := factomdRequest(req)
-	if err != nil {
-		return -1, err
-	}
-	if resp.Error != nil {
-		return -1, resp.Error
-	}
-
-	balance := new(BalanceResponse)
-	if err := json.Unmarshal(resp.JSONResult(), balance); err != nil {
-		return -1, err
-	}
-
-	return balance.Balance, nil
-}
-
-func GetFctBalance(key string) (int64, error) {
-	param := AddressRequest{Address: key}
-	req := NewJSON2Request("factoid-balance", apiCounter(), param)
-	resp, err := factomdRequest(req)
-	if err != nil {
-		return -1, err
-	}
-	if resp.Error != nil {
-		return -1, resp.Error
-	}
-
-	balance := new(BalanceResponse)
-	if err := json.Unmarshal(resp.JSONResult(), balance); err != nil {
-		return -1, err
-	}
-
-	return balance.Balance, nil
-}
-
-func DnsBalance(addr string) (int64, int64, error) {
-	fct, ec, err := ResolveDnsName(addr)
-	if err != nil {
-		return -1, -1, err
-	}
-
-	f, err1 := GetFctBalance(fct)
-	e, err2 := GetECBalance(ec)
-	if err1 != nil || err2 != nil {
-		return f, e, fmt.Errorf("%s\n%s\n", err1, err2)
-	}
-
-	return f, e, nil
-}
-
-func GetRate() (uint64, error) {
-	req := NewJSON2Request("factoid-fee", apiCounter(), nil)
-	resp, err := factomdRequest(req)
-	if err != nil {
-		return 0, err
-	}
-	if resp.Error != nil {
-		return 0, resp.Error
-	}
-
-	rate := new(RateResponse)
-	if err := json.Unmarshal(resp.JSONResult(), rate); err != nil {
-		return 0, err
-	}
-
-	return rate.Rate, nil
 }
 
 func GetAllChainEntries(chainid string) ([]*Entry, error) {

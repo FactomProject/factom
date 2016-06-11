@@ -4,6 +4,8 @@
 
 package wsapi
 
+// requests
+
 type addressRequest struct {
 	Address string `json:"address"`
 }
@@ -28,6 +30,8 @@ type transactionAddressRequest struct {
 	Name    string `json:"tx-name"`
 	Address string `json:"address"`
 }
+
+// responses
 
 type addressResponse struct {
 	Public string `json:"public"`

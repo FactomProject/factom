@@ -9,8 +9,12 @@ import (
 )
 
 func GetReceipt(hash string) (*Receipt, error) {
-	param := HashRequest{Hash: hash}
-	req := NewJSON2Request("receipt", apiCounter(), param)
+	type receiptResponse struct {
+		Receipt *Receipt `json:"receipt"`
+	}
+	
+	params := hashRequest{Hash: hash}
+	req := NewJSON2Request("receipt", apiCounter(), params)
 	resp, err := factomdRequest(req)
 	if err != nil {
 		return nil, err
@@ -19,7 +23,7 @@ func GetReceipt(hash string) (*Receipt, error) {
 		return nil, resp.Error
 	}
 
-	rec := new(ReceiptResponse)
+	rec := new(receiptResponse)
 	if err := json.Unmarshal(resp.JSONResult(), rec); err != nil {
 		return nil, err
 	}
@@ -27,27 +31,19 @@ func GetReceipt(hash string) (*Receipt, error) {
 	return rec.Receipt, nil
 }
 
-type ReceiptResponse struct {
-	Receipt *Receipt `json:"receipt"`
-}
-
 type Receipt struct {
-	Entry                  *JSON         `json:"entry,omitempty"`
-	MerkleBranch           []*MerkleNode `json:"merklebranch,omitempty"`
-	EntryBlockKeyMR        string        `json:"entryblockkeymr,omitempty"`
-	DirectoryBlockKeyMR    string        `json:"directoryblockkeymr,omitempty"`
-	BitcoinTransactionHash string        `json:"bitcointransactionhash,omitempty"`
-	BitcoinBlockHash       string        `json:"bitcoinblockhash,omitempty"`
-}
-
-type JSON struct {
-	Raw  string `json:"raw,omitempty"`
-	Key  string `json:"key,omitempty"`
-	Json string `json:"json,omitempty"`
-}
-
-type MerkleNode struct {
-	Left  string `json:"left,omitempty"`
-	Right string `json:"right,omitempty"`
-	Top   string `json:"top,omitempty"`
+	Entry struct {
+		Raw  string `json:"raw,omitempty"`
+		Key  string `json:"key,omitempty"`
+		Json string `json:"json,omitempty"`
+	} `json:"entry,omitempty"`
+	MerkleBranch []struct {
+		Left  string `json:"left,omitempty"`
+		Right string `json:"right,omitempty"`
+		Top   string `json:"top,omitempty"`
+	} `json:"merklebranch,omitempty"`
+	EntryBlockKeyMR        string `json:"entryblockkeymr,omitempty"`
+	DirectoryBlockKeyMR    string `json:"directoryblockkeymr,omitempty"`
+	BitcoinTransactionHash string `json:"bitcointransactionhash,omitempty"`
+	BitcoinBlockHash       string `json:"bitcoinblockhash,omitempty"`
 }

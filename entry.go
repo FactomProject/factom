@@ -12,33 +12,6 @@ import (
 	"fmt"
 )
 
-type EntryStrings struct {
-	ChainID string   `json:"chainid"`
-	ExtIDs  []string `json:"extids"`
-	Content string   `json:"content"`
-}
-
-func (es *EntryStrings) ToEntry() (*Entry, error) {
-	e := new(Entry)
-	e.ChainID = es.ChainID
-
-	for _, v := range es.ExtIDs {
-		if p, err := hex.DecodeString(v); err != nil {
-			return nil, fmt.Errorf("Could not decode ExtID %s: %s", v, err)
-		} else {
-			e.ExtIDs = append(e.ExtIDs, p)
-		}
-	}
-
-	p, err := hex.DecodeString(es.Content)
-	if err != nil {
-		return nil, fmt.Errorf("Could not decode Content %s: %s", es.Content, err)
-	}
-	e.Content = p
-
-	return e, nil
-}
-
 type Entry struct {
 	ChainID string   `json:"chainid"`
 	ExtIDs  [][]byte `json:"extids"`
@@ -204,7 +177,7 @@ func ComposeEntryCommit(e *Entry, ec *ECAddress) (*JSON2Request, error) {
 	buf.Write(ec.PubBytes())
 	buf.Write(sig[:])
 
-	param := EntryRequest{Entry: hex.EncodeToString(buf.Bytes())}
+	param := entryRequest{Entry: hex.EncodeToString(buf.Bytes())}
 	req := NewJSON2Request("commit-entry", apiCounter(), param)
 
 	return req, nil
@@ -218,7 +191,7 @@ func ComposeEntryReveal(e *Entry) (*JSON2Request, error) {
 		return nil, err
 	}
 
-	param := EntryRequest{Entry: hex.EncodeToString(p)}
+	param := entryRequest{Entry: hex.EncodeToString(p)}
 	req := NewJSON2Request("reveal-entry", apiCounter(), param)
 
 	return req, nil
