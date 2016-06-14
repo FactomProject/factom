@@ -28,6 +28,14 @@ type hashRequest struct {
 	Hash string `json:"hash"`
 }
 
+type secretRequest struct {
+	Secret string `json:"secret"`
+}
+
+type importRequest struct {
+	Addresses []secretRequest `json:addresses`
+}
+
 type keyMRRequest struct {
 	KeyMR string `json:"keymr"`
 }
@@ -41,5 +49,16 @@ type messageRequest struct {
 }
 
 type transactionRequest struct {
-	Transaction string `json:"transaction"`
+	Name string `json:"transaction"`
+}
+
+type transactionValueRequest struct {
+	Name    string `json:"tx-name"`
+	Address string `json:"address"`
+	Amount  uint64 `json:"amount"`
+}
+
+type transactionAddressRequest struct {
+	Name    string `json:"tx-name"`
+	Address string `json:"address"`
 }

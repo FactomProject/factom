@@ -11,6 +11,8 @@ import (
 	"github.com/FactomProject/factom"
 	"github.com/FactomProject/factom/wallet"
 	"github.com/FactomProject/web"
+	
+	"fmt" // DEBUG
 )
 
 const APIVersion string = "2.0"
@@ -79,6 +81,8 @@ func handleV2Request(j *factom.JSON2Request) (*factom.JSON2Response, *factom.JSO
 		resp, jsonError = handleNewTransaction(params)
 	case "delete-transaction":
 		resp, jsonError = handleDeleteTransaction(params)
+	case "transactions":
+		resp, jsonError = handleTransactions(params)
 	case "add-input":
 		resp, jsonError = handleAddInput(params)
 	case "add-output":
@@ -247,7 +251,8 @@ func handleNewTransaction(params interface{}) (interface{}, *factom.JSONError) {
 	if err := fctWallet.NewTransaction(req.Name); err != nil {
 		return nil, newCustomInternalError(err)
 	}
-	return "success", nil
+	resp := transactionResponse{Name: req.Name}
+	return resp, nil
 }
 
 func handleDeleteTransaction(params interface{}) (interface{}, *factom.JSONError) {
@@ -262,9 +267,21 @@ func handleDeleteTransaction(params interface{}) (interface{}, *factom.JSONError
 	return "success", nil
 }
 
+func handleTransactions(params interface{}) (interface{}, *factom.JSONError) {
+	resp := new(transactionsResponse)
+
+	for name, _ := range fctWallet.GetTransactions() {
+		r := transactionResponse{Name: name}
+		resp.Transactions = append(resp.Transactions, r)
+	}
+	
+	return resp, nil
+}
+
 func handleAddInput(params interface{}) (interface{}, *factom.JSONError) {
 	req := new(transactionValueRequest)
 	if err := mapToObject(params, req); err != nil {
+		fmt.Println("DEBUG:", err)
 		return nil, newInvalidParamsError()
 	}
 	
@@ -304,11 +321,11 @@ func handleAddFee(params interface{}) (interface{}, *factom.JSONError) {
 		return nil, newInvalidParamsError()
 	}
 	
-	rate, err := factom.GetRate()
+	fee, err := factom.GetFee()
 	if err != nil {
 		return nil, newCustomInternalError(err)
 	}
-	if err := fctWallet.AddFee(req.Name, req.Address, rate); err != nil {
+	if err := fctWallet.AddFee(req.Name, req.Address, fee); err != nil {
 		return nil, newCustomInternalError(err)
 	}
 	return "success", nil
@@ -320,11 +337,11 @@ func handleSubFee(params interface{}) (interface{}, *factom.JSONError) {
 		return nil, newInvalidParamsError()
 	}
 	
-	rate, err := factom.GetRate()
+	fee, err := factom.GetFee()
 	if err != nil {
 		return nil, newCustomInternalError(err)
 	}
-	if err := fctWallet.SubFee(req.Name, req.Address, rate); err != nil {
+	if err := fctWallet.SubFee(req.Name, req.Address, fee); err != nil {
 		return nil, newCustomInternalError(err)
 	}
 	return "success", nil

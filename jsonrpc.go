@@ -129,7 +129,7 @@ func factomdRequest(req *JSON2Request) (*JSON2Response, error) {
 	if err := json.Unmarshal(body, r); err != nil {
 		return nil, err
 	}
-
+	
 	return r, nil
 }
 

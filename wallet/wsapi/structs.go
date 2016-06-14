@@ -43,6 +43,14 @@ type multiAddressResponse struct {
 }
 
 type walletBackupResponse struct {
-	Seed      string             `json:wallet-seed`
+	Seed      string             `json:"wallet-seed"`
 	Addresses []*addressResponse `json:"addresses"`
+}
+
+type transactionResponse struct {
+	Name string `json:"tx-name"`
+}
+
+type transactionsResponse struct {
+	Transactions []transactionResponse `json:"transactions"`
 }

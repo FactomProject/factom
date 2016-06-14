@@ -8,12 +8,12 @@ import (
 	"encoding/json"
 )
 
-type addressResponse struct {
-	Public string `json:"public"`
-	Secret string `json:"secret"`
-}
-
 func GenerateFactoidAddress() (*FactoidAddress, error) {
+	type addressResponse struct {
+		Public string `json:"public"`
+		Secret string `json:"secret"`
+	}
+	
 	req := NewJSON2Request("generate-factoid-address", apiCounter(), nil)
 	resp, err := walletRequest(req)
 	if err != nil {
@@ -36,6 +36,11 @@ func GenerateFactoidAddress() (*FactoidAddress, error) {
 }
 
 func GenerateECAddress() (*ECAddress, error) {
+	type addressResponse struct {
+		Public string `json:"public"`
+		Secret string `json:"secret"`
+	}
+	
 	req := NewJSON2Request("generate-ec-address", apiCounter(), nil)
 	resp, err := walletRequest(req)
 	if err != nil {
@@ -57,11 +62,60 @@ func GenerateECAddress() (*ECAddress, error) {
 	return e, nil
 }
 
+func ImportAddresses(addrs ...string) error {
+	params := new(importRequest)
+	for _, addr := range addrs {
+		s := secretRequest{Secret: addr}
+		params.Addresses = append(params.Addresses, s)
+	}
+	req := NewJSON2Request("import-addresses", apiCounter(), params)
+	resp, err := walletRequest(req)
+	if err != nil {
+		return err
+	}
+	if resp.Error != nil {
+		return resp.Error
+	}
+	
+	return nil
+}
+
+func ListAddresses() ([]string, error) {
+	type addressResponse struct {
+		Public string `json:"public"`
+		Secret string `json:"secret"`
+	}
+	
+	type multiAddressResponse struct {
+		Addresses []*addressResponse `json:"addresses"`
+	}
+	
+	req := NewJSON2Request("all-addresses", apiCounter(), nil)
+	resp, err := walletRequest(req)
+	if err != nil {
+		return nil, err
+	}
+	if resp.Error != nil {
+		return nil, resp.Error
+	}
+
+	r := make([]string, 0)
+	as := new(multiAddressResponse)
+	if err := json.Unmarshal(resp.JSONResult(), as); err != nil {
+		return nil, err
+	}
+	for _, adr := range as.Addresses {
+		r = append(r, adr.Public)
+	}
+
+	return r, nil
+}
+
 //func GenerateFactoidAddressFromMnemonic(name string, mnemonic string) (string, error) {
 //	name = strings.TrimSpace(name)
-//	param := GenerateAddressFromPrivateKeyRequest{Name: name, Mnemonic: mnemonic}
+//	params := GenerateAddressFromPrivateKeyRequest{Name: name, Mnemonic: mnemonic}
 //
-//	req := NewJSON2Request("factoid-generate-address-from-token-sale", apiCounter(), param)
+//	req := NewJSON2Request("factoid-generate-address-from-token-sale", apiCounter(), params)
 //	resp, err := walletRequest(req)
 //	if err != nil {
 //		return "", err

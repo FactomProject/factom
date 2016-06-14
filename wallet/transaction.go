@@ -270,7 +270,7 @@ func (w *Wallet) ComposeTransaction(name string) (*factom.JSON2Request, error) {
 		param.Transaction = hex.EncodeToString(p)
 	}
 
-	req := factom.NewJSON2Request("factoid-transaction", apiCounter(), param)
+	req := factom.NewJSON2Request("factoid-submit", apiCounter(), param)
 
 	return req, nil
 }

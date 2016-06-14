@@ -15,8 +15,8 @@ func GetECBalance(key string) (int64, error) {
 		Balance int64 `json:"balance"`
 	}
 
-	param := addressRequest{Address: key}
-	req := NewJSON2Request("entry-credit-balance", apiCounter(), param)
+	params := addressRequest{Address: key}
+	req := NewJSON2Request("entry-credit-balance", apiCounter(), params)
 	resp, err := factomdRequest(req)
 	if err != nil {
 		return -1, err
@@ -40,8 +40,8 @@ func GetFactoidBalance(key string) (int64, error) {
 		Balance int64 `json:"balance"`
 	}
 
-	param := addressRequest{Address: key}
-	req := NewJSON2Request("factoid-balance", apiCounter(), param)
+	params := addressRequest{Address: key}
+	req := NewJSON2Request("factoid-balance", apiCounter(), params)
 	resp, err := factomdRequest(req)
 	if err != nil {
 		return -1, err

@@ -177,8 +177,8 @@ func ComposeEntryCommit(e *Entry, ec *ECAddress) (*JSON2Request, error) {
 	buf.Write(ec.PubBytes())
 	buf.Write(sig[:])
 
-	param := entryRequest{Entry: hex.EncodeToString(buf.Bytes())}
-	req := NewJSON2Request("commit-entry", apiCounter(), param)
+	params := entryRequest{Entry: hex.EncodeToString(buf.Bytes())}
+	req := NewJSON2Request("commit-entry", apiCounter(), params)
 
 	return req, nil
 }
@@ -191,8 +191,8 @@ func ComposeEntryReveal(e *Entry) (*JSON2Request, error) {
 		return nil, err
 	}
 
-	param := entryRequest{Entry: hex.EncodeToString(p)}
-	req := NewJSON2Request("reveal-entry", apiCounter(), param)
+	params := entryRequest{Entry: hex.EncodeToString(p)}
+	req := NewJSON2Request("reveal-entry", apiCounter(), params)
 
 	return req, nil
 }
