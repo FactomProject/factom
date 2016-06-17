@@ -250,20 +250,8 @@ func (a *FactoidAddress) RCDType() uint8 {
 	return a.rcd.Type()
 }
 
-func (a *FactoidAddress) PubString() string {
-	buf := new(bytes.Buffer)
-
-	// FC address prefix
-	buf.Write(fcPubPrefix)
-
-	// RCD Hash
-	buf.Write(a.RCDHash())
-
-	// Checksum
-	check := shad(buf.Bytes())[:4]
-	buf.Write(check)
-
-	return base58.Encode(buf.Bytes())
+func (a *FactoidAddress) PubBytes() []byte {
+	return a.rcd.(*RCD1).PubBytes()
 }
 
 func (a *FactoidAddress) SecBytes() []byte {
@@ -291,5 +279,17 @@ func (a *FactoidAddress) SecString() string {
 }
 
 func (a *FactoidAddress) String() string {
-	return a.PubString()
+	buf := new(bytes.Buffer)
+
+	// FC address prefix
+	buf.Write(fcPubPrefix)
+
+	// RCD Hash
+	buf.Write(a.RCDHash())
+
+	// Checksum
+	check := shad(buf.Bytes())[:4]
+	buf.Write(check)
+
+	return base58.Encode(buf.Bytes())
 }

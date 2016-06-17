@@ -13,7 +13,7 @@ import (
 )
 
 func TestNewWallet(t *testing.T) {
-	dbpath := os.TempDir() + "/test_wallet-01"
+	dbpath := os.TempDir() + "/test_wallet-02"
 	
 	// create a new database
 	w1, err := NewWallet(dbpath)
@@ -145,7 +145,7 @@ func TestPutFCTAddress(t *testing.T) {
 	}
 	
 	// Check that the address was written into the db
-	if _, err := w.GetFCTAddress(f.PubString()); err != nil {
+	if _, err := w.GetFCTAddress(f.String()); err != nil {
 		t.Error(err)
 	}
 
@@ -203,7 +203,7 @@ func TestGenerateFCTAddress(t *testing.T) {
 	}
 	
 	// Check that the address was written into the db
-	if _, err := w.GetFCTAddress(f.PubString()); err != nil {
+	if _, err := w.GetFCTAddress(f.String()); err != nil {
 		t.Error(err)
 	}
 

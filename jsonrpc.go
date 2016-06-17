@@ -51,17 +51,19 @@ func (e *JSONError) Error() string {
 }
 
 type JSON2Request struct {
-	JSONRPC string      `json:"jsonrpc"`
-	ID      interface{} `json:"id"`
-	Params  interface{} `json:"params,omitempty"`
-	Method  string      `json:"method,omitempty"`
+	JSONRPC string          `json:"jsonrpc"`
+	ID      interface{}     `json:"id"`
+	Params  json.RawMessage `json:"params,omitempty"`
+	Method  string          `json:"method,omitempty"`
 }
 
 func NewJSON2Request(method string, id, params interface{}) *JSON2Request {
 	j := new(JSON2Request)
 	j.JSONRPC = "2.0"
 	j.ID = id
-	j.Params = params
+	if b, err := json.Marshal(params); err == nil {
+		j.Params = b
+	}
 	j.Method = method
 	return j
 }
@@ -79,10 +81,10 @@ func ParseJSON2Request(request string) (*JSON2Request, error) {
 }
 
 type JSON2Response struct {
-	JSONRPC string      `json:"jsonrpc"`
-	ID      interface{} `json:"id"`
-	Error   *JSONError  `json:"error,omitempty"`
-	Result  interface{} `json:"result,omitempty"`
+	JSONRPC string          `json:"jsonrpc"`
+	ID      interface{}     `json:"id"`
+	Error   *JSONError      `json:"error,omitempty"`
+	Result  json.RawMessage `json:"result,omitempty"`
 }
 
 func NewJSON2Response() *JSON2Response {
@@ -96,8 +98,7 @@ func (j *JSON2Response) JSONString() (string, error) {
 }
 
 func (j *JSON2Response) JSONResult() []byte {
-	p, _ := json.Marshal(j.Result)
-	return p
+	return j.Result
 }
 
 func (j *JSON2Response) String() string {

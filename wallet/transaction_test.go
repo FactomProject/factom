@@ -70,7 +70,7 @@ func TestAddInput (t *testing.T) {
 		t.Error(err)
 	}
 	// Get the address back out of the db
-	adr, err := w1.GetFCTAddress(f.PubString())
+	adr, err := w1.GetFCTAddress(f.String())
 	if err != nil {
 		t.Error(err)
 	}
@@ -80,7 +80,7 @@ func TestAddInput (t *testing.T) {
 		t.Error(err)
 	}
 	
-	if err := w1.AddInput("tx-01", adr.PubString(), 5); err != nil {
+	if err := w1.AddInput("tx-01", adr.String(), 5); err != nil {
 		t.Error(err)
 	}
 	if len(w1.GetTransactions()) != 1 {
@@ -99,7 +99,8 @@ func TestAddInput (t *testing.T) {
 
 func TestComposeTrasnaction(t *testing.T) {
 	dbpath := os.TempDir() + "/test_wallet-01"
-	f1Sec := "Fs1KWJrpLdfucvmYwN2nWrwepLn8ercpMbzXshd1g8zyhKXLVLWj"
+	f1Sec := "Fs3E9gV6DXsYzf7Fqx1fVBQPQXV695eP3k5XbmHEZVRLkMdD9qCK"
+//	f1Sec := "Fs1KWJrpLdfucvmYwN2nWrwepLn8ercpMbzXshd1g8zyhKXLVLWj"
 	f2Sec := "Fs3GFV6GNV6ar4b8eGcQWpGFbFtkNWKfEPdbywmha8ez5p7XMJyk"
 	e1Sec := "Es2Rf7iM6PdsqfYCo3D1tnAR65SkLENyWJG1deUzpRMQmbh9F3eG"
 	
@@ -124,7 +125,7 @@ func TestComposeTrasnaction(t *testing.T) {
 	if out, err := factom.GetFactoidAddress(f1Sec); err != nil {
 		t.Error(err)
 	} else {
-		if f, err := w1.GetFCTAddress(out.PubString()); err != nil {
+		if f, err := w1.GetFCTAddress(out.String()); err != nil {
 			t.Error(err)
 		} else {
 			f1 = f
@@ -147,16 +148,16 @@ func TestComposeTrasnaction(t *testing.T) {
 	if err := w1.NewTransaction("tx-01"); err != nil {
 		t.Error(err)
 	}
-	if err := w1.AddInput("tx-01", f1.PubString(), 5e8); err != nil {
+	if err := w1.AddInput("tx-01", f1.String(), 5e8); err != nil {
 		t.Error(err)
 	}
-	if err := w1.AddOutput("tx-01", f2.PubString(), 3e8); err != nil {
+	if err := w1.AddOutput("tx-01", f2.String(), 3e8); err != nil {
 		t.Error(err)
 	}
 	if err := w1.AddECOutput("tx-01", e1.PubString(), 2e8); err != nil {
 		t.Error(err)
 	}
-	if err := w1.AddFee("tx-01", f1.PubString(), 10000); err != nil {
+	if err := w1.AddFee("tx-01", f1.String(), 10000); err != nil {
 		t.Error(err)
 	}
 	if err := w1.SignTransaction("tx-01"); err != nil {

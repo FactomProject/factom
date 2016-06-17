@@ -2,6 +2,8 @@
 // Use of this source code is governed by the MIT
 // license that can be found in the LICENSE file.
 
+// run ``factom-walletd -w /tmp/test_wallet-01 -p 8889`` and ``factomd`` to test the wsapi calls.
+
 package wsapi_test
 
 import (
@@ -86,8 +88,22 @@ func TestTransaction(t *testing.T) {
 		t.Log(resp)
 	}
 	
-	addfee := `{"jsonrpc":"2.0","id":0,"method":"add-fee","params":{"tx-name":"a","address":"FA2xWmGckzbACp7LR43bfnViCyN4uNhugBxiaYPtWGVZVSn1y2m6"}}`
+	addfee := `{"jsonrpc":"2.0","id":0,"method":"add-fee","params":{"tx-name":"a","address":"FA2jK2HcLnRdS94dEcU27rF3meoJfpUcZPSinpb7AwQvPRY6RL1Q"}}`
 	if resp, err := apiCall(addfee); err != nil {
+		t.Error(err)
+	} else {
+		t.Log(resp)
+	}
+
+	sign := `{"jsonrpc":"2.0","id":0,"method":"sign-transaction","params":{"tx-name":"a"}}`
+	if resp, err := apiCall(sign); err != nil {
+		t.Error(err)
+	} else {
+		t.Log(resp)
+	}
+
+	compose := `{"jsonrpc":"2.0","id":0,"method":"compose-transaction","params":{"tx-name":"a"}}`
+	if resp, err := apiCall(compose); err != nil {
 		t.Error(err)
 	} else {
 		t.Log(resp)

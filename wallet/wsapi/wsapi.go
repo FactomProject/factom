@@ -15,6 +15,8 @@ import (
 	"fmt" // DEBUG
 )
 
+var _ = fmt.Sprint("DEBUG")
+
 const APIVersion string = "2.0"
 
 var (
@@ -62,7 +64,7 @@ func handleV2(ctx *web.Context) {
 func handleV2Request(j *factom.JSON2Request) (*factom.JSON2Response, *factom.JSONError) {
 	var resp interface{}
 	var jsonError *factom.JSONError
-	params := j.Params
+	params := []byte(j.Params)
 
 	switch j.Method {
 	case "address":
@@ -106,14 +108,18 @@ func handleV2Request(j *factom.JSON2Request) (*factom.JSON2Response, *factom.JSO
 
 	jsonResp := factom.NewJSON2Response()
 	jsonResp.ID = j.ID
-	jsonResp.Result = resp
+	if b, err := json.Marshal(resp); err != nil {
+		return nil, newCustomInternalError(err)
+	} else {
+		jsonResp.Result = b
+	}
 
 	return jsonResp, nil
 }
 
-func handleAddress(params interface{}) (interface{}, *factom.JSONError) {
+func handleAddress(params []byte) (interface{}, *factom.JSONError) {
 	req := new(addressRequest)
-	if err := mapToObject(params, req); err != nil {
+	if err := json.Unmarshal(params, req); err != nil {
 		return nil, newInvalidParamsError()
 	}
 
@@ -138,7 +144,7 @@ func handleAddress(params interface{}) (interface{}, *factom.JSONError) {
 	return resp, nil
 }
 
-func handleAllAddresses(params interface{}) (interface{}, *factom.JSONError) {
+func handleAllAddresses(params []byte) (interface{}, *factom.JSONError) {
 	resp := new(multiAddressResponse)
 
 	fs, es, err := fctWallet.GetAllAddresses()
@@ -157,7 +163,7 @@ func handleAllAddresses(params interface{}) (interface{}, *factom.JSONError) {
 	return resp, nil
 }
 
-func handleGenerateFactoidAddress(params interface{}) (interface{}, *factom.JSONError) {
+func handleGenerateFactoidAddress(params []byte) (interface{}, *factom.JSONError) {
 	a, err := fctWallet.GenerateFCTAddress()
 	if err != nil {
 		return nil, newCustomInternalError(err)
@@ -168,7 +174,7 @@ func handleGenerateFactoidAddress(params interface{}) (interface{}, *factom.JSON
 	return resp, nil
 }
 
-func handleGenerateECAddress(params interface{}) (interface{}, *factom.JSONError) {
+func handleGenerateECAddress(params []byte) (interface{}, *factom.JSONError) {
 	a, err := fctWallet.GenerateECAddress()
 	if err != nil {
 		return nil, newCustomInternalError(err)
@@ -179,9 +185,9 @@ func handleGenerateECAddress(params interface{}) (interface{}, *factom.JSONError
 	return resp, nil
 }
 
-func handleImportAddresses(params interface{})  (interface{}, *factom.JSONError) {
+func handleImportAddresses(params []byte)  (interface{}, *factom.JSONError) {
 	req := new(importRequest)
-	if err := mapToObject(params, req); err != nil {
+	if err := json.Unmarshal(params, req); err != nil {
 		return nil, newInvalidParamsError()
 	}
 	
@@ -215,7 +221,7 @@ func handleImportAddresses(params interface{})  (interface{}, *factom.JSONError)
 	return resp, nil
 }
 
-func handleWalletBackup(params interface{}) (interface{}, *factom.JSONError) {
+func handleWalletBackup(params []byte) (interface{}, *factom.JSONError) {
 	resp := new(walletBackupResponse)
 
 	if seed, err := fctWallet.GetSeed(); err != nil {
@@ -242,9 +248,9 @@ func handleWalletBackup(params interface{}) (interface{}, *factom.JSONError) {
 
 // transaction handlers
 
-func handleNewTransaction(params interface{}) (interface{}, *factom.JSONError) {
+func handleNewTransaction(params []byte) (interface{}, *factom.JSONError) {
 	req := new(transactionRequest)
-	if err := mapToObject(params, req); err != nil {
+	if err := json.Unmarshal(params, req); err != nil {
 		return nil, newInvalidParamsError()
 	}
 	
@@ -255,9 +261,9 @@ func handleNewTransaction(params interface{}) (interface{}, *factom.JSONError) {
 	return resp, nil
 }
 
-func handleDeleteTransaction(params interface{}) (interface{}, *factom.JSONError) {
+func handleDeleteTransaction(params []byte) (interface{}, *factom.JSONError) {
 	req := new(transactionRequest)
-	if err := mapToObject(params, req); err != nil {
+	if err := json.Unmarshal(params, req); err != nil {
 		return nil, newInvalidParamsError()
 	}
 	
@@ -267,7 +273,7 @@ func handleDeleteTransaction(params interface{}) (interface{}, *factom.JSONError
 	return "success", nil
 }
 
-func handleTransactions(params interface{}) (interface{}, *factom.JSONError) {
+func handleTransactions(params []byte) (interface{}, *factom.JSONError) {
 	resp := new(transactionsResponse)
 
 	for name, _ := range fctWallet.GetTransactions() {
@@ -278,9 +284,9 @@ func handleTransactions(params interface{}) (interface{}, *factom.JSONError) {
 	return resp, nil
 }
 
-func handleAddInput(params interface{}) (interface{}, *factom.JSONError) {
+func handleAddInput(params []byte) (interface{}, *factom.JSONError) {
 	req := new(transactionValueRequest)
-	if err := mapToObject(params, req); err != nil {
+	if err := json.Unmarshal(params, req); err != nil {
 		fmt.Println("DEBUG:", err)
 		return nil, newInvalidParamsError()
 	}
@@ -291,9 +297,9 @@ func handleAddInput(params interface{}) (interface{}, *factom.JSONError) {
 	return "success", nil
 }
 
-func handleAddOutput(params interface{}) (interface{}, *factom.JSONError) {
+func handleAddOutput(params []byte) (interface{}, *factom.JSONError) {
 	req := new(transactionValueRequest)
-	if err := mapToObject(params, req); err != nil {
+	if err := json.Unmarshal(params, req); err != nil {
 		return nil, newInvalidParamsError()
 	}
 	
@@ -303,9 +309,9 @@ func handleAddOutput(params interface{}) (interface{}, *factom.JSONError) {
 	return "success", nil
 }
 
-func handleAddECOutput(params interface{}) (interface{}, *factom.JSONError) {
+func handleAddECOutput(params []byte) (interface{}, *factom.JSONError) {
 	req := new(transactionValueRequest)
-	if err := mapToObject(params, req); err != nil {
+	if err := json.Unmarshal(params, req); err != nil {
 		return nil, newInvalidParamsError()
 	}
 	
@@ -315,9 +321,9 @@ func handleAddECOutput(params interface{}) (interface{}, *factom.JSONError) {
 	return "success", nil
 }
 
-func handleAddFee(params interface{}) (interface{}, *factom.JSONError) {
+func handleAddFee(params []byte) (interface{}, *factom.JSONError) {
 	req := new(transactionAddressRequest)
-	if err := mapToObject(params, req); err != nil {
+	if err := json.Unmarshal(params, req); err != nil {
 		return nil, newInvalidParamsError()
 	}
 	
@@ -331,9 +337,9 @@ func handleAddFee(params interface{}) (interface{}, *factom.JSONError) {
 	return "success", nil
 }
 
-func handleSubFee(params interface{}) (interface{}, *factom.JSONError) {
+func handleSubFee(params []byte) (interface{}, *factom.JSONError) {
 	req := new(transactionAddressRequest)
-	if err := mapToObject(params, req); err != nil {
+	if err := json.Unmarshal(params, req); err != nil {
 		return nil, newInvalidParamsError()
 	}
 	
@@ -347,9 +353,9 @@ func handleSubFee(params interface{}) (interface{}, *factom.JSONError) {
 	return "success", nil
 }
 
-func handleSignTransaction(params interface{}) (interface{}, *factom.JSONError) {
+func handleSignTransaction(params []byte) (interface{}, *factom.JSONError) {
 	req := new(transactionRequest)
-	if err := mapToObject(params, req); err != nil {
+	if err := json.Unmarshal(params, req); err != nil {
 		return nil, newInvalidParamsError()
 	}
 	
@@ -359,9 +365,9 @@ func handleSignTransaction(params interface{}) (interface{}, *factom.JSONError) 
 	return "success", nil
 }
 
-func handleComposeTransaction(params interface{}) (interface{}, *factom.JSONError) {
+func handleComposeTransaction(params []byte) (interface{}, *factom.JSONError) {
 	req := new(transactionRequest)
-	if err := mapToObject(params, req); err != nil {
+	if err := json.Unmarshal(params, req); err != nil {
 		return nil, newInvalidParamsError()
 	}
 	
@@ -375,21 +381,13 @@ func handleComposeTransaction(params interface{}) (interface{}, *factom.JSONErro
 // utility functions
 
 type addressResponder interface {
-	PubString() string
+	String() string
 	SecString() string
 }
 
 func mkAddressResponse(a addressResponder) *addressResponse {
 	r := new(addressResponse)
-	r.Public = a.PubString()
+	r.Public = a.String()
 	r.Secret = a.SecString()
 	return r
-}
-
-func mapToObject(source interface{}, dst interface{}) error {
-	b, err := json.Marshal(source)
-	if err != nil {
-		return err
-	}
-	return json.Unmarshal(b, dst)
 }

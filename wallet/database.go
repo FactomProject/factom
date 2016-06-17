@@ -11,8 +11,8 @@ import (
 	"os"
 	"sync"
 
-	"github.com/FactomProject/factoid"
 	"github.com/FactomProject/factom"
+	"github.com/FactomProject/factomd/common/factoid"
 	"github.com/FactomProject/goleveldb/leveldb"
 	"github.com/FactomProject/goleveldb/leveldb/opt"
 	"github.com/FactomProject/goleveldb/leveldb/util"
@@ -30,7 +30,7 @@ var (
 type Wallet struct {
 	lock         sync.RWMutex
 	ldb          *leveldb.DB
-	transactions map[string]factoid.ITransaction
+	transactions map[string]*factoid.Transaction
 }
 
 // NewWallet creates a new Factom Wallet Database. It will return an error if a
@@ -38,7 +38,7 @@ type Wallet struct {
 func NewWallet(path string) (*Wallet, error) {
 	o := &opt.Options{ErrorIfExist: true}
 	w := new(Wallet)
-	w.transactions = make(map[string]factoid.ITransaction)
+	w.transactions = make(map[string]*factoid.Transaction)
 	if l, err := leveldb.OpenFile(path, o); err != nil {
 		return nil, err
 	} else {
@@ -63,7 +63,7 @@ func NewWallet(path string) (*Wallet, error) {
 func OpenWallet(path string) (*Wallet, error) {
 	o := &opt.Options{ErrorIfMissing: true}
 	w := new(Wallet)
-	w.transactions = make(map[string]factoid.ITransaction)
+	w.transactions = make(map[string]*factoid.Transaction)
 	
 	// open the db file
 	if l, err := leveldb.OpenFile(path, o); err != nil {
@@ -234,7 +234,7 @@ func (w *Wallet) PutECAddress(e *factom.ECAddress) error {
 
 // PutFCTAddress stores a Factoid Address in the Wallet Database.
 func (w *Wallet) PutFCTAddress(f *factom.FactoidAddress) error {
-	key := append(fcDBPrefix, f.PubString()...)
+	key := append(fcDBPrefix, f.String()...)
 	return w.ldb.Put(key, []byte(f.SecString()), nil)
 }
 

@@ -6,6 +6,7 @@ package factom
 
 import (
 	"encoding/json"
+	"fmt"
 )
 
 func GenerateFactoidAddress() (*FactoidAddress, error) {
@@ -111,6 +112,67 @@ func ListAddresses() ([]string, error) {
 	return r, nil
 }
 
+func FetchECAddress(ecpub string) (*ECAddress, error) {
+	type addressResponse struct {
+		Public string `json:"public"`
+		Secret string `json:"secret"`
+	}
+	
+	if AddressStringType(ecpub) != ECPub {
+		return nil, fmt.Errorf(
+			"%s is not an Entry Credit Public Address", ecpub)
+	}
+	params := new(addressRequest)
+	params.Address = ecpub
+	
+	req := NewJSON2Request("address", apiCounter(), params)
+	resp, err := walletRequest(req)
+	if err != nil {
+		return nil, err
+	}
+	if resp.Error != nil {
+		return nil, resp.Error
+	}
+
+	r := new(addressResponse)
+	if err := json.Unmarshal(resp.JSONResult(), r); err != nil {
+		return nil, err
+	}
+
+	return GetECAddress(r.Secret)
+}
+
+func FetchFactoidAddress(fctpub string) (*FactoidAddress, error) {
+	type addressResponse struct {
+		Public string `json:"public"`
+		Secret string `json:"secret"`
+	}
+	
+	if AddressStringType(fctpub) != FactoidPub {
+		return nil, fmt.Errorf("%s is not a Factoid Address", fctpub)
+	}
+	params := new(addressRequest)
+	params.Address = fctpub
+	
+	req := NewJSON2Request("address", apiCounter(), params)
+	resp, err := walletRequest(req)
+	if err != nil {
+		return nil, err
+	}
+	if resp.Error != nil {
+		return nil, resp.Error
+	}
+
+	r := new(addressResponse)
+	if err := json.Unmarshal(resp.JSONResult(), r); err != nil {
+		return nil, err
+	}
+
+	return GetFactoidAddress(r.Secret)
+}
+
+
+// TODO ----
 //func GenerateFactoidAddressFromMnemonic(name string, mnemonic string) (string, error) {
 //	name = strings.TrimSpace(name)
 //	params := GenerateAddressFromPrivateKeyRequest{Name: name, Mnemonic: mnemonic}

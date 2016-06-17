@@ -11,9 +11,9 @@ import (
 	"regexp"
 
 	"github.com/FactomProject/btcutil/base58"
-	ed "github.com/FactomProject/ed25519"
-	"github.com/FactomProject/factoid"
 	"github.com/FactomProject/factom"
+	"github.com/FactomProject/factomd/common/factoid"
+	"github.com/FactomProject/factomd/common/primitives"
 )
 
 var (
@@ -76,6 +76,7 @@ func (w *Wallet) AddInput(name, address string, amount uint64) error {
 
 	// Add our new input
 	trans.AddInput(adr, amount)
+	trans.AddRCD(factoid.NewRCD_1(a.PubBytes()))
 
 	return nil
 }
@@ -219,37 +220,24 @@ func (w *Wallet) SignTransaction(name string) error {
 		return err
 	}
 
-	var errMsg []byte
 	for i, rcd := range trans.GetRCDs() {
-		rcd1, ok := rcd.(*factoid.RCD_1)
-		if ok {
-			pub := rcd1.GetPublicKey()
-			key := base58.CheckEncodeWithVersionBytes(pub[:], 0x5f, 0xb1)
-			adr, err := w.GetFCTAddress(key)
-			if err != nil {
-				errMsg = append(errMsg,
-					[]byte("Do not have the private key for: "+
-						factoid.ConvertFctAddressToUserStr(factoid.NewAddress(pub))+"\n")...)
-			} else {
-				sec := new([factoid.SIGNATURE_LENGTH]byte)
-				copy(sec[:], adr.SecBytes())
-				bsig := ed.Sign(sec, data)
-				sig := new(factoid.Signature)
-				sig.SetSignature(bsig[:])
-				sigblk := new(factoid.SignatureBlock)
-				sigblk.AddSignature(sig)
-				trans.SetSignatureBlock(i, sigblk)
-			}
+		a, err := rcd.GetAddress()
+		if err != nil {
+			return err
 		}
-	}
-	if errMsg != nil {
-		return errors.New(string(errMsg))
+			
+		f, err := w.GetFCTAddress(primitives.ConvertFctAddressToUserStr(a))
+		if err !=  nil {
+			return err
+		}
+		sig := factoid.NewSingleSignatureBlock(f.SecBytes(), data)
+		trans.SetSignatureBlock(i, sig)
 	}
 
 	return nil
 }
 
-func (w *Wallet) GetTransactions() map[string]factoid.ITransaction {
+func (w *Wallet) GetTransactions() map[string]*factoid.Transaction {
 	return w.transactions
 }
 

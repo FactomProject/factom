@@ -49,7 +49,7 @@ type messageRequest struct {
 }
 
 type transactionRequest struct {
-	Name string `json:"transaction"`
+	Name string `json:"tx-name"`
 }
 
 type transactionValueRequest struct {
