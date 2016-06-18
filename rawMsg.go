@@ -8,12 +8,8 @@ type SendRawMessageResponse struct {
 	Message string `json:"message"`
 }
 
-type SendRawMessageRequest struct {
-	Message string `json:"message"`
-}
-
 func SendRawMsg(message string) (*SendRawMessageResponse, error) {
-	param := SendRawMessageRequest{Message: message}
+	param := messageRequest{Message: message}
 	req := NewJSON2Request("send-raw-message", apiCounter(), param)
 	resp, err := factomdRequest(req)
 	if err != nil {

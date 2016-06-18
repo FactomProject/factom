@@ -8,11 +8,6 @@ import (
 	"encoding/json"
 )
 
-type AckRequest struct {
-	TxID            string `json:"txid,omitempty"`
-	FullTransaction string `json:"fulltransaction,omitempty"`
-}
-
 type FactoidTxStatus struct {
 	TxID string `json:"txid"`
 	GeneralTransactionData
@@ -45,7 +40,7 @@ type Malleated struct {
 }
 
 func FactoidACK(txID, fullTransaction string) (*FactoidTxStatus, error) {
-	params := AckRequest{TxID: txID, FullTransaction: fullTransaction}
+	params := ackRequest{TxID: txID, FullTransaction: fullTransaction}
 	req := NewJSON2Request("factoid-ack", apiCounter(), params)
 	resp, err := factomdRequest(req)
 	if err != nil {
@@ -64,7 +59,7 @@ func FactoidACK(txID, fullTransaction string) (*FactoidTxStatus, error) {
 }
 
 func EntryACK(txID, fullTransaction string) (*EntryStatus, error) {
-	params := AckRequest{TxID: txID, FullTransaction: fullTransaction}
+	params := ackRequest{TxID: txID, FullTransaction: fullTransaction}
 	req := NewJSON2Request("entry-ack", apiCounter(), params)
 	resp, err := factomdRequest(req)
 	if err != nil {

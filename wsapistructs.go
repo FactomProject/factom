@@ -8,8 +8,9 @@ import ()
 
 // requests
 
-type nameRequest struct {
-	Name string `json:"name"`
+type ackRequest struct {
+	TxID            string `json:"txid,omitempty"`
+	FullTransaction string `json:"fulltransaction,omitempty"`
 }
 
 type addressRequest struct {
@@ -28,10 +29,6 @@ type hashRequest struct {
 	Hash string `json:"hash"`
 }
 
-type secretRequest struct {
-	Secret string `json:"secret"`
-}
-
 type importRequest struct {
 	Addresses []secretRequest `json:addresses`
 }
@@ -46,6 +43,14 @@ type keyRequest struct {
 
 type messageRequest struct {
 	Message string `json:"message"`
+}
+
+type nameRequest struct {
+	Name string `json:"name"`
+}
+
+type secretRequest struct {
+	Secret string `json:"secret"`
 }
 
 type transactionRequest struct {
