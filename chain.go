@@ -8,6 +8,7 @@ import (
 	"bytes"
 	"crypto/sha256"
 	"encoding/hex"
+	"encoding/json"
 )
 
 type Chain struct {
@@ -99,21 +100,30 @@ func ComposeChainReveal(c *Chain) (*JSON2Request, error) {
 // public key to the factom network. Once the payment is verified and the
 // network is commited to publishing the Chain it may be published by revealing
 // the First Entry in the Chain.
-func CommitChain(c *Chain, ec *ECAddress) error {	
+func CommitChain(c *Chain, ec *ECAddress) (string, error) {
+	type commitResponse struct {
+		Message string `json:"message"`
+		TxID    string `json:"txid"`
+	}
+
 	req, err := ComposeChainCommit(c, ec)
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	resp, err := factomdRequest(req)
 	if err != nil {
-		return err
+		return "", err
 	}
 	if resp.Error != nil {
-		return resp.Error
+		return "", resp.Error
+	}
+	r := new(commitResponse)
+	if err := json.Unmarshal(resp.JSONResult(), r); err != nil {
+		return "", err
 	}
 
-	return nil
+	return r.TxID, nil
 }
 
 func RevealChain(c *Chain) error {

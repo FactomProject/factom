@@ -200,21 +200,30 @@ func ComposeEntryReveal(e *Entry) (*JSON2Request, error) {
 // CommitEntry sends the signed Entry Hash and the Entry Credit public key to
 // the factom network. Once the payment is verified and the network is commited
 // to publishing the Entry it may be published with a call to RevealEntry.
-func CommitEntry(e *Entry, ec *ECAddress) error {
+func CommitEntry(e *Entry, ec *ECAddress) (string, error) {
+	type commitResponse struct {
+		Message string `json:"message"`
+		TxID    string `json:"txid"`
+	}
+
 	req, err := ComposeEntryReveal(e)
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	resp, err := walletRequest(req)
 	if err != nil {
-		return err
+		return "", err
 	}
 	if resp.Error != nil {
-		return resp.Error
+		return "", resp.Error
+	}
+	r := new(commitResponse)
+	if err := json.Unmarshal(resp.JSONResult(), r); err != nil {
+		return "", err
 	}
 
-	return nil
+	return r.TxID, nil
 }
 
 func RevealEntry(e *Entry) error {
