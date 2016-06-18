@@ -30,7 +30,7 @@ type hashRequest struct {
 }
 
 type importRequest struct {
-	Addresses []secretRequest `json:addresses`
+	Addresses []secretRequest `json:"addresses"`
 }
 
 type keyMRRequest struct {
@@ -43,10 +43,6 @@ type keyRequest struct {
 
 type messageRequest struct {
 	Message string `json:"message"`
-}
-
-type nameRequest struct {
-	Name string `json:"name"`
 }
 
 type secretRequest struct {

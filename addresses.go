@@ -56,8 +56,6 @@ func AddressStringType(s string) addressStringType {
 	default:
 		return InvalidAddress
 	}
-	// we should never reach here
-	return InvalidAddress
 }
 
 func IsValidAddress(s string) bool {
