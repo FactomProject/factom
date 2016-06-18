@@ -37,10 +37,6 @@ type keyMRRequest struct {
 	KeyMR string `json:"keymr"`
 }
 
-type keyRequest struct {
-	Key string `json:"key"`
-}
-
 type messageRequest struct {
 	Message string `json:"message"`
 }

@@ -63,7 +63,19 @@ func GenerateECAddress() (*ECAddress, error) {
 	return e, nil
 }
 
-func ImportAddresses(addrs ...string) error {
+func ImportAddresses(addrs ...string) (
+	[]*FactoidAddress,
+	[]*ECAddress,
+	error) {
+	
+	type addressResponse struct {
+		Public string `json:"public"`
+		Secret string `json:"secret"`
+	}
+	type multiAddressResponse struct {
+		Addresses []*addressResponse `json:"addresses"`
+	}
+	
 	params := new(importRequest)
 	for _, addr := range addrs {
 		s := secretRequest{Secret: addr}
@@ -72,13 +84,38 @@ func ImportAddresses(addrs ...string) error {
 	req := NewJSON2Request("import-addresses", apiCounter(), params)
 	resp, err := walletRequest(req)
 	if err != nil {
-		return err
+		return nil, nil, err
 	}
 	if resp.Error != nil {
-		return resp.Error
+		return nil, nil, resp.Error
+	}
+
+	r := new(multiAddressResponse)
+	if err := json.Unmarshal(resp.JSONResult(), r); err != nil {
+		return nil, nil, err
+	}
+	fs := make([]*FactoidAddress, 0)
+	es := make([]*ECAddress, 0)
+	for _, address := range r.Addresses {
+		switch AddressStringType(address.Secret) {
+		case FactoidSec:
+			f, err := GetFactoidAddress(address.Secret)
+			if err != nil {
+				return nil, nil, err
+			}
+			fs = append(fs, f)
+		case ECSec:
+			e, err := GetECAddress(address.Secret)
+			if err != nil {
+				return nil, nil, err
+			}
+			es = append(es, e)
+		default:
+			return nil, nil, fmt.Errorf("Unrecognized address type")
+		}
 	}
 	
-	return nil
+	return fs, es, nil
 }
 
 func ListAddresses() ([]string, error) {
