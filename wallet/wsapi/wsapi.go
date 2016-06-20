@@ -257,7 +257,15 @@ func handleNewTransaction(params []byte) (interface{}, *factom.JSONError) {
 	if err := fctWallet.NewTransaction(req.Name); err != nil {
 		return nil, newCustomInternalError(err)
 	}
+
 	resp := transactionResponse{Name: req.Name}
+	t := fctWallet.GetTransactions()[req.Name]
+	if s, err := t.JSONString(); err != nil {
+		return nil, newCustomInternalError(err)
+	} else {
+		resp.Transaction = s
+	}
+	
 	return resp, nil
 }
 
@@ -270,7 +278,8 @@ func handleDeleteTransaction(params []byte) (interface{}, *factom.JSONError) {
 	if err := fctWallet.DeleteTransaction(req.Name); err != nil {
 		return nil, newCustomInternalError(err)
 	}
-	return "success", nil
+	resp := transactionResponse{Name: req.Name}
+	return resp, nil
 }
 
 func handleTransactions(params []byte) (interface{}, *factom.JSONError) {
@@ -278,6 +287,12 @@ func handleTransactions(params []byte) (interface{}, *factom.JSONError) {
 
 	for name, _ := range fctWallet.GetTransactions() {
 		r := transactionResponse{Name: name}
+		t := fctWallet.GetTransactions()[name]
+		if s, err := t.JSONString(); err != nil {
+			return nil, newCustomInternalError(err)
+		} else {
+			r.Transaction = s
+		}
 		resp.Transactions = append(resp.Transactions, r)
 	}
 	
@@ -294,7 +309,15 @@ func handleAddInput(params []byte) (interface{}, *factom.JSONError) {
 	if err := fctWallet.AddInput(req.Name, req.Address, req.Amount); err != nil {
 		return nil, newCustomInternalError(err)
 	}
-	return "success", nil
+	resp := transactionResponse{Name: req.Name}
+	t := fctWallet.GetTransactions()[req.Name]
+	if s, err := t.JSONString(); err != nil {
+		return nil, newCustomInternalError(err)
+	} else {
+		resp.Transaction = s
+	}
+	
+	return resp, nil
 }
 
 func handleAddOutput(params []byte) (interface{}, *factom.JSONError) {
@@ -306,7 +329,8 @@ func handleAddOutput(params []byte) (interface{}, *factom.JSONError) {
 	if err := fctWallet.AddOutput(req.Name, req.Address, req.Amount); err != nil {
 		return nil, newCustomInternalError(err)
 	}
-	return "success", nil
+	resp := transactionResponse{Name: req.Name}
+	return resp, nil
 }
 
 func handleAddECOutput(params []byte) (interface{}, *factom.JSONError) {
@@ -318,7 +342,15 @@ func handleAddECOutput(params []byte) (interface{}, *factom.JSONError) {
 	if err := fctWallet.AddECOutput(req.Name, req.Address, req.Amount); err != nil {
 		return nil, newCustomInternalError(err)
 	}
-	return "success", nil
+	resp := transactionResponse{Name: req.Name}
+	t := fctWallet.GetTransactions()[req.Name]
+	if s, err := t.JSONString(); err != nil {
+		return nil, newCustomInternalError(err)
+	} else {
+		resp.Transaction = s
+	}
+	
+	return resp, nil
 }
 
 func handleAddFee(params []byte) (interface{}, *factom.JSONError) {
@@ -327,14 +359,22 @@ func handleAddFee(params []byte) (interface{}, *factom.JSONError) {
 		return nil, newInvalidParamsError()
 	}
 	
-	fee, err := factom.GetFee()
+	rate, err := factom.GetRate()
 	if err != nil {
 		return nil, newCustomInternalError(err)
 	}
-	if err := fctWallet.AddFee(req.Name, req.Address, fee); err != nil {
+	if err := fctWallet.AddFee(req.Name, req.Address, rate); err != nil {
 		return nil, newCustomInternalError(err)
 	}
-	return "success", nil
+	resp := transactionResponse{Name: req.Name}
+	t := fctWallet.GetTransactions()[req.Name]
+	if s, err := t.JSONString(); err != nil {
+		return nil, newCustomInternalError(err)
+	} else {
+		resp.Transaction = s
+	}
+	
+	return resp, nil
 }
 
 func handleSubFee(params []byte) (interface{}, *factom.JSONError) {
@@ -343,14 +383,22 @@ func handleSubFee(params []byte) (interface{}, *factom.JSONError) {
 		return nil, newInvalidParamsError()
 	}
 	
-	fee, err := factom.GetFee()
+	rate, err := factom.GetRate()
 	if err != nil {
 		return nil, newCustomInternalError(err)
 	}
-	if err := fctWallet.SubFee(req.Name, req.Address, fee); err != nil {
+	if err := fctWallet.SubFee(req.Name, req.Address, rate); err != nil {
 		return nil, newCustomInternalError(err)
 	}
-	return "success", nil
+	resp := transactionResponse{Name: req.Name}
+	t := fctWallet.GetTransactions()[req.Name]
+	if s, err := t.JSONString(); err != nil {
+		return nil, newCustomInternalError(err)
+	} else {
+		resp.Transaction = s
+	}
+	
+	return resp, nil
 }
 
 func handleSignTransaction(params []byte) (interface{}, *factom.JSONError) {
@@ -362,7 +410,15 @@ func handleSignTransaction(params []byte) (interface{}, *factom.JSONError) {
 	if err := fctWallet.SignTransaction(req.Name); err != nil {
 		return nil, newCustomInternalError(err)
 	}
-	return "success", nil
+	resp := transactionResponse{Name: req.Name}
+	t := fctWallet.GetTransactions()[req.Name]
+	if s, err := t.JSONString(); err != nil {
+		return nil, newCustomInternalError(err)
+	} else {
+		resp.Transaction = s
+	}
+	
+	return resp, nil
 }
 
 func handleComposeTransaction(params []byte) (interface{}, *factom.JSONError) {

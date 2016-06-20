@@ -58,12 +58,12 @@ func GetFactoidBalance(key string) (int64, error) {
 	return balance.Balance, nil
 }
 
-func GetFee() (uint64, error) {
-	type feeResponse struct {
-		Fee uint64 `json:"fee"`
+func GetRate() (uint64, error) {
+	type rateResponse struct {
+		Rate uint64 `json:"rate"`
 	}
 
-	req := NewJSON2Request("factoid-fee", apiCounter(), nil)
+	req := NewJSON2Request("entry-credit-rate", apiCounter(), nil)
 	resp, err := factomdRequest(req)
 	if err != nil {
 		return 0, err
@@ -72,12 +72,12 @@ func GetFee() (uint64, error) {
 		return 0, resp.Error
 	}
 
-	fee := new(feeResponse)
-	if err := json.Unmarshal(resp.JSONResult(), fee); err != nil {
+	rate := new(rateResponse)
+	if err := json.Unmarshal(resp.JSONResult(), rate); err != nil {
 		return 0, err
 	}
 
-	return fee.Fee, nil
+	return rate.Rate, nil
 }
 
 // GetDBlock requests a Directory Block from factomd by its Key Merkel Root

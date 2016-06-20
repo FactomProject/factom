@@ -48,7 +48,8 @@ type walletBackupResponse struct {
 }
 
 type transactionResponse struct {
-	Name string `json:"tx-name"`
+	Name        string `json:"tx-name"`
+	Transaction string `json:"transaction"`
 }
 
 type transactionsResponse struct {
