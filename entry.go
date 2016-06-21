@@ -206,7 +206,7 @@ func CommitEntry(e *Entry, ec *ECAddress) (string, error) {
 		TxID    string `json:"txid"`
 	}
 
-	req, err := ComposeEntryReveal(e)
+	req, err := ComposeEntryCommit(e, ec)
 	if err != nil {
 		return "", err
 	}
