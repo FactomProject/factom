@@ -23,7 +23,7 @@ var (
 )
 
 func (w *Wallet) NewTransaction(name string) error {
-	if _, exists := w.transactions[name]; exists {
+	if _, exist := w.transactions[name]; exist {
 		return ErrTXExists
 	}
 	

@@ -11,11 +11,7 @@ import (
 	"github.com/FactomProject/factom"
 	"github.com/FactomProject/factom/wallet"
 	"github.com/FactomProject/web"
-	
-	"fmt" // DEBUG
 )
-
-var _ = fmt.Sprint("DEBUG")
 
 const APIVersion string = "2.0"
 
@@ -109,7 +105,7 @@ func handleV2Request(j *factom.JSON2Request) (*factom.JSON2Response, *factom.JSO
 	jsonResp := factom.NewJSON2Response()
 	jsonResp.ID = j.ID
 	if b, err := json.Marshal(resp); err != nil {
-		return nil, newCustomInternalError(err)
+		return nil, newCustomInternalError(err.Error())
 	} else {
 		jsonResp.Result = b
 	}
@@ -128,13 +124,13 @@ func handleAddress(params []byte) (interface{}, *factom.JSONError) {
 	case factom.ECPub:
 		e, err := fctWallet.GetECAddress(req.Address)
 		if err != nil {
-			return nil, newCustomInternalError(err)
+			return nil, newCustomInternalError(err.Error())
 		}
 		resp = mkAddressResponse(e)
 	case factom.FactoidPub:
 		f, err := fctWallet.GetFCTAddress(req.Address)
 		if err != nil {
-			return nil, newCustomInternalError(err)
+			return nil, newCustomInternalError(err.Error())
 		}
 		resp = mkAddressResponse(f)
 	default:
@@ -149,7 +145,7 @@ func handleAllAddresses(params []byte) (interface{}, *factom.JSONError) {
 
 	fs, es, err := fctWallet.GetAllAddresses()
 	if err != nil {
-		return nil, newCustomInternalError(err)
+		return nil, newCustomInternalError(err.Error())
 	}
 	for _, f := range fs {
 		a := mkAddressResponse(f)
@@ -166,7 +162,7 @@ func handleAllAddresses(params []byte) (interface{}, *factom.JSONError) {
 func handleGenerateFactoidAddress(params []byte) (interface{}, *factom.JSONError) {
 	a, err := fctWallet.GenerateFCTAddress()
 	if err != nil {
-		return nil, newCustomInternalError(err)
+		return nil, newCustomInternalError(err.Error())
 	}
 	
 	resp := mkAddressResponse(a)
@@ -177,7 +173,7 @@ func handleGenerateFactoidAddress(params []byte) (interface{}, *factom.JSONError
 func handleGenerateECAddress(params []byte) (interface{}, *factom.JSONError) {
 	a, err := fctWallet.GenerateECAddress()
 	if err != nil {
-		return nil, newCustomInternalError(err)
+		return nil, newCustomInternalError(err.Error())
 	}
 	
 	resp := mkAddressResponse(a)
@@ -197,20 +193,20 @@ func handleImportAddresses(params []byte)  (interface{}, *factom.JSONError) {
 		case factom.FactoidSec:
 			f, err := factom.GetFactoidAddress(v.Secret)
 			if err != nil {
-				return nil, newCustomInternalError(err)
+				return nil, newCustomInternalError(err.Error())
 			}
 			if err := fctWallet.PutFCTAddress(f); err != nil {
-				return nil, newCustomInternalError(err)
+				return nil, newCustomInternalError(err.Error())
 			}
 			a := mkAddressResponse(f)
 			resp.Addresses = append(resp.Addresses, a)
 		case factom.ECSec:
 			e, err := factom.GetECAddress(v.Secret)
 			if err != nil {
-				return nil, newCustomInternalError(err)
+				return nil, newCustomInternalError(err.Error())
 			}
 			if err := fctWallet.PutECAddress(e); err != nil {
-				return nil, newCustomInternalError(err)
+				return nil, newCustomInternalError(err.Error())
 			}
 			a := mkAddressResponse(e)
 			resp.Addresses = append(resp.Addresses, a)
@@ -225,14 +221,14 @@ func handleWalletBackup(params []byte) (interface{}, *factom.JSONError) {
 	resp := new(walletBackupResponse)
 
 	if seed, err := fctWallet.GetSeed(); err != nil {
-		return nil, newCustomInternalError(err)
+		return nil, newCustomInternalError(err.Error())
 	} else {
 		resp.Seed = seed
 	}
 	
 	fs, es, err := fctWallet.GetAllAddresses()
 	if err != nil {
-		return nil, newCustomInternalError(err)
+		return nil, newCustomInternalError(err.Error())
 	}
 	for _, f := range fs {
 		a := mkAddressResponse(f)
@@ -255,13 +251,13 @@ func handleNewTransaction(params []byte) (interface{}, *factom.JSONError) {
 	}
 	
 	if err := fctWallet.NewTransaction(req.Name); err != nil {
-		return nil, newCustomInternalError(err)
+		return nil, newCustomInternalError(err.Error())
 	}
 
 	resp := transactionResponse{Name: req.Name}
 	t := fctWallet.GetTransactions()[req.Name]
 	if s, err := t.JSONString(); err != nil {
-		return nil, newCustomInternalError(err)
+		return nil, newCustomInternalError(err.Error())
 	} else {
 		resp.Transaction = s
 	}
@@ -276,7 +272,7 @@ func handleDeleteTransaction(params []byte) (interface{}, *factom.JSONError) {
 	}
 	
 	if err := fctWallet.DeleteTransaction(req.Name); err != nil {
-		return nil, newCustomInternalError(err)
+		return nil, newCustomInternalError(err.Error())
 	}
 	resp := transactionResponse{Name: req.Name}
 	return resp, nil
@@ -289,7 +285,7 @@ func handleTransactions(params []byte) (interface{}, *factom.JSONError) {
 		r := transactionResponse{Name: name}
 		t := fctWallet.GetTransactions()[name]
 		if s, err := t.JSONString(); err != nil {
-			return nil, newCustomInternalError(err)
+			return nil, newCustomInternalError(err.Error())
 		} else {
 			r.Transaction = s
 		}
@@ -302,17 +298,16 @@ func handleTransactions(params []byte) (interface{}, *factom.JSONError) {
 func handleAddInput(params []byte) (interface{}, *factom.JSONError) {
 	req := new(transactionValueRequest)
 	if err := json.Unmarshal(params, req); err != nil {
-		fmt.Println("DEBUG:", err)
 		return nil, newInvalidParamsError()
 	}
 	
 	if err := fctWallet.AddInput(req.Name, req.Address, req.Amount); err != nil {
-		return nil, newCustomInternalError(err)
+		return nil, newCustomInternalError(err.Error())
 	}
 	resp := transactionResponse{Name: req.Name}
 	t := fctWallet.GetTransactions()[req.Name]
 	if s, err := t.JSONString(); err != nil {
-		return nil, newCustomInternalError(err)
+		return nil, newCustomInternalError(err.Error())
 	} else {
 		resp.Transaction = s
 	}
@@ -327,7 +322,7 @@ func handleAddOutput(params []byte) (interface{}, *factom.JSONError) {
 	}
 	
 	if err := fctWallet.AddOutput(req.Name, req.Address, req.Amount); err != nil {
-		return nil, newCustomInternalError(err)
+		return nil, newCustomInternalError(err.Error())
 	}
 	resp := transactionResponse{Name: req.Name}
 	return resp, nil
@@ -340,12 +335,12 @@ func handleAddECOutput(params []byte) (interface{}, *factom.JSONError) {
 	}
 	
 	if err := fctWallet.AddECOutput(req.Name, req.Address, req.Amount); err != nil {
-		return nil, newCustomInternalError(err)
+		return nil, newCustomInternalError(err.Error())
 	}
 	resp := transactionResponse{Name: req.Name}
 	t := fctWallet.GetTransactions()[req.Name]
 	if s, err := t.JSONString(); err != nil {
-		return nil, newCustomInternalError(err)
+		return nil, newCustomInternalError(err.Error())
 	} else {
 		resp.Transaction = s
 	}
@@ -361,15 +356,15 @@ func handleAddFee(params []byte) (interface{}, *factom.JSONError) {
 	
 	rate, err := factom.GetRate()
 	if err != nil {
-		return nil, newCustomInternalError(err)
+		return nil, newCustomInternalError(err.Error())
 	}
 	if err := fctWallet.AddFee(req.Name, req.Address, rate); err != nil {
-		return nil, newCustomInternalError(err)
+		return nil, newCustomInternalError(err.Error())
 	}
 	resp := transactionResponse{Name: req.Name}
 	t := fctWallet.GetTransactions()[req.Name]
 	if s, err := t.JSONString(); err != nil {
-		return nil, newCustomInternalError(err)
+		return nil, newCustomInternalError(err.Error())
 	} else {
 		resp.Transaction = s
 	}
@@ -385,15 +380,15 @@ func handleSubFee(params []byte) (interface{}, *factom.JSONError) {
 	
 	rate, err := factom.GetRate()
 	if err != nil {
-		return nil, newCustomInternalError(err)
+		return nil, newCustomInternalError(err.Error())
 	}
 	if err := fctWallet.SubFee(req.Name, req.Address, rate); err != nil {
-		return nil, newCustomInternalError(err)
+		return nil, newCustomInternalError(err.Error())
 	}
 	resp := transactionResponse{Name: req.Name}
 	t := fctWallet.GetTransactions()[req.Name]
 	if s, err := t.JSONString(); err != nil {
-		return nil, newCustomInternalError(err)
+		return nil, newCustomInternalError(err.Error())
 	} else {
 		resp.Transaction = s
 	}
@@ -408,12 +403,12 @@ func handleSignTransaction(params []byte) (interface{}, *factom.JSONError) {
 	}
 	
 	if err := fctWallet.SignTransaction(req.Name); err != nil {
-		return nil, newCustomInternalError(err)
+		return nil, newCustomInternalError(err.Error())
 	}
 	resp := transactionResponse{Name: req.Name}
 	t := fctWallet.GetTransactions()[req.Name]
 	if s, err := t.JSONString(); err != nil {
-		return nil, newCustomInternalError(err)
+		return nil, newCustomInternalError(err.Error())
 	} else {
 		resp.Transaction = s
 	}
@@ -429,7 +424,7 @@ func handleComposeTransaction(params []byte) (interface{}, *factom.JSONError) {
 	
 	t, err := fctWallet.ComposeTransaction(req.Name)
 	if err != nil {
-		return nil, newCustomInternalError(err)
+		return nil, newCustomInternalError(err.Error())
 	}
 	return t, nil
 }
