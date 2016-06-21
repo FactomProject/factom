@@ -226,19 +226,28 @@ func CommitEntry(e *Entry, ec *ECAddress) (string, error) {
 	return r.TxID, nil
 }
 
-func RevealEntry(e *Entry) error {
+func RevealEntry(e *Entry) (string, error) {
+	type revealResponse struct {
+		Message string `json:"message"`
+		Entry   string `json:"entryhash"`
+	}
+
 	req, err := ComposeEntryReveal(e)
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	resp, err := factomdRequest(req)
 	if err != nil {
-		return err
+		return "", err
 	}
 	if resp.Error != nil {
-		return resp.Error
+		return "", resp.Error
 	}
 
-	return nil
+	r := new(revealResponse)
+	if err := json.Unmarshal(resp.JSONResult(), r); err != nil {
+		return "", err
+	}
+	return r.Entry, nil
 }
