@@ -211,7 +211,7 @@ func CommitEntry(e *Entry, ec *ECAddress) (string, error) {
 		return "", err
 	}
 
-	resp, err := walletRequest(req)
+	resp, err := factomdRequest(req)
 	if err != nil {
 		return "", err
 	}
