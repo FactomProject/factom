@@ -118,7 +118,7 @@ func ImportAddresses(addrs ...string) (
 	return fs, es, nil
 }
 
-func ListAddresses() ([]string, error) {
+func FetchAddresses() ([]*FactoidAddress, []*ECAddress, error) {
 	type addressResponse struct {
 		Public string `json:"public"`
 		Secret string `json:"secret"`
@@ -131,22 +131,40 @@ func ListAddresses() ([]string, error) {
 	req := NewJSON2Request("all-addresses", apiCounter(), nil)
 	resp, err := walletRequest(req)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	if resp.Error != nil {
-		return nil, resp.Error
+		return nil, nil, resp.Error
 	}
 
-	r := make([]string, 0)
+	fs := make([]*FactoidAddress, 0)
+	es := make([]*ECAddress, 0)
+	
 	as := new(multiAddressResponse)
 	if err := json.Unmarshal(resp.JSONResult(), as); err != nil {
-		return nil, err
+		return nil, nil, err
 	}
+	
 	for _, adr := range as.Addresses {
-		r = append(r, adr.Public)
+		switch AddressStringType(adr.Public) {
+		case FactoidPub:
+			f, err := GetFactoidAddress(adr.Secret)
+			if err != nil {
+				return nil, nil, err
+			}
+			fs = append(fs, f)
+		case ECPub:
+			e, err := GetECAddress(adr.Secret)
+			if err != nil {
+				return nil, nil, err
+			}
+			es = append(es, e)
+		default:
+			return nil, nil, fmt.Errorf("%s is not a valid address", adr.Public)
+		}
 	}
 
-	return r, nil
+	return fs, es, nil
 }
 
 func FetchECAddress(ecpub string) (*ECAddress, error) {
