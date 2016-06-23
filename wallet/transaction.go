@@ -26,7 +26,7 @@ func (w *Wallet) NewTransaction(name string) error {
 	if _, exist := w.transactions[name]; exist {
 		return ErrTXExists
 	}
-	
+
 	// check that the transaction name is valid
 	if name == "" {
 		return ErrTXInvalidName
@@ -39,7 +39,7 @@ func (w *Wallet) NewTransaction(name string) error {
 	} else if match {
 		return ErrTXInvalidName
 	}
-	
+
 	t := new(factoid.Transaction)
 	t.SetMilliTimestamp(milliTime())
 	w.transactions[name] = t
@@ -225,9 +225,9 @@ func (w *Wallet) SignTransaction(name string) error {
 		if err != nil {
 			return err
 		}
-			
+
 		f, err := w.GetFCTAddress(primitives.ConvertFctAddressToUserStr(a))
-		if err !=  nil {
+		if err != nil {
 			return err
 		}
 		sig := factoid.NewSingleSignatureBlock(f.SecBytes(), data)
@@ -262,7 +262,3 @@ func (w *Wallet) ComposeTransaction(name string) (*factom.JSON2Request, error) {
 
 	return req, nil
 }
-
-// TODO ---
-//
-//func (w *Wallet) SendTransaction

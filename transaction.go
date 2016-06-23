@@ -44,11 +44,11 @@ func ListTransactions() ([]string, error) {
 	type transactionResponse struct {
 		Name string `json:"tx-name"`
 	}
-	
+
 	type transactionsResponse struct {
 		Transactions []transactionResponse `json:"transactions"`
 	}
-	
+
 	req := NewJSON2Request("transactions", apiCounter(), nil)
 	resp, err := walletRequest(req)
 	if err != nil {
@@ -185,6 +185,31 @@ func ComposeTransaction(name string) ([]byte, error) {
 	}
 
 	return resp.JSONResult(), nil
+}
+
+func SendTransaction(name string) error {
+	params := transactionRequest{Name: name}
+
+	wreq := NewJSON2Request("compose-transaction", apiCounter(), params)
+	wresp, err := walletRequest(wreq)
+	if err != nil {
+		return err
+	}
+	if wresp.Error != nil {
+		return wresp.Error
+	}
+	
+	freq := new(JSON2Request)
+	json.Unmarshal(wresp.JSONResult(), freq)
+	fresp, err := factomdRequest(freq)
+	if err != nil {
+		return err
+	}
+	if fresp.Error != nil {
+		return fresp.Error
+	}
+	
+	return nil
 }
 
 func SendFactoid(from, to string, ammount uint64) error {
