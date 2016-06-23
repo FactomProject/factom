@@ -126,19 +126,28 @@ func CommitChain(c *Chain, ec *ECAddress) (string, error) {
 	return r.TxID, nil
 }
 
-func RevealChain(c *Chain) error {
+func RevealChain(c *Chain) (string, error) {
+	type revealResponse struct {
+		Message string `json:"message"`
+		Entry   string `json:"entryhash"`
+	}
+
 	req, err := ComposeChainReveal(c)
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	resp, err := factomdRequest(req)
 	if err != nil {
-		return err
+		return "", err
 	}
 	if resp.Error != nil {
-		return resp.Error
+		return "", resp.Error
 	}
 
-	return nil
+	r := new(revealResponse)
+	if err := json.Unmarshal(resp.JSONResult(), r); err != nil {
+		return "", err
+	}
+	return r.Entry, nil
 }
