@@ -8,6 +8,7 @@ import (
 	"crypto/rand"
 	"encoding/hex"
 	"encoding/json"
+	"fmt"
 )
 
 func NewTransaction(name string) error {
@@ -70,6 +71,10 @@ func ListTransactions() ([]string, error) {
 }
 
 func AddTransactionInput(name, address string, amount uint64) error {
+	if AddressStringType(address) != FactoidPub {
+		return fmt.Errorf("%s is not a Factoid address", address)
+	}
+
 	params := transactionValueRequest{
 		Name:    name,
 		Address: address,
@@ -88,6 +93,10 @@ func AddTransactionInput(name, address string, amount uint64) error {
 }
 
 func AddTransactionOutput(name, address string, amount uint64) error {
+	if AddressStringType(address) != FactoidPub {
+		return fmt.Errorf("%s is not a Factoid address", address)
+	}
+
 	params := transactionValueRequest{
 		Name:    name,
 		Address: address,
@@ -106,6 +115,10 @@ func AddTransactionOutput(name, address string, amount uint64) error {
 }
 
 func AddTransactionECOutput(name, address string, amount uint64) error {
+	if AddressStringType(address) != ECPub {
+		return fmt.Errorf("%s is not an Entry Credit address", address)
+	}
+
 	params := transactionValueRequest{
 		Name:    name,
 		Address: address,
@@ -124,6 +137,10 @@ func AddTransactionECOutput(name, address string, amount uint64) error {
 }
 
 func AddTransactionFee(name, address string) error {
+	if AddressStringType(address) != FactoidPub {
+		return fmt.Errorf("%s is not a Factoid address", address)
+	}
+
 	params := transactionValueRequest{
 		Name:    name,
 		Address: address}
@@ -239,9 +256,6 @@ func SendFactoid(from, to string, ammount uint64) error {
 	if err := SendTransaction(name); err != nil {
 		return err
 	}
-	if err := DeleteTransaction(name); err != nil {
-		return err
-	}
 	
 	return nil
 }
@@ -270,8 +284,6 @@ func BuyEC(from, to string, ammount uint64) error {
 	if err := SendTransaction(name); err != nil {
 		return err
 	}
-	if err := DeleteTransaction(name); err != nil {
-		return err
-	}
+	
 	return nil
 }
