@@ -95,8 +95,6 @@ func handleV2Request(j *factom.JSON2Request) (*factom.JSON2Response, *factom.JSO
 		resp, jsonError = handleSignTransaction(params)
 	case "compose-transaction":
 		resp, jsonError = handleComposeTransaction(params)
-	case "send-transaction":
-		resp, jsonError = handleSendTransaction(params)
 	default:
 		jsonError = newMethodNotFoundError()
 	}
