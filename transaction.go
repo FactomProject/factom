@@ -208,6 +208,9 @@ func SendTransaction(name string) error {
 	if fresp.Error != nil {
 		return fresp.Error
 	}
+	if err := DeleteTransaction(name); err != nil {
+		return err
+	}
 	
 	return nil
 }
@@ -233,7 +236,13 @@ func SendFactoid(from, to string, ammount uint64) error {
 	if err := SignTransaction(name); err != nil {
 		return err
 	}
-	// TODO - Send the transaction or something
+	if err := SendTransaction(name); err != nil {
+		return err
+	}
+	if err := DeleteTransaction(name); err != nil {
+		return err
+	}
+	
 	return nil
 }
 
@@ -258,6 +267,11 @@ func BuyEC(from, to string, ammount uint64) error {
 	if err := SignTransaction(name); err != nil {
 		return err
 	}
-	// TODO - Send the transaction or something
+	if err := SendTransaction(name); err != nil {
+		return err
+	}
+	if err := DeleteTransaction(name); err != nil {
+		return err
+	}
 	return nil
 }

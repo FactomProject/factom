@@ -58,6 +58,7 @@ func GetFactoidBalance(key string) (int64, error) {
 	return balance.Balance, nil
 }
 
+// GetRate returns the number of factoshis per entry credit
 func GetRate() (uint64, error) {
 	type rateResponse struct {
 		Rate uint64 `json:"rate"`
