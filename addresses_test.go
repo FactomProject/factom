@@ -5,12 +5,11 @@
 package factom
 
 import (
-	"testing"
 	ed "github.com/FactomProject/ed25519"
+	"testing"
 )
 
-var (
-)
+var ()
 
 func TestAddressStringType(t *testing.T) {
 	var (
@@ -20,7 +19,7 @@ func TestAddressStringType(t *testing.T) {
 		a3 = "EC2DKSYyRcNWf7RS963VFYgMExoHRYLHVeCfQ9PGPmNzwrcmgm2r"
 		a4 = "Es2Rf7iM6PdsqfYCo3D1tnAR65SkLENyWJG1deUzpRMQmbh9F3eG"
 	)
-	
+
 	if v := AddressStringType(a0); v != InvalidAddress {
 		t.Errorf("invalid address has wrong type %s %#v", a0, v)
 	}
@@ -56,7 +55,7 @@ func TestECAddress(t *testing.T) {
 	if e.PubString() != zPub {
 		t.Errorf("%s did not match %s", e.PubString(), zPub)
 	}
-	
+
 	if e.SecString() != zSec {
 		t.Errorf("%s did not match %s", e.SecString(), zSec)
 	}
@@ -71,14 +70,14 @@ func TestIsValidECAddress(t *testing.T) {
 	badPreSec := "ER2Rf7iM6PdsqfYCo3D1tnAR65SkLENyWJG1deUzpRMQmbh9F3eG"
 	badCheckPub := "EC1m9mouvUQeEidmqpUYpYtXg8fvTYi6GNHaKg8KMLbdMBrFfgUa"
 	badCheckSec := "Es2Rf7iM6PdsqfYCo3D1tnAR65SkLENyWJG1deUzpRMQmbh9F3ea"
-	
+
 	if !IsValidAddress(zPub) {
 		t.Errorf("%s was not considered valid", zPub)
 	}
 	if !IsValidAddress(zSec) {
 		t.Errorf("%s was not considered valid", zSec)
 	}
-	
+
 	if IsValidAddress(badEmpty) {
 		t.Errorf("%s was considered valid", badEmpty)
 	}
@@ -105,7 +104,7 @@ func TestGetECAddress(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	
+
 	// verify that the keys work
 	msg := []byte("Hello Factom!")
 	sig := ed.Sign(e.SecFixed(), msg)
@@ -123,14 +122,14 @@ func TestIsValidFactoidAddress(t *testing.T) {
 	badPreSec := "Fb1KWJrpLdfucvmYwN2nWrwepLn8ercpMbzXshd1g8zyhKXLVLWj"
 	badCheckPub := "FA1y5ZGuHSLmf2TqNf6hVMkPiNGyQpQDTFJvDLRkKQaoPo4bmggu"
 	badCheckSec := "Fs1KWJrpLdfucvmYwN2nWrwepLn8ercpMbzXshd1g8zyhKXLVLwj"
-	
+
 	if !IsValidAddress(zPub) {
 		t.Errorf("%s was not considered valid", zPub)
 	}
 	if !IsValidAddress(zSec) {
 		t.Errorf("%s was not considered valid", zSec)
 	}
-	
+
 	if IsValidAddress(badEmpty) {
 		t.Errorf("%s was considered valid", badEmpty)
 	}
@@ -157,7 +156,6 @@ func TestGetFactoidAddress(t *testing.T) {
 	if _, err := GetFactoidAddress(zSec); err != nil {
 		t.Error(err)
 	}
-	
+
 	// ? test factoid key validity here
 }
-

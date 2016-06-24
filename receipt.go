@@ -12,7 +12,7 @@ func GetReceipt(hash string) (*Receipt, error) {
 	type receiptResponse struct {
 		Receipt *Receipt `json:"receipt"`
 	}
-	
+
 	params := hashRequest{Hash: hash}
 	req := NewJSON2Request("receipt", apiCounter(), params)
 	resp, err := factomdRequest(req)

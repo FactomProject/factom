@@ -14,13 +14,13 @@ import (
 
 func TestNewWallet(t *testing.T) {
 	dbpath := os.TempDir() + "/test_wallet-02"
-	
+
 	// create a new database
 	w1, err := NewWallet(dbpath)
 	if err != nil {
 		t.Error(err)
 	}
-	
+
 	// check that the seed got written
 	w1.lock.RLock()
 	seed, err := w1.ldb.Get(seedDBKey, nil)
@@ -34,16 +34,16 @@ func TestNewWallet(t *testing.T) {
 	if bytes.Equal(seed, make([]byte, 64)) {
 		t.Errorf("stored db seed is blank")
 	}
-	
+
 	if err := w1.Close(); err != nil {
 		t.Error(err)
 	}
-	
-	// try and create a new database where one already exists 
+
+	// try and create a new database where one already exists
 	if _, err := NewWallet(dbpath); err == nil {
 		t.Errorf("NewWallet did not report error on existing path: %s", dbpath)
 	}
-	
+
 	// remove the testing db
 	if err := os.RemoveAll(dbpath); err != nil {
 		t.Error(err)
@@ -52,20 +52,20 @@ func TestNewWallet(t *testing.T) {
 
 func TestOpenWallet(t *testing.T) {
 	dbpath := os.TempDir() + "/test_wallet-01"
-	
+
 	// create a new database
 	w1, err := NewWallet(dbpath)
 	if err != nil {
 		t.Error(err)
 	}
 	w1.Close()
-	
+
 	// make sure we can open the db
 	w2, err := OpenWallet(dbpath)
 	if err != nil {
 		t.Error(err)
 	}
-	
+
 	// check that the seed is there
 	w2.lock.RLock()
 	seed, err := w2.ldb.Get(seedDBKey, nil)
@@ -79,11 +79,11 @@ func TestOpenWallet(t *testing.T) {
 	if bytes.Equal(seed, make([]byte, 64)) {
 		t.Errorf("stored db seed is blank")
 	}
-	
+
 	if err := w2.Close(); err != nil {
 		t.Error(err)
 	}
-	
+
 	// remove the testing db
 	if err := os.RemoveAll(dbpath); err != nil {
 		t.Error(err)
@@ -92,15 +92,15 @@ func TestOpenWallet(t *testing.T) {
 
 func TestPutECAddress(t *testing.T) {
 	zSec := "Es2Rf7iM6PdsqfYCo3D1tnAR65SkLENyWJG1deUzpRMQmbh9F3eG"
-	
+
 	dbpath := os.TempDir() + "/test_wallet-01"
-	
+
 	// create a new database
 	w, err := NewWallet(dbpath)
 	if err != nil {
 		t.Error(err)
 	}
-	
+
 	// write a new ec address to the db
 	e, err := factom.GetECAddress(zSec)
 	if err != nil {
@@ -109,7 +109,7 @@ func TestPutECAddress(t *testing.T) {
 	if err := w.PutECAddress(e); err != nil {
 		t.Error(err)
 	}
-	
+
 	// Check that the address was written into the db
 	if _, err := w.GetECAddress(e.PubString()); err != nil {
 		t.Error(err)
@@ -126,15 +126,15 @@ func TestPutECAddress(t *testing.T) {
 
 func TestPutFCTAddress(t *testing.T) {
 	zSec := "Fs1KWJrpLdfucvmYwN2nWrwepLn8ercpMbzXshd1g8zyhKXLVLWj"
-	
+
 	dbpath := os.TempDir() + "/test_wallet-01"
-	
+
 	// create a new database
 	w, err := NewWallet(dbpath)
 	if err != nil {
 		t.Error(err)
 	}
-	
+
 	// write a new fct address to the db
 	f, err := factom.GetFactoidAddress(zSec)
 	if err != nil {
@@ -143,7 +143,7 @@ func TestPutFCTAddress(t *testing.T) {
 	if err := w.PutFCTAddress(f); err != nil {
 		t.Error(err)
 	}
-	
+
 	// Check that the address was written into the db
 	if _, err := w.GetFCTAddress(f.String()); err != nil {
 		t.Error(err)
@@ -160,19 +160,19 @@ func TestPutFCTAddress(t *testing.T) {
 
 func TestGenerateECAddress(t *testing.T) {
 	dbpath := os.TempDir() + "/test_wallet-01"
-	
+
 	// create a new database
 	w, err := NewWallet(dbpath)
 	if err != nil {
 		t.Error(err)
 	}
-	
+
 	// Generate a new ec address
 	e, err := w.GenerateECAddress()
 	if err != nil {
 		t.Error(err)
 	}
-	
+
 	// Check that the address was written into the db
 	if _, err := w.GetECAddress(e.PubString()); err != nil {
 		t.Error(err)
@@ -189,19 +189,19 @@ func TestGenerateECAddress(t *testing.T) {
 
 func TestGenerateFCTAddress(t *testing.T) {
 	dbpath := os.TempDir() + "/test_wallet-01"
-	
+
 	// create a new database
 	w, err := NewWallet(dbpath)
 	if err != nil {
 		t.Error(err)
 	}
-	
+
 	// Generate a new fct address
 	f, err := w.GenerateFCTAddress()
 	if err != nil {
 		t.Error(err)
 	}
-	
+
 	// Check that the address was written into the db
 	if _, err := w.GetFCTAddress(f.String()); err != nil {
 		t.Error(err)
@@ -223,13 +223,13 @@ func TestGetAllAddresses(t *testing.T) {
 	f2Sec := "Fs3GFV6GNV6ar4b8eGcQWpGFbFtkNWKfEPdbywmha8ez5p7XMJyk"
 	correctLen := 2
 	dbpath := os.TempDir() + "/test_wallet-01"
-	
+
 	// create a new database
 	w, err := NewWallet(dbpath)
 	if err != nil {
 		t.Error(err)
 	}
-	
+
 	// write a new ec address to the db
 	e1, err := factom.GetECAddress(e1Sec)
 	if err != nil {
@@ -245,7 +245,7 @@ func TestGetAllAddresses(t *testing.T) {
 	if err := w.PutECAddress(e2); err != nil {
 		t.Error(err)
 	}
-	
+
 	// write a new fct address to the db
 	f1, err := factom.GetFactoidAddress(f1Sec)
 	if err != nil {
@@ -278,7 +278,7 @@ func TestGetAllAddresses(t *testing.T) {
 	if len(es) != correctLen {
 		t.Errorf("Wrong number of ec addesses were retrived: %v", es)
 	}
-	
+
 	// print the addresses
 	for _, f := range fs {
 		t.Logf("%s %s", f, f.SecString())

@@ -64,7 +64,7 @@ func OpenWallet(path string) (*Wallet, error) {
 	o := &opt.Options{ErrorIfMissing: true}
 	w := new(Wallet)
 	w.transactions = make(map[string]*factoid.Transaction)
-	
+
 	// open the db file
 	if l, err := leveldb.OpenFile(path, o); err != nil {
 		// try an recover the file if there is an error
@@ -72,7 +72,7 @@ func OpenWallet(path string) (*Wallet, error) {
 		if err != nil {
 			return nil, err
 		}
-		w.ldb = r		
+		w.ldb = r
 	} else {
 		w.ldb = l
 	}
@@ -87,7 +87,7 @@ func OpenWallet(path string) (*Wallet, error) {
 	} else if !n {
 		return nil, fmt.Errorf("wallet is missing its next seed")
 	}
-	
+
 	return w, nil
 }
 
@@ -177,7 +177,7 @@ func (w *Wallet) GetAllAddresses() ([]*factom.FactoidAddress, []*factom.ECAddres
 		}
 		fcs = append(fcs, f)
 	}
-	
+
 	ecs := make([]*factom.ECAddress, 0)
 	for iter := w.ldb.NewIterator(util.BytesPrefix(ecDBPrefix), nil); iter.Next(); {
 		e, err := factom.GetECAddress(string(iter.Value()))
@@ -247,7 +247,7 @@ func (w *Wallet) GetSeed() (string, error) {
 	if err != nil {
 		return "", err
 	}
-	
+
 	return seedString(seed), nil
 }
 
@@ -256,7 +256,7 @@ func (w *Wallet) getSeed() ([]byte, error) {
 	w.lock.Lock()
 	defer w.lock.Unlock()
 
-	p, err:=  w.ldb.Get(seedDBKey, nil)
+	p, err := w.ldb.Get(seedDBKey, nil)
 	if err != nil {
 		return nil, err
 	} else if len(p) != SeedLength {

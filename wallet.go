@@ -14,7 +14,7 @@ func GenerateFactoidAddress() (*FactoidAddress, error) {
 		Public string `json:"public"`
 		Secret string `json:"secret"`
 	}
-	
+
 	req := NewJSON2Request("generate-factoid-address", apiCounter(), nil)
 	resp, err := walletRequest(req)
 	if err != nil {
@@ -41,7 +41,7 @@ func GenerateECAddress() (*ECAddress, error) {
 		Public string `json:"public"`
 		Secret string `json:"secret"`
 	}
-	
+
 	req := NewJSON2Request("generate-ec-address", apiCounter(), nil)
 	resp, err := walletRequest(req)
 	if err != nil {
@@ -67,7 +67,7 @@ func ImportAddresses(addrs ...string) (
 	[]*FactoidAddress,
 	[]*ECAddress,
 	error) {
-	
+
 	type addressResponse struct {
 		Public string `json:"public"`
 		Secret string `json:"secret"`
@@ -75,7 +75,7 @@ func ImportAddresses(addrs ...string) (
 	type multiAddressResponse struct {
 		Addresses []*addressResponse `json:"addresses"`
 	}
-	
+
 	params := new(importRequest)
 	for _, addr := range addrs {
 		s := secretRequest{Secret: addr}
@@ -114,7 +114,7 @@ func ImportAddresses(addrs ...string) (
 			return nil, nil, fmt.Errorf("Unrecognized address type")
 		}
 	}
-	
+
 	return fs, es, nil
 }
 
@@ -123,11 +123,11 @@ func FetchAddresses() ([]*FactoidAddress, []*ECAddress, error) {
 		Public string `json:"public"`
 		Secret string `json:"secret"`
 	}
-	
+
 	type multiAddressResponse struct {
 		Addresses []*addressResponse `json:"addresses"`
 	}
-	
+
 	req := NewJSON2Request("all-addresses", apiCounter(), nil)
 	resp, err := walletRequest(req)
 	if err != nil {
@@ -139,12 +139,12 @@ func FetchAddresses() ([]*FactoidAddress, []*ECAddress, error) {
 
 	fs := make([]*FactoidAddress, 0)
 	es := make([]*ECAddress, 0)
-	
+
 	as := new(multiAddressResponse)
 	if err := json.Unmarshal(resp.JSONResult(), as); err != nil {
 		return nil, nil, err
 	}
-	
+
 	for _, adr := range as.Addresses {
 		switch AddressStringType(adr.Public) {
 		case FactoidPub:
@@ -172,14 +172,14 @@ func FetchECAddress(ecpub string) (*ECAddress, error) {
 		Public string `json:"public"`
 		Secret string `json:"secret"`
 	}
-	
+
 	if AddressStringType(ecpub) != ECPub {
 		return nil, fmt.Errorf(
 			"%s is not an Entry Credit Public Address", ecpub)
 	}
 	params := new(addressRequest)
 	params.Address = ecpub
-	
+
 	req := NewJSON2Request("address", apiCounter(), params)
 	resp, err := walletRequest(req)
 	if err != nil {
@@ -202,13 +202,13 @@ func FetchFactoidAddress(fctpub string) (*FactoidAddress, error) {
 		Public string `json:"public"`
 		Secret string `json:"secret"`
 	}
-	
+
 	if AddressStringType(fctpub) != FactoidPub {
 		return nil, fmt.Errorf("%s is not a Factoid Address", fctpub)
 	}
 	params := new(addressRequest)
 	params.Address = fctpub
-	
+
 	req := NewJSON2Request("address", apiCounter(), params)
 	resp, err := walletRequest(req)
 	if err != nil {
@@ -225,7 +225,6 @@ func FetchFactoidAddress(fctpub string) (*FactoidAddress, error) {
 
 	return GetFactoidAddress(r.Secret)
 }
-
 
 // TODO ----
 //func GenerateFactoidAddressFromMnemonic(name string, mnemonic string) (string, error) {
