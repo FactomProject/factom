@@ -215,7 +215,7 @@ func SendTransaction(name string) error {
 	if wresp.Error != nil {
 		return wresp.Error
 	}
-	
+
 	freq := new(JSON2Request)
 	json.Unmarshal(wresp.JSONResult(), freq)
 	fresp, err := factomdRequest(freq)
@@ -228,7 +228,7 @@ func SendTransaction(name string) error {
 	if err := DeleteTransaction(name); err != nil {
 		return err
 	}
-	
+
 	return nil
 }
 
@@ -256,7 +256,7 @@ func SendFactoid(from, to string, ammount uint64) error {
 	if err := SendTransaction(name); err != nil {
 		return err
 	}
-	
+
 	return nil
 }
 
@@ -284,6 +284,6 @@ func BuyEC(from, to string, ammount uint64) error {
 	if err := SendTransaction(name); err != nil {
 		return err
 	}
-	
+
 	return nil
 }

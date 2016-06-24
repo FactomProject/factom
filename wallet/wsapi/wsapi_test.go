@@ -17,7 +17,7 @@ var testnet = "localhost:8889"
 
 func TestAllAddresses(t *testing.T) {
 	req := `{"jsonrpc":"2.0","id":0,"method":"all-addresses"}`
-	
+
 	resp, err := apiCall(req)
 	if err != nil {
 		t.Error(err)
@@ -27,7 +27,7 @@ func TestAllAddresses(t *testing.T) {
 
 func TestGenerateECAddress(t *testing.T) {
 	req := `{"jsonrpc":"2.0","id":0,"method":"generate-ec-address"}`
-	
+
 	resp, err := apiCall(req)
 	if err != nil {
 		t.Error(err)
@@ -37,7 +37,7 @@ func TestGenerateECAddress(t *testing.T) {
 
 func TestGenerateFCTAddress(t *testing.T) {
 	req := `{"jsonrpc":"2.0","id":0,"method":"generate-factoid-address"}`
-	
+
 	resp, err := apiCall(req)
 	if err != nil {
 		t.Error(err)
@@ -47,7 +47,7 @@ func TestGenerateFCTAddress(t *testing.T) {
 
 func TestImportAddresses(t *testing.T) {
 	req := `{"jsonrpc":"2.0","id":0,"method":"import-addresses","params":{"addresses":[{"secret":"Fs3E9gV6DXsYzf7Fqx1fVBQPQXV695eP3k5XbmHEZVRLkMdD9qCK"}]}}`
-	
+
 	resp, err := apiCall(req)
 	if err != nil {
 		t.Error(err)
@@ -57,7 +57,7 @@ func TestImportAddresses(t *testing.T) {
 
 func TestAddress(t *testing.T) {
 	req := `{"jsonrpc":"2.0","id":0,"method":"address","params":{"address":"FA2jK2HcLnRdS94dEcU27rF3meoJfpUcZPSinpb7AwQvPRY6RL1Q"}}`
-	
+
 	resp, err := apiCall(req)
 	if err != nil {
 		t.Error(err)
@@ -67,27 +67,27 @@ func TestAddress(t *testing.T) {
 
 func TestTransaction(t *testing.T) {
 	new := `{"jsonrpc":"2.0","id":0,"method":"new-transaction","params":{"tx-name":"a"}}`
-	
+
 	if resp, err := apiCall(new); err != nil {
 		t.Error(err)
 	} else {
 		t.Log(resp)
 	}
-	
+
 	addin := `{"jsonrpc":"2.0","id":0,"method":"add-input","params":{"tx-name":"a","address":"FA2jK2HcLnRdS94dEcU27rF3meoJfpUcZPSinpb7AwQvPRY6RL1Q","amount":1000000000}}`
 	if resp, err := apiCall(addin); err != nil {
 		t.Error(err)
 	} else {
 		t.Log(resp)
 	}
-	
+
 	addout := `{"jsonrpc":"2.0","id":0,"method":"add-output","params":{"tx-name":"a","address":"FA2xWmGckzbACp7LR43bfnViCyN4uNhugBxiaYPtWGVZVSn1y2m6","amount":1000000000}}`
 	if resp, err := apiCall(addout); err != nil {
 		t.Error(err)
 	} else {
 		t.Log(resp)
 	}
-	
+
 	addfee := `{"jsonrpc":"2.0","id":0,"method":"add-fee","params":{"tx-name":"a","address":"FA2jK2HcLnRdS94dEcU27rF3meoJfpUcZPSinpb7AwQvPRY6RL1Q"}}`
 	if resp, err := apiCall(addfee); err != nil {
 		t.Error(err)
@@ -112,16 +112,16 @@ func TestTransaction(t *testing.T) {
 
 func apiCall(req string) (string, error) {
 	buf := bytes.NewBuffer([]byte(req))
-	resp, err := http.Post("http://" + testnet + "/v2", "text/plain", buf)
+	resp, err := http.Post("http://"+testnet+"/v2", "text/plain", buf)
 	if err != nil {
 		return "", err
 	}
 	defer resp.Body.Close()
-	
+
 	p, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		return "", err
 	}
-	
+
 	return string(p), nil
 }
