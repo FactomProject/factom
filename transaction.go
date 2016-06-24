@@ -43,7 +43,8 @@ func DeleteTransaction(name string) error {
 
 func ListTransactions() ([]string, error) {
 	type transactionResponse struct {
-		Name string `json:"tx-name"`
+		Name        string `json:"tx-name"`
+		Transaction string `json:"transaction"`
 	}
 
 	type transactionsResponse struct {
@@ -65,7 +66,7 @@ func ListTransactions() ([]string, error) {
 		return nil, err
 	}
 	for _, tx := range txs.Transactions {
-		r = append(r, tx.Name)
+		r = append(r, tx.Name, tx.Transaction)
 	}
 	return r, nil
 }
