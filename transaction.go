@@ -43,11 +43,14 @@ func DeleteTransaction(name string) error {
 
 func ListTransactions() ([]string, error) {
 	type transactionResponse struct {
-		Name        string `json:"tx-name"`
-		Transaction string `json:"transaction"`
+		Name           string `json:"tx-name"`
+		TxID           string `json:"txid,omitempty"`
+		TotalInputs    uint64 `json:"totalinputs"`
+		TotalOutputs   uint64 `json:"totaloutputs"`
+		TotalECOutputs uint64 `json:"totalecoutputs"`
 	}
 
-	type transactionsResponse struct {
+	type multiTransactionResponse struct {
 		Transactions []transactionResponse `json:"transactions"`
 	}
 
@@ -61,12 +64,12 @@ func ListTransactions() ([]string, error) {
 	}
 
 	r := make([]string, 0)
-	txs := new(transactionsResponse)
+	txs := new(multiTransactionResponse)
 	if err := json.Unmarshal(resp.JSONResult(), txs); err != nil {
 		return nil, err
 	}
 	for _, tx := range txs.Transactions {
-		r = append(r, tx.Name, tx.Transaction)
+		r = append(r, fmt.Sprintf("%#v", tx))
 	}
 	return r, nil
 }

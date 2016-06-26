@@ -48,10 +48,13 @@ type walletBackupResponse struct {
 }
 
 type transactionResponse struct {
-	Name        string `json:"tx-name"`
-	Transaction string `json:"transaction"`
+	Name           string `json:"tx-name"`
+	TxID           string `json:"txid,omitempty"`
+	TotalInputs    uint64 `json:"totalinputs"`
+	TotalOutputs   uint64 `json:"totaloutputs"`
+	TotalECOutputs uint64 `json:"totalecoutputs"`
 }
 
-type transactionsResponse struct {
+type multiTransactionResponse struct {
 	Transactions []transactionResponse `json:"transactions"`
 }

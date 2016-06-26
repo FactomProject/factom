@@ -5,11 +5,13 @@
 package wsapi
 
 import (
+	"encoding/hex"
 	"encoding/json"
 	"io/ioutil"
 
 	"github.com/FactomProject/factom"
 	"github.com/FactomProject/factom/wallet"
+	"github.com/FactomProject/factomd/common/factoid"
 	"github.com/FactomProject/web"
 )
 
@@ -254,13 +256,12 @@ func handleNewTransaction(params []byte) (interface{}, *factom.JSONError) {
 		return nil, newCustomInternalError(err.Error())
 	}
 
-	resp := transactionResponse{Name: req.Name}
 	t := fctWallet.GetTransactions()[req.Name]
-	if s, err := t.JSONString(); err != nil {
+	resp, err := mkTransactionResponse(t)
+	if err != nil {
 		return nil, newCustomInternalError(err.Error())
-	} else {
-		resp.Transaction = s
 	}
+	resp.Name = req.Name
 
 	return resp, nil
 }
@@ -279,16 +280,12 @@ func handleDeleteTransaction(params []byte) (interface{}, *factom.JSONError) {
 }
 
 func handleTransactions(params []byte) (interface{}, *factom.JSONError) {
-	resp := new(transactionsResponse)
+	resp := new(multiTransactionResponse)
 
 	for name, _ := range fctWallet.GetTransactions() {
 		r := transactionResponse{Name: name}
 		t := fctWallet.GetTransactions()[name]
-		if s, err := t.JSONString(); err != nil {
-			return nil, newCustomInternalError(err.Error())
-		} else {
-			r.Transaction = s
-		}
+		r.TxID = hex.EncodeToString(t.GetSigHash().Bytes())
 		resp.Transactions = append(resp.Transactions, r)
 	}
 
@@ -304,13 +301,12 @@ func handleAddInput(params []byte) (interface{}, *factom.JSONError) {
 	if err := fctWallet.AddInput(req.Name, req.Address, req.Amount); err != nil {
 		return nil, newCustomInternalError(err.Error())
 	}
-	resp := transactionResponse{Name: req.Name}
 	t := fctWallet.GetTransactions()[req.Name]
-	if s, err := t.JSONString(); err != nil {
+	resp, err := mkTransactionResponse(t)
+	if err != nil {
 		return nil, newCustomInternalError(err.Error())
-	} else {
-		resp.Transaction = s
 	}
+	resp.Name = req.Name
 
 	return resp, nil
 }
@@ -337,13 +333,12 @@ func handleAddECOutput(params []byte) (interface{}, *factom.JSONError) {
 	if err := fctWallet.AddECOutput(req.Name, req.Address, req.Amount); err != nil {
 		return nil, newCustomInternalError(err.Error())
 	}
-	resp := transactionResponse{Name: req.Name}
 	t := fctWallet.GetTransactions()[req.Name]
-	if s, err := t.JSONString(); err != nil {
+	resp, err := mkTransactionResponse(t)
+	if err != nil {
 		return nil, newCustomInternalError(err.Error())
-	} else {
-		resp.Transaction = s
 	}
+	resp.Name = req.Name
 
 	return resp, nil
 }
@@ -361,13 +356,12 @@ func handleAddFee(params []byte) (interface{}, *factom.JSONError) {
 	if err := fctWallet.AddFee(req.Name, req.Address, rate); err != nil {
 		return nil, newCustomInternalError(err.Error())
 	}
-	resp := transactionResponse{Name: req.Name}
 	t := fctWallet.GetTransactions()[req.Name]
-	if s, err := t.JSONString(); err != nil {
+	resp, err := mkTransactionResponse(t)
+	if err != nil {
 		return nil, newCustomInternalError(err.Error())
-	} else {
-		resp.Transaction = s
 	}
+	resp.Name = req.Name
 
 	return resp, nil
 }
@@ -385,13 +379,12 @@ func handleSubFee(params []byte) (interface{}, *factom.JSONError) {
 	if err := fctWallet.SubFee(req.Name, req.Address, rate); err != nil {
 		return nil, newCustomInternalError(err.Error())
 	}
-	resp := transactionResponse{Name: req.Name}
 	t := fctWallet.GetTransactions()[req.Name]
-	if s, err := t.JSONString(); err != nil {
+	resp, err := mkTransactionResponse(t)
+	if err != nil {
 		return nil, newCustomInternalError(err.Error())
-	} else {
-		resp.Transaction = s
 	}
+	resp.Name = req.Name
 
 	return resp, nil
 }
@@ -405,13 +398,12 @@ func handleSignTransaction(params []byte) (interface{}, *factom.JSONError) {
 	if err := fctWallet.SignTransaction(req.Name); err != nil {
 		return nil, newCustomInternalError(err.Error())
 	}
-	resp := transactionResponse{Name: req.Name}
 	t := fctWallet.GetTransactions()[req.Name]
-	if s, err := t.JSONString(); err != nil {
+	resp, err := mkTransactionResponse(t)
+	if err != nil {
 		return nil, newCustomInternalError(err.Error())
-	} else {
-		resp.Transaction = s
 	}
+	resp.Name = req.Name
 
 	return resp, nil
 }
@@ -441,4 +433,29 @@ func mkAddressResponse(a addressResponder) *addressResponse {
 	r.Public = a.String()
 	r.Secret = a.SecString()
 	return r
+}
+
+func mkTransactionResponse(t *factoid.Transaction) (*transactionResponse, error) {
+	r := new(transactionResponse)
+	r.TxID = hex.EncodeToString(t.GetSigHash().Bytes())
+
+	if i, err := t.TotalInputs(); err != nil {
+		return nil, err
+	} else {
+		r.TotalInputs = i
+	}
+
+	if i, err := t.TotalOutputs(); err != nil {
+		return nil, err
+	} else {
+		r.TotalOutputs = i
+	}
+
+	if i, err := t.TotalECs(); err != nil {
+		return nil, err
+	} else {
+		r.TotalECOutputs = i
+	}
+
+	return r, nil
 }
