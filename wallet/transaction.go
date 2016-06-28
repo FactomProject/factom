@@ -15,6 +15,7 @@ import (
 	"github.com/FactomProject/factomd/common/factoid"
 	"github.com/FactomProject/factomd/common/interfaces"
 	"github.com/FactomProject/factomd/common/primitives"
+	"github.com/FactomProject/goleveldb/leveldb"
 )
 
 var (
@@ -62,7 +63,9 @@ func (w *Wallet) AddInput(name, address string, amount uint64) error {
 	trans := w.transactions[name]
 
 	a, err := w.GetFCTAddress(address)
-	if err != nil {
+	if err == leveldb.ErrNotFound {
+		return errors.New("No such address in the wallet")
+	} else if err != nil {
 		return err
 	}
 	adr := factoid.NewAddress(a.RCDHash())
