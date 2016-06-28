@@ -19,6 +19,7 @@ import (
 )
 
 var (
+	ErrNoSuchAddress = errors.New("wallet: No such address")
 	ErrTXExists      = errors.New("wallet: Transaction name already exists")
 	ErrTXNotExists   = errors.New("wallet: Transaction name was not found")
 	ErrTXInvalidName = errors.New("wallet: Transaction name is not valid")
@@ -64,7 +65,7 @@ func (w *Wallet) AddInput(name, address string, amount uint64) error {
 
 	a, err := w.GetFCTAddress(address)
 	if err == leveldb.ErrNotFound {
-		return errors.New("No such address in the wallet")
+		return ErrNoSuchAddress
 	} else if err != nil {
 		return err
 	}
