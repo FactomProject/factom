@@ -83,6 +83,8 @@ func handleV2Request(j *factom.JSON2Request) (*factom.JSON2Response, *factom.JSO
 		resp, jsonError = handleDeleteTransaction(params)
 	case "transactions":
 		resp, jsonError = handleTransactions(params)
+	case "transaction-hash":
+		resp, jsonError = handleTransactionHash(params)
 	case "add-input":
 		resp, jsonError = handleAddInput(params)
 	case "add-output":
@@ -281,15 +283,35 @@ func handleDeleteTransaction(params []byte) (interface{}, *factom.JSONError) {
 
 func handleTransactions(params []byte) (interface{}, *factom.JSONError) {
 	resp := new(multiTransactionResponse)
+	txs := fctWallet.GetTransactions()
 
-	for name, _ := range fctWallet.GetTransactions() {
+	for name, tx := range txs {
 		r := transactionResponse{Name: name}
-		t := fctWallet.GetTransactions()[name]
-		r.TxID = hex.EncodeToString(t.GetSigHash().Bytes())
+		r.TxID = hex.EncodeToString(tx.GetSigHash().Bytes())
 		resp.Transactions = append(resp.Transactions, r)
 	}
 
 	return resp, nil
+}
+
+func handleTransactionHash(params []byte) (interface{}, *factom.JSONError) {
+	req := new(transactionRequest)
+	if err := json.Unmarshal(params, req); err != nil {
+		return nil, newInvalidParamsError()
+	}
+
+	resp := new(transactionResponse)
+	txs := fctWallet.GetTransactions()
+
+	for name, tx := range txs {
+		if name == req.Name {
+			resp.Name = name
+			resp.TxID = tx.GetSigHash().String()
+			return resp, nil
+		}
+	}
+
+	return nil, newCustomInternalError("Transaction not found")
 }
 
 func handleAddInput(params []byte) (interface{}, *factom.JSONError) {

@@ -41,6 +41,32 @@ func DeleteTransaction(name string) error {
 	return nil
 }
 
+func TransactionHash(name string) (string, error) {
+	params := transactionRequest{Name: name}
+	req := NewJSON2Request("transaction-hash", apiCounter(), params)
+
+	resp, err := walletRequest(req)
+	if err != nil {
+		return "", err
+	}
+	if resp.Error != nil {
+		return "", resp.Error
+	}
+	type transactionResponse struct {
+		Name           string `json:"tx-name"`
+		TxID           string `json:"txid,omitempty"`
+		TotalInputs    uint64 `json:"totalinputs"`
+		TotalOutputs   uint64 `json:"totaloutputs"`
+		TotalECOutputs uint64 `json:"totalecoutputs"`
+	}
+	tx := new(transactionResponse)
+	if err := json.Unmarshal(resp.JSONResult(), tx); err != nil {
+		return "", err
+	}
+
+	return tx.TxID, nil
+}
+
 func ListTransactions() ([]string, error) {
 	type transactionResponse struct {
 		Name           string `json:"tx-name"`
