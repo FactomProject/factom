@@ -255,9 +255,9 @@ func SendTransaction(name string) error {
 	if fresp.Error != nil {
 		return fresp.Error
 	}
-	/*if err := DeleteTransaction(name); err != nil {
+	if err := DeleteTransaction(name); err != nil {
 		return err
-	}*/
+	}
 
 	return nil
 }
