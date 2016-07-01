@@ -234,86 +234,88 @@ func ComposeTransaction(name string) ([]byte, error) {
 	return resp.JSONResult(), nil
 }
 
-func SendTransaction(name string) error {
+func SendTransaction(name string) ([]byte, error) {
 	params := transactionRequest{Name: name}
 
 	wreq := NewJSON2Request("compose-transaction", apiCounter(), params)
 	wresp, err := walletRequest(wreq)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	if wresp.Error != nil {
-		return wresp.Error
+		return nil, wresp.Error
 	}
 
 	freq := new(JSON2Request)
 	json.Unmarshal(wresp.JSONResult(), freq)
 	fresp, err := factomdRequest(freq)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	if fresp.Error != nil {
-		return fresp.Error
+		return nil, fresp.Error
 	}
 	if err := DeleteTransaction(name); err != nil {
-		return err
+		return nil, err
 	}
 
-	return nil
+	return fresp.JSONResult(), nil
 }
 
-func SendFactoid(from, to string, ammount uint64) error {
+func SendFactoid(from, to string, amount uint64) ([]byte, error) {
 	n := make([]byte, 16)
 	if _, err := rand.Read(n); err != nil {
-		return err
+		return nil, err
 	}
 	name := hex.EncodeToString(n)
 	if err := NewTransaction(name); err != nil {
-		return err
+		return nil, err
 	}
-	if err := AddTransactionInput(name, from, ammount); err != nil {
-		return err
+	if err := AddTransactionInput(name, from, amount); err != nil {
+		return nil, err
 	}
-	if err := AddTransactionOutput(name, to, ammount); err != nil {
-		return err
+	if err := AddTransactionOutput(name, to, amount); err != nil {
+		return nil, err
 	}
 	if err := AddTransactionFee(name, from); err != nil {
-		return err
+		return nil, err
 	}
 	if err := SignTransaction(name); err != nil {
-		return err
+		return nil, err
 	}
-	if err := SendTransaction(name); err != nil {
-		return err
+	r, err := SendTransaction(name)
+	if err != nil {
+		return nil, err
 	}
 
-	return nil
+	return r, nil
 }
 
-func BuyEC(from, to string, ammount uint64) error {
+func BuyEC(from, to string, ammount uint64) ([]byte, error) {
 	n := make([]byte, 16)
 	if _, err := rand.Read(n); err != nil {
-		return err
+		return nil, err
 	}
 	name := hex.EncodeToString(n)
 	if err := NewTransaction(name); err != nil {
-		return err
+		return nil, err
 	}
 	if err := AddTransactionInput(name, from, ammount); err != nil {
-		return err
+		return nil, err
 	}
 	if err := AddTransactionECOutput(name, to, ammount); err != nil {
-		return err
+		return nil, err
 	}
 	if err := AddTransactionFee(name, from); err != nil {
-		return err
+		return nil, err
 	}
 	if err := SignTransaction(name); err != nil {
-		return err
+		return nil, err
 	}
-	if err := SendTransaction(name); err != nil {
-		return err
+	r, err := SendTransaction(name)
+	if err != nil {
+		return nil, err
 	}
 
-	return nil
+	return r, nil
 }
