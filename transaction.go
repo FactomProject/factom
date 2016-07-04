@@ -10,6 +10,13 @@ import (
 	"encoding/json"
 	"fmt"
 )
+type TXInfo struct {
+	Name           string `json:"tx-name"`
+	TxID           string `json:"txid,omitempty"`
+	TotalInputs    uint64 `json:"totalinputs"`
+	TotalOutputs   uint64 `json:"totaloutputs"`
+	TotalECOutputs uint64 `json:"totalecoutputs"`
+}
 
 func NewTransaction(name string) error {
 	params := transactionRequest{Name: name}
@@ -52,14 +59,7 @@ func TransactionHash(name string) (string, error) {
 	if resp.Error != nil {
 		return "", resp.Error
 	}
-	type transactionResponse struct {
-		Name           string `json:"tx-name"`
-		TxID           string `json:"txid,omitempty"`
-		TotalInputs    uint64 `json:"totalinputs"`
-		TotalOutputs   uint64 `json:"totaloutputs"`
-		TotalECOutputs uint64 `json:"totalecoutputs"`
-	}
-	tx := new(transactionResponse)
+	tx := new(TXInfo)
 	if err := json.Unmarshal(resp.JSONResult(), tx); err != nil {
 		return "", err
 	}
@@ -67,17 +67,9 @@ func TransactionHash(name string) (string, error) {
 	return tx.TxID, nil
 }
 
-func ListTransactions() ([]string, error) {
-	type transactionResponse struct {
-		Name           string `json:"tx-name"`
-		TxID           string `json:"txid,omitempty"`
-		TotalInputs    uint64 `json:"totalinputs"`
-		TotalOutputs   uint64 `json:"totaloutputs"`
-		TotalECOutputs uint64 `json:"totalecoutputs"`
-	}
-
+func ListTransactions() ([]TXInfo, error) {
 	type multiTransactionResponse struct {
-		Transactions []transactionResponse `json:"transactions"`
+		Transactions []TXInfo `json:"transactions"`
 	}
 
 	req := NewJSON2Request("transactions", apiCounter(), nil)
@@ -89,15 +81,11 @@ func ListTransactions() ([]string, error) {
 		return nil, resp.Error
 	}
 
-	r := make([]string, 0)
 	txs := new(multiTransactionResponse)
 	if err := json.Unmarshal(resp.JSONResult(), txs); err != nil {
 		return nil, err
 	}
-	for _, tx := range txs.Transactions {
-		r = append(r, fmt.Sprintf("%#v", tx))
-	}
-	return r, nil
+	return txs.Transactions, nil
 }
 
 func AddTransactionInput(name, address string, amount uint64) error {
