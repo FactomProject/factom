@@ -13,7 +13,6 @@ import (
 	"github.com/FactomProject/btcutil/base58"
 	"github.com/FactomProject/factom"
 	"github.com/FactomProject/factomd/common/factoid"
-	"github.com/FactomProject/factomd/common/interfaces"
 	"github.com/FactomProject/factomd/common/primitives"
 	"github.com/FactomProject/goleveldb/leveldb"
 )
@@ -44,7 +43,7 @@ func (w *Wallet) NewTransaction(name string) error {
 	}
 
 	t := new(factoid.Transaction)
-	t.SetTimestamp(*interfaces.NewTimestampNow())
+	t.SetTimestamp(primitives.NewTimestampNow())
 	w.transactions[name] = t
 	return nil
 }
