@@ -10,12 +10,14 @@ import (
 	"encoding/json"
 	"fmt"
 )
+
 type TXInfo struct {
 	Name           string `json:"tx-name"`
 	TxID           string `json:"txid,omitempty"`
 	TotalInputs    uint64 `json:"totalinputs"`
 	TotalOutputs   uint64 `json:"totaloutputs"`
 	TotalECOutputs uint64 `json:"totalecoutputs"`
+	RawTransaction string `json:"rawtransaction"`
 }
 
 func NewTransaction(name string) error {

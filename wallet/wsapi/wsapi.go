@@ -303,6 +303,12 @@ func handleTransactions(params []byte) (interface{}, *factom.JSONError) {
 		} else {
 			r.TotalECOutputs = i
 		}
+		if t, err := tx.MarshalBinary(); err != nil {
+			return nil, newCustomInternalError(err.Error())
+		} else {
+			r.RawTransaction = hex.EncodeToString(t)
+		}
+
 		resp.Transactions = append(resp.Transactions, r)
 	}
 
