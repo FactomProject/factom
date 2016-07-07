@@ -288,6 +288,27 @@ func handleTransactions(params []byte) (interface{}, *factom.JSONError) {
 	for name, tx := range txs {
 		r := transactionResponse{Name: name}
 		r.TxID = hex.EncodeToString(tx.GetSigHash().Bytes())
+		if i, err := tx.TotalInputs(); err != nil {
+			return nil, newCustomInternalError(err.Error())
+		} else {
+			r.TotalInputs = i
+		}
+		if i, err := tx.TotalOutputs(); err != nil {
+			return nil, newCustomInternalError(err.Error())
+		} else {
+			r.TotalOutputs = i
+		}
+		if i, err := tx.TotalECs(); err != nil {
+			return nil, newCustomInternalError(err.Error())
+		} else {
+			r.TotalECOutputs = i
+		}
+		if t, err := tx.MarshalBinary(); err != nil {
+			return nil, newCustomInternalError(err.Error())
+		} else {
+			r.RawTransaction = hex.EncodeToString(t)
+		}
+
 		resp.Transactions = append(resp.Transactions, r)
 	}
 

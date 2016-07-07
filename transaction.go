@@ -11,6 +11,15 @@ import (
 	"fmt"
 )
 
+type TXInfo struct {
+	Name           string `json:"tx-name"`
+	TxID           string `json:"txid,omitempty"`
+	TotalInputs    uint64 `json:"totalinputs"`
+	TotalOutputs   uint64 `json:"totaloutputs"`
+	TotalECOutputs uint64 `json:"totalecoutputs"`
+	RawTransaction string `json:"rawtransaction"`
+}
+
 func NewTransaction(name string) error {
 	params := transactionRequest{Name: name}
 	req := NewJSON2Request("new-transaction", apiCounter(), params)
@@ -52,14 +61,7 @@ func TransactionHash(name string) (string, error) {
 	if resp.Error != nil {
 		return "", resp.Error
 	}
-	type transactionResponse struct {
-		Name           string `json:"tx-name"`
-		TxID           string `json:"txid,omitempty"`
-		TotalInputs    uint64 `json:"totalinputs"`
-		TotalOutputs   uint64 `json:"totaloutputs"`
-		TotalECOutputs uint64 `json:"totalecoutputs"`
-	}
-	tx := new(transactionResponse)
+	tx := new(TXInfo)
 	if err := json.Unmarshal(resp.JSONResult(), tx); err != nil {
 		return "", err
 	}
@@ -67,17 +69,9 @@ func TransactionHash(name string) (string, error) {
 	return tx.TxID, nil
 }
 
-func ListTransactions() ([]string, error) {
-	type transactionResponse struct {
-		Name           string `json:"tx-name"`
-		TxID           string `json:"txid,omitempty"`
-		TotalInputs    uint64 `json:"totalinputs"`
-		TotalOutputs   uint64 `json:"totaloutputs"`
-		TotalECOutputs uint64 `json:"totalecoutputs"`
-	}
-
+func ListTransactions() ([]TXInfo, error) {
 	type multiTransactionResponse struct {
-		Transactions []transactionResponse `json:"transactions"`
+		Transactions []TXInfo `json:"transactions"`
 	}
 
 	req := NewJSON2Request("transactions", apiCounter(), nil)
@@ -89,15 +83,11 @@ func ListTransactions() ([]string, error) {
 		return nil, resp.Error
 	}
 
-	r := make([]string, 0)
 	txs := new(multiTransactionResponse)
 	if err := json.Unmarshal(resp.JSONResult(), txs); err != nil {
 		return nil, err
 	}
-	for _, tx := range txs.Transactions {
-		r = append(r, fmt.Sprintf("%#v", tx))
-	}
-	return r, nil
+	return txs.Transactions, nil
 }
 
 func AddTransactionInput(name, address string, amount uint64) error {
@@ -234,87 +224,91 @@ func ComposeTransaction(name string) ([]byte, error) {
 	return resp.JSONResult(), nil
 }
 
-func SendTransaction(name string) ([]byte, error) {
+func SendTransaction(name string) (string, error) {
 	params := transactionRequest{Name: name}
 
 	wreq := NewJSON2Request("compose-transaction", apiCounter(), params)
 	wresp, err := walletRequest(wreq)
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 	if wresp.Error != nil {
-		return nil, wresp.Error
+		return "", wresp.Error
 	}
 
 	freq := new(JSON2Request)
 	json.Unmarshal(wresp.JSONResult(), freq)
 	fresp, err := factomdRequest(freq)
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 	if fresp.Error != nil {
-		return nil, fresp.Error
+		return "", fresp.Error
+	}
+	id, err := TransactionHash(name)
+	if err != nil {
+		return "", err
 	}
 	if err := DeleteTransaction(name); err != nil {
-		return nil, err
+		return "", err
 	}
 
-	return fresp.JSONResult(), nil
+	return id, nil
 }
 
-func SendFactoid(from, to string, amount uint64) ([]byte, error) {
+func SendFactoid(from, to string, amount uint64) (string, error) {
 	n := make([]byte, 16)
 	if _, err := rand.Read(n); err != nil {
-		return nil, err
+		return "", err
 	}
 	name := hex.EncodeToString(n)
 	if err := NewTransaction(name); err != nil {
-		return nil, err
+		return "", err
 	}
 	if err := AddTransactionInput(name, from, amount); err != nil {
-		return nil, err
+		return "", err
 	}
 	if err := AddTransactionOutput(name, to, amount); err != nil {
-		return nil, err
+		return "", err
 	}
 	if err := AddTransactionFee(name, from); err != nil {
-		return nil, err
+		return "", err
 	}
 	if err := SignTransaction(name); err != nil {
-		return nil, err
+		return "", err
 	}
 	r, err := SendTransaction(name)
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 
 	return r, nil
 }
 
-func BuyEC(from, to string, ammount uint64) ([]byte, error) {
+func BuyEC(from, to string, ammount uint64) (string, error) {
 	n := make([]byte, 16)
 	if _, err := rand.Read(n); err != nil {
-		return nil, err
+		return "", err
 	}
 	name := hex.EncodeToString(n)
 	if err := NewTransaction(name); err != nil {
-		return nil, err
+		return "", err
 	}
 	if err := AddTransactionInput(name, from, ammount); err != nil {
-		return nil, err
+		return "", err
 	}
 	if err := AddTransactionECOutput(name, to, ammount); err != nil {
-		return nil, err
+		return "", err
 	}
 	if err := AddTransactionFee(name, from); err != nil {
-		return nil, err
+		return "", err
 	}
 	if err := SignTransaction(name); err != nil {
-		return nil, err
+		return "", err
 	}
 	r, err := SendTransaction(name)
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 
 	return r, nil
