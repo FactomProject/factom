@@ -287,3 +287,27 @@ func GetFirstEntry(chainid string) (*Entry, error) {
 
 	return GetEntry(eb.EntryList[0].EntryHash)
 }
+
+func GetProperties() (string, string, string, error) {
+	type propertiesResponse struct {
+		FactomdVersion string `json:"factomdversion"`
+		APIVersion     string `json:"apiversion"`
+		WalletVersion  string `json:"walletversion"`
+	}
+
+	req := NewJSON2Request("properties", apiCounter(), nil)
+	resp, err := factomdRequest(req)
+	if err != nil {
+		return "", "", "", err
+	}
+	if resp.Error != nil {
+		return "", "", "", resp.Error
+	}
+
+	props := new(propertiesResponse)
+	if err := json.Unmarshal(resp.JSONResult(), props); err != nil {
+		return "", "", "", err
+	}
+
+	return props.FactomdVersion, props.APIVersion, props.WalletVersion, nil
+}
