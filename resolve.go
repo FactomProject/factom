@@ -11,10 +11,10 @@ import (
 )
 
 func ResolveDnsName(addr string) (string, string, error) {
-	fct, ferr := netki.WalletNameLookup(addr, "fct")
-	ec, eerr := netki.WalletNameLookup(addr, "fec")
-	if ferr != nil && eerr != nil {
-		return fct, ec, fmt.Errorf("%s\n%s", ferr, eerr)
+	fct, err1 := netki.WalletNameLookup(addr, "fct")
+	ec, err2 := netki.WalletNameLookup(addr, "fec")
+	if err1 != nil && err2 != nil {
+		return fct, ec, fmt.Errorf("%s\n%s", err1, err2)
 	}
 	return fct, ec, nil
 }
