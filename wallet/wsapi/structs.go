@@ -59,3 +59,7 @@ type transactionResponse struct {
 type multiTransactionResponse struct {
 	Transactions []transactionResponse `json:"transactions"`
 }
+
+type propertiesResponse struct {
+	WalletVersion string `json:"walletversion"`
+}

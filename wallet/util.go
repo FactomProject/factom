@@ -13,6 +13,7 @@ import (
 
 const (
 	SeedLength = 64
+	Version = "0.2.0.0"
 )
 
 // seed address prefix

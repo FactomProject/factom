@@ -99,6 +99,8 @@ func handleV2Request(j *factom.JSON2Request) (*factom.JSON2Response, *factom.JSO
 		resp, jsonError = handleSignTransaction(params)
 	case "compose-transaction":
 		resp, jsonError = handleComposeTransaction(params)
+	case "properties":
+		resp, jsonError = handleProperties(params)
 	default:
 		jsonError = newMethodNotFoundError()
 	}
@@ -462,6 +464,12 @@ func handleComposeTransaction(params []byte) (interface{}, *factom.JSONError) {
 		return nil, newCustomInternalError(err.Error())
 	}
 	return t, nil
+}
+
+func handleProperties(params []byte) (interface{}, *factom.JSONError) {
+	props := new(propertiesResponse)
+	props.WalletVersion = fctWallet.GetProperties()
+	return props, nil
 }
 
 // utility functions
