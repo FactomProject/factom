@@ -21,6 +21,7 @@ var (
 	ErrNoSuchAddress = errors.New("wallet: No such address")
 	ErrTXExists      = errors.New("wallet: Transaction name already exists")
 	ErrTXNotExists   = errors.New("wallet: Transaction name was not found")
+	ErrTXNoInputs    = errors.New("wallet: Transaction has no inputs")
 	ErrTXInvalidName = errors.New("wallet: Transaction name is not valid")
 )
 
@@ -224,7 +225,11 @@ func (w *Wallet) SignTransaction(name string) error {
 		return err
 	}
 
-	for i, rcd := range trans.GetRCDs() {
+	rcds := trans.GetRCDs()
+	if len(rcds) == 0 {
+		return ErrTXNoInputs
+	}
+	for i, rcd := range rcds {
 		a, err := rcd.GetAddress()
 		if err != nil {
 			return err
