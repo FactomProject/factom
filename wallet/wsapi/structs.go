@@ -16,6 +16,10 @@ type importRequest struct {
 	} `json:addresses`
 }
 
+type importMnemonicRequest struct {
+	Words string `json:"words"`
+}
+
 type transactionRequest struct {
 	Name string `json:"tx-name"`
 }
