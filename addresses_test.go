@@ -159,3 +159,19 @@ func TestGetFactoidAddress(t *testing.T) {
 
 	// ? test factoid key validity here
 }
+
+func TestMakeFactoidAddressFromMnemonic(t *testing.T) {
+	m := "yellow yellow yellow yellow yellow yellow yellow yellow yellow yellow yellow yellow"
+	cannonAdr := "FA3cih2o2tjEUsnnFR4jX1tQXPpSXFwsp3rhVp6odL5PNCHWvZV1"
+	
+	fct, err := MakeFactoidAddressFromMnemonic(m)
+	if err != nil {
+		t.Error(err)
+	}
+	
+	if fct.String() != cannonAdr {
+		t.Errorf(
+			"incorrect factoid address from 12 words: got %s expecting %s",
+			fct.String(), cannonAdr)
+	}
+}

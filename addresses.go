@@ -7,9 +7,12 @@ package factom
 import (
 	"bytes"
 	"fmt"
+	"strings"
 
 	"github.com/FactomProject/btcutil/base58"
 	ed "github.com/FactomProject/ed25519"
+	"github.com/FactomProject/go-bip32"
+	"github.com/FactomProject/go-bip39"
 )
 
 type addressStringType byte
@@ -238,6 +241,28 @@ func MakeFactoidAddress(sec []byte) (*FactoidAddress, error) {
 	a.rcd = r
 
 	return a, nil
+}
+
+// MakeFactoidAddressFromMnemonic takes the 12 word string used in the Koinify
+// sale and returns a Factoid Address.
+func MakeFactoidAddressFromMnemonic(mnemonic string) (*FactoidAddress, error) {
+	mnemonic = strings.ToLower(strings.TrimSpace(mnemonic))
+	seed, err := bip39.NewSeedWithErrorChecking(mnemonic, "")
+	if err != nil {
+		return nil, err
+	}
+
+	masterKey, err := bip32.NewMasterKey(seed)
+	if err != nil {
+		return nil, err
+	}
+
+	child, err := masterKey.NewChildKey(bip32.FirstHardenedChild + 7)
+	if err != nil {
+		return nil, err
+	}
+
+	return MakeFactoidAddress(child.Key)
 }
 
 func (a *FactoidAddress) RCDHash() []byte {
