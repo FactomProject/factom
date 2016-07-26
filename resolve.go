@@ -6,7 +6,7 @@ package factom
 
 import (
 	"fmt"
-	
+
 	netki "github.com/FactomProject/netki-go-partner-client"
 )
 
