@@ -231,7 +231,7 @@ func handleImportMnemonic(params []byte) (interface{}, *factom.JSONError) {
 		return nil, newInvalidParamsError()
 	}
 
-	f, err := factom.MakeFactoidAddressFromMnemonic()
+	f, err := factom.MakeFactoidAddressFromMnemonic(req.Words)
 	if err != nil {
 		return nil, newCustomInternalError(err.Error())
 	}
