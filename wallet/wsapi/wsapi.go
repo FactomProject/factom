@@ -235,6 +235,9 @@ func handleImportMnemonic(params []byte) (interface{}, *factom.JSONError) {
 	if err != nil {
 		return nil, newCustomInternalError(err.Error())
 	}
+	if err := fctWallet.PutFCTAddress(f); err != nil {
+		return nil, newCustomInternalError(err.Error())
+	}
 
 	return mkAddressResponse(f), nil
 }
