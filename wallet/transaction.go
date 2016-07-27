@@ -20,6 +20,7 @@ import (
 var (
 	ErrNoSuchAddress = errors.New("wallet: No such address")
 	ErrTXExists      = errors.New("wallet: Transaction name already exists")
+	ErrTXFee         = errors.New("wallet: Transaction Fee is not okay")
 	ErrTXNotExists   = errors.New("wallet: Transaction name was not found")
 	ErrTXNoInputs    = errors.New("wallet: Transaction has no inputs")
 	ErrTXInvalidName = errors.New("wallet: Transaction name is not valid")
@@ -219,6 +220,10 @@ func (w *Wallet) SignTransaction(name string) error {
 		return ErrTXNotExists
 	}
 	trans := w.transactions[name]
+	
+	if !isFeeOkay(trans) {
+		return ErrTXFee
+	}
 
 	data, err := trans.MarshalBinarySig()
 	if err != nil {
@@ -270,4 +275,46 @@ func (w *Wallet) ComposeTransaction(name string) (*factom.JSON2Request, error) {
 	req := factom.NewJSON2Request("factoid-submit", apiCounter(), param)
 
 	return req, nil
+}
+
+func isFeeOkay(t *factoid.Transaction) bool {
+	ins, err := t.TotalInputs()
+	if err != nil {
+		return false
+	}
+	outs, err := t.TotalOutputs()
+	if err != nil {
+		return false
+	}
+	ecs, err := t.TotalECs()
+	if err != nil {
+		return false
+	}
+
+	// fee is the fee that will be paid
+	fee := outs + ecs - ins
+	
+	if fee < 0 {
+		return false
+	}
+	
+	rate, err := factom.GetRate()
+	if err != nil {
+		return false
+	}
+	
+	// cfee is the fee calculated for the transaction
+	cfee, err := t.CalculateFee(rate)
+	
+	// fee is too low
+	if fee < cfee {
+		return false
+	}
+	
+	// fee is too high (over 10x cfee)
+	if fee < cfee * 10 {
+		return false
+	}
+	
+	return true
 }
