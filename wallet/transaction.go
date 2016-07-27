@@ -292,7 +292,7 @@ func isFeeOkay(t *factoid.Transaction) bool {
 	}
 
 	// fee is the fee that will be paid
-	fee := outs + ecs - ins
+	fee := int64(outs) + int64(ecs) - int64(ins)
 	
 	if fee < 0 {
 		return false
@@ -304,7 +304,12 @@ func isFeeOkay(t *factoid.Transaction) bool {
 	}
 	
 	// cfee is the fee calculated for the transaction
-	cfee, err := t.CalculateFee(rate)
+	var cfee int64
+	if c, err := t.CalculateFee(rate); err != nil {
+		return false
+	} else {
+		cfee = int64(c)
+	}
 	
 	// fee is too low
 	if fee < cfee {
