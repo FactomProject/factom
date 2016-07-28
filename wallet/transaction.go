@@ -100,6 +100,14 @@ func (w *Wallet) AddOutput(name, address string, amount uint64) error {
 
 	adr := factoid.NewAddress(base58.Decode(address)[2:34])
 
+	// First look if this is really an update
+	for _, output := range trans.GetOutputs() {
+		if output.GetAddress().IsSameAs(adr) {
+			output.SetAmount(amount)
+			return nil
+		}
+	}
+	
 	trans.AddOutput(adr, amount)
 
 	return nil
@@ -117,6 +125,14 @@ func (w *Wallet) AddECOutput(name, address string, amount uint64) error {
 
 	adr := factoid.NewAddress(base58.Decode(address)[2:34])
 
+	// First look if this is really an update
+	for _, output := range trans.GetECOutputs() {
+		if output.GetAddress().IsSameAs(adr) {
+			output.SetAmount(amount)
+			return nil
+		}
+	}
+	
 	trans.AddECOutput(adr, amount)
 
 	return nil
