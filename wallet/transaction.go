@@ -18,9 +18,10 @@ import (
 )
 
 var (
+	ErrFeeTooHigh    = errors.New("wallet: Overpaying Fee")
+	ErrFeeTooLow     = errors.New("wallet: Insufficient Fee")
 	ErrNoSuchAddress = errors.New("wallet: No such address")
 	ErrTXExists      = errors.New("wallet: Transaction name already exists")
-	ErrTXFee         = errors.New("wallet: Transaction Fee is not okay")
 	ErrTXNotExists   = errors.New("wallet: Transaction name was not found")
 	ErrTXNoInputs    = errors.New("wallet: Transaction has no inputs")
 	ErrTXInvalidName = errors.New("wallet: Transaction name is not valid")
@@ -220,9 +221,9 @@ func (w *Wallet) SignTransaction(name string) error {
 		return ErrTXNotExists
 	}
 	trans := w.transactions[name]
-	
-	if !isFeeOkay(trans) {
-		return ErrTXFee
+
+	if err := checkFee(trans); err != nil {
+		return err
 	}
 
 	data, err := trans.MarshalBinarySig()
@@ -277,49 +278,51 @@ func (w *Wallet) ComposeTransaction(name string) (*factom.JSON2Request, error) {
 	return req, nil
 }
 
-func isFeeOkay(t *factoid.Transaction) bool {
+func checkFee(t *factoid.Transaction) error {
 	ins, err := t.TotalInputs()
 	if err != nil {
-		return false
+		return err
 	}
 	outs, err := t.TotalOutputs()
 	if err != nil {
-		return false
+		return err
 	}
 	ecs, err := t.TotalECs()
 	if err != nil {
-		return false
+		return err
 	}
 
 	// fee is the fee that will be paid
 	fee := int64(outs) + int64(ecs) - int64(ins)
-	
-	if fee < 0 {
-		return false
+
+	if fee <= 0 {
+		return ErrFeeTooLow
 	}
-	
+
 	rate, err := factom.GetRate()
 	if err != nil {
-		return false
+		return err
 	}
-	
+
 	// cfee is the fee calculated for the transaction
 	var cfee int64
 	if c, err := t.CalculateFee(rate); err != nil {
-		return false
+		return err
+	} else if c == 0 {
+		return errors.New("wallet: Could not calculate fee")
 	} else {
 		cfee = int64(c)
 	}
-	
+
 	// fee is too low
 	if fee < cfee {
-		return false
+		return ErrFeeTooLow
 	}
-	
+
 	// fee is too high (over 10x cfee)
-	if fee < cfee * 10 {
-		return false
+	if fee > cfee*10 {
+		return ErrFeeTooHigh
 	}
-	
-	return true
+
+	return nil
 }
