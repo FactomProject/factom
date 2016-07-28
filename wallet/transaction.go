@@ -294,7 +294,6 @@ func checkFee(t *factoid.Transaction) error {
 
 	// fee is the fee that will be paid
 	fee := int64(ins) - int64(outs) - int64(ecs)
-	fmt.Println("DEBUG: fee is", fee)
 	
 	if fee <= 0 {
 		return ErrFeeTooLow
@@ -313,7 +312,6 @@ func checkFee(t *factoid.Transaction) error {
 		return errors.New("wallet: Could not calculate fee")
 	} else {
 		cfee = int64(c)
-		fmt.Println("DEBUG: cfee is", cfee)
 	}
 
 	// fee is too low
