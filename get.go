@@ -309,5 +309,19 @@ func GetProperties() (string, string, string, error) {
 		return "", "", "", err
 	}
 
-	return props.FactomdVersion, props.APIVersion, props.WalletVersion, nil
+	wresp, err := walletRequest(req)
+	if err != nil {
+		return props.FactomdVersion, props.APIVersion, props.WalletVersion, err
+	}
+	if wresp.Error != nil {
+		return props.FactomdVersion, props.APIVersion, props.WalletVersion,
+			wresp.Error
+	}
+
+	wprops := new(propertiesResponse)
+	if err := json.Unmarshal(wresp.JSONResult(), wprops); err != nil {
+		return "", "", "", err
+	}
+
+	return props.FactomdVersion, props.APIVersion, wprops.WalletVersion, nil
 }

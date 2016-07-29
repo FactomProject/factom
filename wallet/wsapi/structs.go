@@ -16,6 +16,10 @@ type importRequest struct {
 	} `json:addresses`
 }
 
+type importMnemonicRequest struct {
+	Words string `json:"words"`
+}
+
 type transactionRequest struct {
 	Name string `json:"tx-name"`
 }
@@ -58,4 +62,8 @@ type transactionResponse struct {
 
 type multiTransactionResponse struct {
 	Transactions []transactionResponse `json:"transactions"`
+}
+
+type propertiesResponse struct {
+	WalletVersion string `json:"walletversion"`
 }

@@ -18,9 +18,12 @@ import (
 )
 
 var (
+	ErrFeeTooHigh    = errors.New("wallet: Overpaying Fee")
+	ErrFeeTooLow     = errors.New("wallet: Insufficient Fee")
 	ErrNoSuchAddress = errors.New("wallet: No such address")
 	ErrTXExists      = errors.New("wallet: Transaction name already exists")
 	ErrTXNotExists   = errors.New("wallet: Transaction name was not found")
+	ErrTXNoInputs    = errors.New("wallet: Transaction has no inputs")
 	ErrTXInvalidName = errors.New("wallet: Transaction name is not valid")
 )
 
@@ -97,6 +100,14 @@ func (w *Wallet) AddOutput(name, address string, amount uint64) error {
 
 	adr := factoid.NewAddress(base58.Decode(address)[2:34])
 
+	// First look if this is really an update
+	for _, output := range trans.GetOutputs() {
+		if output.GetAddress().IsSameAs(adr) {
+			output.SetAmount(amount)
+			return nil
+		}
+	}
+	
 	trans.AddOutput(adr, amount)
 
 	return nil
@@ -114,6 +125,14 @@ func (w *Wallet) AddECOutput(name, address string, amount uint64) error {
 
 	adr := factoid.NewAddress(base58.Decode(address)[2:34])
 
+	// First look if this is really an update
+	for _, output := range trans.GetECOutputs() {
+		if output.GetAddress().IsSameAs(adr) {
+			output.SetAmount(amount)
+			return nil
+		}
+	}
+	
 	trans.AddECOutput(adr, amount)
 
 	return nil
@@ -219,12 +238,20 @@ func (w *Wallet) SignTransaction(name string) error {
 	}
 	trans := w.transactions[name]
 
+	if err := checkFee(trans); err != nil {
+		return err
+	}
+
 	data, err := trans.MarshalBinarySig()
 	if err != nil {
 		return err
 	}
 
-	for i, rcd := range trans.GetRCDs() {
+	rcds := trans.GetRCDs()
+	if len(rcds) == 0 {
+		return ErrTXNoInputs
+	}
+	for i, rcd := range rcds {
 		a, err := rcd.GetAddress()
 		if err != nil {
 			return err
@@ -265,4 +292,53 @@ func (w *Wallet) ComposeTransaction(name string) (*factom.JSON2Request, error) {
 	req := factom.NewJSON2Request("factoid-submit", apiCounter(), param)
 
 	return req, nil
+}
+
+func checkFee(t *factoid.Transaction) error {
+	ins, err := t.TotalInputs()
+	if err != nil {
+		return err
+	}
+	outs, err := t.TotalOutputs()
+	if err != nil {
+		return err
+	}
+	ecs, err := t.TotalECs()
+	if err != nil {
+		return err
+	}
+
+	// fee is the fee that will be paid
+	fee := int64(ins) - int64(outs) - int64(ecs)
+	
+	if fee <= 0 {
+		return ErrFeeTooLow
+	}
+
+	rate, err := factom.GetRate()
+	if err != nil {
+		return err
+	}
+
+	// cfee is the fee calculated for the transaction
+	var cfee int64
+	if c, err := t.CalculateFee(rate); err != nil {
+		return err
+	} else if c == 0 {
+		return errors.New("wallet: Could not calculate fee")
+	} else {
+		cfee = int64(c)
+	}
+
+	// fee is too low
+	if fee < cfee {
+		return ErrFeeTooLow
+	}
+
+	// fee is too high (over 10x cfee)
+	if fee >= cfee*10 {
+		return ErrFeeTooHigh
+	}
+
+	return nil
 }

@@ -33,6 +33,10 @@ type importRequest struct {
 	Addresses []secretRequest `json:"addresses"`
 }
 
+type importMnemonicRequest struct {
+	Words string `json:"words"`
+}
+
 type keyMRRequest struct {
 	KeyMR string `json:"keymr"`
 }

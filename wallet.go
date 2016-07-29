@@ -118,6 +118,36 @@ func ImportAddresses(addrs ...string) (
 	return fs, es, nil
 }
 
+func ImportMnemonic(mnemonic string) (*FactoidAddress, error) {
+	type addressResponse struct {
+		Public string `json:"public"`
+		Secret string `json:"secret"`
+	}
+
+	params := new(importMnemonicRequest)
+	params.Words = mnemonic
+
+	req := NewJSON2Request("import-mnemonic", apiCounter(), params)
+	resp, err := walletRequest(req)
+	if err != nil {
+		return nil, err
+	}
+	if resp.Error != nil {
+		return nil, resp.Error
+	}
+
+	r := new(addressResponse)
+	if err := json.Unmarshal(resp.JSONResult(), r); err != nil {
+		return nil, err
+	}
+	f, err := GetFactoidAddress(r.Secret)
+	if err != nil {
+		return nil, err
+	}
+
+	return f, nil
+}
+
 func FetchAddresses() ([]*FactoidAddress, []*ECAddress, error) {
 	type addressResponse struct {
 		Public string `json:"public"`

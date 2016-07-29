@@ -251,6 +251,10 @@ func (w *Wallet) GetSeed() (string, error) {
 	return seedString(seed), nil
 }
 
+func (w *Wallet) GetProperties() string {
+	return Version
+}
+
 // getSeed retrieves the raw Wallet Seed from the Database.
 func (w *Wallet) getSeed() ([]byte, error) {
 	w.lock.Lock()

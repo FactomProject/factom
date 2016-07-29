@@ -75,6 +75,8 @@ func handleV2Request(j *factom.JSON2Request) (*factom.JSON2Response, *factom.JSO
 		resp, jsonError = handleGenerateFactoidAddress(params)
 	case "import-addresses":
 		resp, jsonError = handleImportAddresses(params)
+	case "import-mnemonic":
+		resp, jsonError = handleImportMnemonic(params)
 	case "wallet-backup":
 		resp, jsonError = handleWalletBackup(params)
 	case "new-transaction":
@@ -99,6 +101,8 @@ func handleV2Request(j *factom.JSON2Request) (*factom.JSON2Response, *factom.JSO
 		resp, jsonError = handleSignTransaction(params)
 	case "compose-transaction":
 		resp, jsonError = handleComposeTransaction(params)
+	case "properties":
+		resp, jsonError = handleProperties(params)
 	default:
 		jsonError = newMethodNotFoundError()
 	}
@@ -219,6 +223,23 @@ func handleImportAddresses(params []byte) (interface{}, *factom.JSONError) {
 		}
 	}
 	return resp, nil
+}
+
+func handleImportMnemonic(params []byte) (interface{}, *factom.JSONError) {
+	req := new(importMnemonicRequest)
+	if err := json.Unmarshal(params, req); err != nil {
+		return nil, newInvalidParamsError()
+	}
+
+	f, err := factom.MakeFactoidAddressFromMnemonic(req.Words)
+	if err != nil {
+		return nil, newCustomInternalError(err.Error())
+	}
+	if err := fctWallet.PutFCTAddress(f); err != nil {
+		return nil, newCustomInternalError(err.Error())
+	}
+
+	return mkAddressResponse(f), nil
 }
 
 func handleWalletBackup(params []byte) (interface{}, *factom.JSONError) {
@@ -462,6 +483,12 @@ func handleComposeTransaction(params []byte) (interface{}, *factom.JSONError) {
 		return nil, newCustomInternalError(err.Error())
 	}
 	return t, nil
+}
+
+func handleProperties(params []byte) (interface{}, *factom.JSONError) {
+	props := new(propertiesResponse)
+	props.WalletVersion = fctWallet.GetProperties()
+	return props, nil
 }
 
 // utility functions
