@@ -80,7 +80,7 @@ func (db *WalletDatabaseOverlay) InsertDBSeed(dbSeed []byte) error {
 	return db.dbo.PutInBatch(batch)
 }
 
-func (db *WalletDatabaseOverlay) FetchDBSeed() ([]byte, error) {
+func (db *WalletDatabaseOverlay) GetDBSeed() ([]byte, error) {
 	data, err := db.dbo.Get(seedDBKey, seedDBKey, new(primitives.ByteSlice))
 	if err != nil {
 		return nil, err
@@ -110,7 +110,7 @@ func (db *WalletDatabaseOverlay) InsertNextDBSeed(dbSeed []byte) error {
 	return db.dbo.PutInBatch(batch)
 }
 
-func (db *WalletDatabaseOverlay) FetchNextDBSeed() ([]byte, error) {
+func (db *WalletDatabaseOverlay) GetNextDBSeed() ([]byte, error) {
 	data, err := db.dbo.Get(nextSeedDBKey, nextSeedDBKey, new(primitives.ByteSlice))
 	if err != nil {
 		return nil, err
@@ -132,7 +132,7 @@ func (db *WalletDatabaseOverlay) InsertECAddress(e *factom.ECAddress) error {
 	return db.dbo.PutInBatch(batch)
 }
 
-func (db *WalletDatabaseOverlay) FetchECAddress(pubString string) (*factom.ECAddress, error) {
+func (db *WalletDatabaseOverlay) GetECAddress(pubString string) (*factom.ECAddress, error) {
 	data, err := db.dbo.Get(ecDBPrefix, []byte(pubString), new(factom.ECAddress))
 	if err != nil {
 		return nil, err
@@ -143,7 +143,7 @@ func (db *WalletDatabaseOverlay) FetchECAddress(pubString string) (*factom.ECAdd
 	return data.(*factom.ECAddress), nil
 }
 
-func (db *WalletDatabaseOverlay) FetchAllECAddresses() ([]*factom.ECAddress, error) {
+func (db *WalletDatabaseOverlay) GetAllECAddresses() ([]*factom.ECAddress, error) {
 	list, err := db.dbo.FetchAllBlocksFromBucket(ecDBPrefix, new(ECA))
 	if err != nil {
 		return nil, err
@@ -184,7 +184,7 @@ func (db *WalletDatabaseOverlay) InsertFCTAddress(e *factom.FactoidAddress) erro
 	return db.dbo.PutInBatch(batch)
 }
 
-func (db *WalletDatabaseOverlay) FetchFCTAddress(str string) (*factom.FactoidAddress, error) {
+func (db *WalletDatabaseOverlay) GetFCTAddress(str string) (*factom.FactoidAddress, error) {
 	data, err := db.dbo.Get(fcDBPrefix, []byte(str), new(factom.FactoidAddress))
 	if err != nil {
 		return nil, err
@@ -195,7 +195,7 @@ func (db *WalletDatabaseOverlay) FetchFCTAddress(str string) (*factom.FactoidAdd
 	return data.(*factom.FactoidAddress), nil
 }
 
-func (db *WalletDatabaseOverlay) FetchAllFCTAddresses() ([]*factom.FactoidAddress, error) {
+func (db *WalletDatabaseOverlay) GetAllFCTAddresses() ([]*factom.FactoidAddress, error) {
 	list, err := db.dbo.FetchAllBlocksFromBucket(fcDBPrefix, new(FA))
 	if err != nil {
 		return nil, err

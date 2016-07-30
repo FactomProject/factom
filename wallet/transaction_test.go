@@ -63,7 +63,7 @@ func TestAddInput(t *testing.T) {
 		t.Error(err)
 	}
 	// Get the address back out of the db
-	adr, err := w1.FetchFCTAddress(f.String())
+	adr, err := w1.GetFCTAddress(f.String())
 	if err != nil {
 		t.Error(err)
 	}
@@ -113,7 +113,7 @@ func TestComposeTrasnaction(t *testing.T) {
 	if out, err := factom.FetchFactoidAddress(f1Sec); err != nil {
 		t.Error(err)
 	} else {
-		if f, err := w1.FetchFCTAddress(out.String()); err != nil {
+		if f, err := w1.GetFCTAddress(out.String()); err != nil {
 			t.Error(err)
 		} else {
 			f1 = f
@@ -128,7 +128,7 @@ func TestComposeTrasnaction(t *testing.T) {
 	}
 
 	// setup an ec address for receving
-	e1, err := factom.FetchECAddress(e1Sec)
+	e1, err := factom.GetECAddress(e1Sec)
 	if err != nil {
 		t.FailNow()
 		t.Error(err)

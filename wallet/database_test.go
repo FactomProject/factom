@@ -21,7 +21,7 @@ func TestNewWallet(t *testing.T) {
 	}
 
 	// check that the seed got written
-	seed, err := w1.FetchDBSeed()
+	seed, err := w1.GetDBSeed()
 	if err != nil {
 		t.Error(err)
 	}
@@ -54,7 +54,7 @@ func TestOpenWallet(t *testing.T) {
 	}
 
 	// check that the seed is there
-	seed, err := w1.FetchDBSeed()
+	seed, err := w1.GetDBSeed()
 	if len(seed) != 64 {
 		t.Errorf("stored db seed is the wrong length: %x", seed)
 	}
@@ -91,7 +91,7 @@ func TestPutECAddress(t *testing.T) {
 	}
 
 	// Check that the address was written into the db
-	if _, err := w.FetchECAddress(e.PubString()); err != nil {
+	if _, err := w.GetECAddress(e.PubString()); err != nil {
 		t.Error(err)
 	}
 
@@ -120,7 +120,7 @@ func TestPutFCTAddress(t *testing.T) {
 	}
 
 	// Check that the address was written into the db
-	if _, err := w.FetchFCTAddress(f.String()); err != nil {
+	if _, err := w.GetFCTAddress(f.String()); err != nil {
 		t.Error(err)
 	}
 
@@ -144,7 +144,7 @@ func TestGenerateECAddress(t *testing.T) {
 	}
 
 	// Check that the address was written into the db
-	if _, err := w.FetchECAddress(e.PubString()); err != nil {
+	if _, err := w.GetECAddress(e.PubString()); err != nil {
 		t.Error(err)
 	}
 
@@ -168,7 +168,7 @@ func TestGenerateFCTAddress(t *testing.T) {
 	}
 
 	// Check that the address was written into the db
-	if _, err := w.FetchFCTAddress(f.String()); err != nil {
+	if _, err := w.GetFCTAddress(f.String()); err != nil {
 		t.Error(err)
 	}
 

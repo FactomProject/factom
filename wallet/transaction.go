@@ -107,7 +107,7 @@ func (w *Wallet) AddOutput(name, address string, amount uint64) error {
 			return nil
 		}
 	}
-	
+
 	trans.AddOutput(adr, amount)
 
 	return nil
@@ -132,7 +132,7 @@ func (w *Wallet) AddECOutput(name, address string, amount uint64) error {
 			return nil
 		}
 	}
-	
+
 	trans.AddECOutput(adr, amount)
 
 	return nil
@@ -289,7 +289,7 @@ func (w *Wallet) ComposeTransaction(name string) (*factom.JSON2Request, error) {
 		param.Transaction = hex.EncodeToString(p)
 	}
 
-	req := factom.NewJSON2Request("factoid-submit", apiCounter(), param)
+	req := factom.NewJSON2Request("factoid-submit", APICounter(), param)
 
 	return req, nil
 }
@@ -310,7 +310,7 @@ func checkFee(t *factoid.Transaction) error {
 
 	// fee is the fee that will be paid
 	fee := int64(ins) - int64(outs) - int64(ecs)
-	
+
 	if fee <= 0 {
 		return ErrFeeTooLow
 	}
