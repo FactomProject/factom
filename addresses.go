@@ -93,15 +93,39 @@ func IsValidAddress(s string) bool {
 }
 
 type ECAddress struct {
-	pub *[ed.PublicKeySize]byte
-	sec *[ed.PrivateKeySize]byte
+	Pub *[ed.PublicKeySize]byte
+	Sec *[ed.PrivateKeySize]byte
 }
 
 func NewECAddress() *ECAddress {
 	a := new(ECAddress)
-	a.pub = new([ed.PublicKeySize]byte)
-	a.sec = new([ed.PrivateKeySize]byte)
+	a.Pub = new([ed.PublicKeySize]byte)
+	a.Sec = new([ed.PrivateKeySize]byte)
 	return a
+}
+
+func (t *ECAddress) UnmarshalBinary(data []byte) error {
+	_, err := t.UnmarshalBinaryData(data)
+	return err
+}
+
+func (t *ECAddress) UnmarshalBinaryData(data []byte) ([]byte, error) {
+	if len(data) < 32 {
+		return nil, fmt.Errorf("secret key portion must be 32 bytes")
+	}
+
+	if t.Sec == nil {
+		t.Sec = new([ed.PrivateKeySize]byte)
+	}
+
+	copy(t.Sec[:], data[:32])
+	t.Pub = ed.GetPublicKey(t.Sec)
+
+	return data[32:], nil
+}
+
+func (t *ECAddress) MarshalBinary() ([]byte, error) {
+	return t.SecBytes(), nil
 }
 
 // GetECAddress takes a private address string (Es...) and returns an ECAddress.
@@ -116,12 +140,7 @@ func GetECAddress(s string) (*ECAddress, error) {
 		return nil, fmt.Errorf("Invalid Entry Credit Private Address")
 	}
 
-	a := NewECAddress()
-	copy(a.sec[:], p[2:34])
-	// GetPublicKey will overwrite the pubkey portion of 'a.sec'
-	a.pub = ed.GetPublicKey(a.sec)
-
-	return a, nil
+	return MakeECAddress(p[2:34])
 }
 
 func MakeECAddress(sec []byte) (*ECAddress, error) {
@@ -130,18 +149,21 @@ func MakeECAddress(sec []byte) (*ECAddress, error) {
 	}
 
 	a := NewECAddress()
-	copy(a.sec[:], sec)
-	a.pub = ed.GetPublicKey(a.sec)
+
+	err := a.UnmarshalBinary(sec)
+	if err != nil {
+		return nil, err
+	}
 
 	return a, nil
 }
 
 func (a *ECAddress) PubBytes() []byte {
-	return a.pub[:]
+	return a.Pub[:]
 }
 
 func (a *ECAddress) PubFixed() *[32]byte {
-	return a.pub
+	return a.Pub
 }
 
 func (a *ECAddress) PubString() string {
@@ -161,11 +183,11 @@ func (a *ECAddress) PubString() string {
 }
 
 func (a *ECAddress) SecBytes() []byte {
-	return a.sec[:]
+	return a.Sec[:]
 }
 
 func (a *ECAddress) SecFixed() *[64]byte {
-	return a.sec
+	return a.Sec
 }
 
 func (a *ECAddress) SecString() string {
@@ -193,17 +215,43 @@ func (a *ECAddress) String() string {
 }
 
 type FactoidAddress struct {
-	rcd RCD
-	sec *[ed.PrivateKeySize]byte
+	RCD RCD
+	Sec *[ed.PrivateKeySize]byte
 }
 
 func NewFactoidAddress() *FactoidAddress {
 	a := new(FactoidAddress)
 	r := NewRCD1()
 	r.Pub = new([ed.PublicKeySize]byte)
-	a.rcd = r
-	a.sec = new([ed.PrivateKeySize]byte)
+	a.RCD = r
+	a.Sec = new([ed.PrivateKeySize]byte)
 	return a
+}
+
+func (t *FactoidAddress) UnmarshalBinary(data []byte) error {
+	_, err := t.UnmarshalBinaryData(data)
+	return err
+}
+
+func (t *FactoidAddress) UnmarshalBinaryData(data []byte) ([]byte, error) {
+	if len(data) < 32 {
+		return nil, fmt.Errorf("secret key portion must be 32 bytes")
+	}
+
+	if t.Sec == nil {
+		t.Sec = new([ed.PrivateKeySize]byte)
+	}
+
+	copy(t.Sec[:], data[:32])
+	r := NewRCD1()
+	r.Pub = ed.GetPublicKey(t.Sec)
+	t.RCD = r
+
+	return data[32:], nil
+}
+
+func (t *FactoidAddress) MarshalBinary() ([]byte, error) {
+	return t.SecBytes(), nil
 }
 
 // GetFactoidAddress takes a private address string (Fs...) and returns a
@@ -219,14 +267,7 @@ func GetFactoidAddress(s string) (*FactoidAddress, error) {
 		return nil, fmt.Errorf("Invalid Factoid Private Address")
 	}
 
-	a := NewFactoidAddress()
-	copy(a.sec[:], p[2:34])
-	// GetPublicKey will overwrite the pubkey portion of 'a.sec'
-	r := NewRCD1()
-	r.Pub = ed.GetPublicKey(a.sec)
-	a.rcd = r
-
-	return a, nil
+	return MakeFactoidAddress(p[2:34])
 }
 
 func MakeFactoidAddress(sec []byte) (*FactoidAddress, error) {
@@ -235,10 +276,10 @@ func MakeFactoidAddress(sec []byte) (*FactoidAddress, error) {
 	}
 
 	a := NewFactoidAddress()
-	copy(a.sec[:], sec)
-	r := NewRCD1()
-	r.Pub = ed.GetPublicKey(a.sec)
-	a.rcd = r
+	err := a.UnmarshalBinary(sec)
+	if err != nil {
+		return nil, err
+	}
 
 	return a, nil
 }
@@ -266,23 +307,23 @@ func MakeFactoidAddressFromMnemonic(mnemonic string) (*FactoidAddress, error) {
 }
 
 func (a *FactoidAddress) RCDHash() []byte {
-	return a.rcd.Hash()
+	return a.RCD.Hash()
 }
 
 func (a *FactoidAddress) RCDType() uint8 {
-	return a.rcd.Type()
+	return a.RCD.Type()
 }
 
 func (a *FactoidAddress) PubBytes() []byte {
-	return a.rcd.(*RCD1).PubBytes()
+	return a.RCD.(*RCD1).PubBytes()
 }
 
 func (a *FactoidAddress) SecBytes() []byte {
-	return a.sec[:]
+	return a.Sec[:]
 }
 
 func (a *FactoidAddress) SecFixed() *[64]byte {
-	return a.sec
+	return a.Sec
 }
 
 func (a *FactoidAddress) SecString() string {

@@ -2,11 +2,13 @@
 // Use of this source code is governed by the MIT
 // license that can be found in the LICENSE file.
 
-package wallet
+package wallet_test
 
 import (
 	"os"
 	"testing"
+
+	. "github.com/FactomProject/factom/wallet"
 )
 
 func TestImportV1Wallet(t *testing.T) {

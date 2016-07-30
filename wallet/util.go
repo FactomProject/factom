@@ -13,15 +13,15 @@ import (
 
 const (
 	SeedLength = 64
-	Version = "0.2.0.0"
+	Version    = "0.2.0.0"
 )
 
 // seed address prefix
 var seedPrefix = []byte{0x13, 0xdd}
 
-// seedString returnes the string representation of a raw Wallet Seed or Next
+// SeedString returnes the string representation of a raw Wallet Seed or Next
 // Wallet Seed.
-func seedString(seed []byte) string {
+func SeedString(seed []byte) string {
 	if len(seed) != SeedLength {
 		return ""
 	}
@@ -57,4 +57,4 @@ func newCounter() func() int {
 	}
 }
 
-var apiCounter = newCounter()
+var APICounter = newCounter()

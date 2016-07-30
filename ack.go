@@ -45,7 +45,7 @@ type Malleated struct {
 
 func FactoidACK(txID, fullTransaction string) (*FactoidTxStatus, error) {
 	params := ackRequest{TxID: txID, FullTransaction: fullTransaction}
-	req := NewJSON2Request("factoid-ack", apiCounter(), params)
+	req := NewJSON2Request("factoid-ack", APICounter(), params)
 	resp, err := factomdRequest(req)
 	if err != nil {
 		return nil, err
@@ -64,7 +64,7 @@ func FactoidACK(txID, fullTransaction string) (*FactoidTxStatus, error) {
 
 func EntryACK(txID, fullTransaction string) (*EntryStatus, error) {
 	params := ackRequest{TxID: txID, FullTransaction: fullTransaction}
-	req := NewJSON2Request("entry-ack", apiCounter(), params)
+	req := NewJSON2Request("entry-ack", APICounter(), params)
 	resp, err := factomdRequest(req)
 	if err != nil {
 		return nil, err

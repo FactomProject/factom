@@ -1,6 +1,7 @@
-package factom
+package factom_test
 
 import (
+	. "github.com/FactomProject/factom"
 	"testing"
 )
 

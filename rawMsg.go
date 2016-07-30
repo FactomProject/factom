@@ -10,7 +10,7 @@ type SendRawMessageResponse struct {
 
 func SendRawMsg(message string) (*SendRawMessageResponse, error) {
 	param := messageRequest{Message: message}
-	req := NewJSON2Request("send-raw-message", apiCounter(), param)
+	req := NewJSON2Request("send-raw-message", APICounter(), param)
 	resp, err := factomdRequest(req)
 	if err != nil {
 		return nil, err

@@ -169,4 +169,4 @@ func newCounter() func() int {
 	}
 }
 
-var apiCounter = newCounter()
+var APICounter = newCounter()

@@ -14,7 +14,7 @@ func GetReceipt(hash string) (*Receipt, error) {
 	}
 
 	params := hashRequest{Hash: hash}
-	req := NewJSON2Request("receipt", apiCounter(), params)
+	req := NewJSON2Request("receipt", APICounter(), params)
 	resp, err := factomdRequest(req)
 	if err != nil {
 		return nil, err

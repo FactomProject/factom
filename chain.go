@@ -78,7 +78,7 @@ func ComposeChainCommit(c *Chain, ec *ECAddress) (*JSON2Request, error) {
 	buf.Write(sig[:])
 
 	params := messageRequest{Message: hex.EncodeToString(buf.Bytes())}
-	req := NewJSON2Request("commit-chain", apiCounter(), params)
+	req := NewJSON2Request("commit-chain", APICounter(), params)
 
 	return req, nil
 }
@@ -92,7 +92,7 @@ func ComposeChainReveal(c *Chain) (*JSON2Request, error) {
 	}
 	params := entryRequest{Entry: hex.EncodeToString(p)}
 
-	req := NewJSON2Request("reveal-chain", apiCounter(), params)
+	req := NewJSON2Request("reveal-chain", APICounter(), params)
 	return req, nil
 }
 

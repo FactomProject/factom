@@ -64,7 +64,7 @@ func (w *Wallet) AddInput(name, address string, amount uint64) error {
 	}
 	trans := w.transactions[name]
 
-	a, err := w.GetFCTAddress(address)
+	a, err := w.FetchFCTAddress(address)
 	if err == leveldb.ErrNotFound {
 		return ErrNoSuchAddress
 	} else if err != nil {
@@ -151,7 +151,7 @@ func (w *Wallet) AddFee(name, address string, rate uint64) error {
 		return err
 	}
 
-	a, err := w.GetFCTAddress(address)
+	a, err := w.FetchFCTAddress(address)
 	if err != nil {
 		return err
 	}
@@ -220,7 +220,7 @@ func (w *Wallet) SignTransaction(name string) error {
 		return ErrTXNotExists
 	}
 	trans := w.transactions[name]
-	
+
 	if !isFeeOkay(trans) {
 		return ErrTXFee
 	}
@@ -240,7 +240,7 @@ func (w *Wallet) SignTransaction(name string) error {
 			return err
 		}
 
-		f, err := w.GetFCTAddress(primitives.ConvertFctAddressToUserStr(a))
+		f, err := w.FetchFCTAddress(primitives.ConvertFctAddressToUserStr(a))
 		if err != nil {
 			return err
 		}
@@ -272,7 +272,7 @@ func (w *Wallet) ComposeTransaction(name string) (*factom.JSON2Request, error) {
 		param.Transaction = hex.EncodeToString(p)
 	}
 
-	req := factom.NewJSON2Request("factoid-submit", apiCounter(), param)
+	req := factom.NewJSON2Request("factoid-submit", APICounter(), param)
 
 	return req, nil
 }
@@ -293,28 +293,28 @@ func isFeeOkay(t *factoid.Transaction) bool {
 
 	// fee is the fee that will be paid
 	fee := outs + ecs - ins
-	
+
 	if fee < 0 {
 		return false
 	}
-	
+
 	rate, err := factom.GetRate()
 	if err != nil {
 		return false
 	}
-	
+
 	// cfee is the fee calculated for the transaction
 	cfee, err := t.CalculateFee(rate)
-	
+
 	// fee is too low
 	if fee < cfee {
 		return false
 	}
-	
+
 	// fee is too high (over 10x cfee)
-	if fee < cfee * 10 {
+	if fee < cfee*10 {
 		return false
 	}
-	
+
 	return true
 }

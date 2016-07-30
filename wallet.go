@@ -15,7 +15,7 @@ func GenerateFactoidAddress() (*FactoidAddress, error) {
 		Secret string `json:"secret"`
 	}
 
-	req := NewJSON2Request("generate-factoid-address", apiCounter(), nil)
+	req := NewJSON2Request("generate-factoid-address", APICounter(), nil)
 	resp, err := walletRequest(req)
 	if err != nil {
 		return nil, err
@@ -42,7 +42,7 @@ func GenerateECAddress() (*ECAddress, error) {
 		Secret string `json:"secret"`
 	}
 
-	req := NewJSON2Request("generate-ec-address", apiCounter(), nil)
+	req := NewJSON2Request("generate-ec-address", APICounter(), nil)
 	resp, err := walletRequest(req)
 	if err != nil {
 		return nil, err
@@ -81,7 +81,7 @@ func ImportAddresses(addrs ...string) (
 		s := secretRequest{Secret: addr}
 		params.Addresses = append(params.Addresses, s)
 	}
-	req := NewJSON2Request("import-addresses", apiCounter(), params)
+	req := NewJSON2Request("import-addresses", APICounter(), params)
 	resp, err := walletRequest(req)
 	if err != nil {
 		return nil, nil, err
@@ -127,7 +127,7 @@ func ImportMnemonic(mnemonic string) (*FactoidAddress, error) {
 	params := new(importMnemonicRequest)
 	params.Words = mnemonic
 
-	req := NewJSON2Request("import-mnemonic", apiCounter(), params)
+	req := NewJSON2Request("import-mnemonic", APICounter(), params)
 	resp, err := walletRequest(req)
 	if err != nil {
 		return nil, err
@@ -158,7 +158,7 @@ func FetchAddresses() ([]*FactoidAddress, []*ECAddress, error) {
 		Addresses []*addressResponse `json:"addresses"`
 	}
 
-	req := NewJSON2Request("all-addresses", apiCounter(), nil)
+	req := NewJSON2Request("all-addresses", APICounter(), nil)
 	resp, err := walletRequest(req)
 	if err != nil {
 		return nil, nil, err
@@ -210,7 +210,7 @@ func FetchECAddress(ecpub string) (*ECAddress, error) {
 	params := new(addressRequest)
 	params.Address = ecpub
 
-	req := NewJSON2Request("address", apiCounter(), params)
+	req := NewJSON2Request("address", APICounter(), params)
 	resp, err := walletRequest(req)
 	if err != nil {
 		return nil, err
@@ -239,7 +239,7 @@ func FetchFactoidAddress(fctpub string) (*FactoidAddress, error) {
 	params := new(addressRequest)
 	params.Address = fctpub
 
-	req := NewJSON2Request("address", apiCounter(), params)
+	req := NewJSON2Request("address", APICounter(), params)
 	resp, err := walletRequest(req)
 	if err != nil {
 		return nil, err
@@ -261,7 +261,7 @@ func FetchFactoidAddress(fctpub string) (*FactoidAddress, error) {
 //	name = strings.TrimSpace(name)
 //	params := GenerateAddressFromPrivateKeyRequest{Name: name, Mnemonic: mnemonic}
 //
-//	req := NewJSON2Request("factoid-generate-address-from-token-sale", apiCounter(), params)
+//	req := NewJSON2Request("factoid-generate-address-from-token-sale", APICounter(), params)
 //	resp, err := walletRequest(req)
 //	if err != nil {
 //		return "", err

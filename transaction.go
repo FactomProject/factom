@@ -22,7 +22,7 @@ type TXInfo struct {
 
 func NewTransaction(name string) error {
 	params := transactionRequest{Name: name}
-	req := NewJSON2Request("new-transaction", apiCounter(), params)
+	req := NewJSON2Request("new-transaction", APICounter(), params)
 
 	resp, err := walletRequest(req)
 	if err != nil {
@@ -37,7 +37,7 @@ func NewTransaction(name string) error {
 
 func DeleteTransaction(name string) error {
 	params := transactionRequest{Name: name}
-	req := NewJSON2Request("delete-transaction", apiCounter(), params)
+	req := NewJSON2Request("delete-transaction", APICounter(), params)
 
 	resp, err := walletRequest(req)
 	if err != nil {
@@ -52,7 +52,7 @@ func DeleteTransaction(name string) error {
 
 func TransactionHash(name string) (string, error) {
 	params := transactionRequest{Name: name}
-	req := NewJSON2Request("transaction-hash", apiCounter(), params)
+	req := NewJSON2Request("transaction-hash", APICounter(), params)
 
 	resp, err := walletRequest(req)
 	if err != nil {
@@ -74,7 +74,7 @@ func ListTransactions() ([]TXInfo, error) {
 		Transactions []TXInfo `json:"transactions"`
 	}
 
-	req := NewJSON2Request("transactions", apiCounter(), nil)
+	req := NewJSON2Request("transactions", APICounter(), nil)
 	resp, err := walletRequest(req)
 	if err != nil {
 		return nil, err
@@ -99,7 +99,7 @@ func AddTransactionInput(name, address string, amount uint64) error {
 		Name:    name,
 		Address: address,
 		Amount:  amount}
-	req := NewJSON2Request("add-input", apiCounter(), params)
+	req := NewJSON2Request("add-input", APICounter(), params)
 
 	resp, err := walletRequest(req)
 	if err != nil {
@@ -121,7 +121,7 @@ func AddTransactionOutput(name, address string, amount uint64) error {
 		Name:    name,
 		Address: address,
 		Amount:  amount}
-	req := NewJSON2Request("add-output", apiCounter(), params)
+	req := NewJSON2Request("add-output", APICounter(), params)
 
 	resp, err := walletRequest(req)
 	if err != nil {
@@ -143,7 +143,7 @@ func AddTransactionECOutput(name, address string, amount uint64) error {
 		Name:    name,
 		Address: address,
 		Amount:  amount}
-	req := NewJSON2Request("add-ec-output", apiCounter(), params)
+	req := NewJSON2Request("add-ec-output", APICounter(), params)
 
 	resp, err := walletRequest(req)
 	if err != nil {
@@ -164,7 +164,7 @@ func AddTransactionFee(name, address string) error {
 	params := transactionValueRequest{
 		Name:    name,
 		Address: address}
-	req := NewJSON2Request("add-fee", apiCounter(), params)
+	req := NewJSON2Request("add-fee", APICounter(), params)
 
 	resp, err := walletRequest(req)
 	if err != nil {
@@ -181,7 +181,7 @@ func SubTransactionFee(name, address string) error {
 	params := transactionValueRequest{
 		Name:    name,
 		Address: address}
-	req := NewJSON2Request("sub-fee", apiCounter(), params)
+	req := NewJSON2Request("sub-fee", APICounter(), params)
 
 	resp, err := walletRequest(req)
 	if err != nil {
@@ -196,7 +196,7 @@ func SubTransactionFee(name, address string) error {
 
 func SignTransaction(name string) error {
 	params := transactionRequest{Name: name}
-	req := NewJSON2Request("sign-transaction", apiCounter(), params)
+	req := NewJSON2Request("sign-transaction", APICounter(), params)
 
 	resp, err := walletRequest(req)
 	if err != nil {
@@ -211,7 +211,7 @@ func SignTransaction(name string) error {
 
 func ComposeTransaction(name string) ([]byte, error) {
 	params := transactionRequest{Name: name}
-	req := NewJSON2Request("compose-transaction", apiCounter(), params)
+	req := NewJSON2Request("compose-transaction", APICounter(), params)
 
 	resp, err := walletRequest(req)
 	if err != nil {
@@ -227,7 +227,7 @@ func ComposeTransaction(name string) ([]byte, error) {
 func SendTransaction(name string) (string, error) {
 	params := transactionRequest{Name: name}
 
-	wreq := NewJSON2Request("compose-transaction", apiCounter(), params)
+	wreq := NewJSON2Request("compose-transaction", APICounter(), params)
 	wresp, err := walletRequest(wreq)
 	if err != nil {
 		return "", err

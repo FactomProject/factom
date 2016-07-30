@@ -16,7 +16,7 @@ func GetECBalance(key string) (int64, error) {
 	}
 
 	params := addressRequest{Address: key}
-	req := NewJSON2Request("entry-credit-balance", apiCounter(), params)
+	req := NewJSON2Request("entry-credit-balance", APICounter(), params)
 	resp, err := factomdRequest(req)
 	if err != nil {
 		return -1, err
@@ -41,7 +41,7 @@ func GetFactoidBalance(key string) (int64, error) {
 	}
 
 	params := addressRequest{Address: key}
-	req := NewJSON2Request("factoid-balance", apiCounter(), params)
+	req := NewJSON2Request("factoid-balance", APICounter(), params)
 	resp, err := factomdRequest(req)
 	if err != nil {
 		return -1, err
@@ -64,7 +64,7 @@ func GetRate() (uint64, error) {
 		Rate uint64 `json:"rate"`
 	}
 
-	req := NewJSON2Request("entry-credit-rate", apiCounter(), nil)
+	req := NewJSON2Request("entry-credit-rate", APICounter(), nil)
 	resp, err := factomdRequest(req)
 	if err != nil {
 		return 0, err
@@ -84,7 +84,7 @@ func GetRate() (uint64, error) {
 // GetDBlock requests a Directory Block from factomd by its Key Merkel Root
 func GetDBlock(keymr string) (*DBlock, error) {
 	params := keyMRRequest{KeyMR: keymr}
-	req := NewJSON2Request("directory-block", apiCounter(), params)
+	req := NewJSON2Request("directory-block", APICounter(), params)
 	resp, err := factomdRequest(req)
 	if err != nil {
 		return nil, err
@@ -102,7 +102,7 @@ func GetDBlock(keymr string) (*DBlock, error) {
 }
 
 func GetDBlockHead() (string, error) {
-	req := NewJSON2Request("directory-block-head", apiCounter(), nil)
+	req := NewJSON2Request("directory-block-head", APICounter(), nil)
 	resp, err := factomdRequest(req)
 	if err != nil {
 		return "", err
@@ -120,7 +120,7 @@ func GetDBlockHead() (string, error) {
 }
 
 func GetDBlockHeight() (int, error) {
-	req := NewJSON2Request("directory-block-height", apiCounter(), nil)
+	req := NewJSON2Request("directory-block-height", APICounter(), nil)
 	resp, err := factomdRequest(req)
 	if err != nil {
 		return 0, err
@@ -140,7 +140,7 @@ func GetDBlockHeight() (int, error) {
 // GetEntry requests an Entry from factomd by its Entry Hash
 func GetEntry(hash string) (*Entry, error) {
 	params := hashRequest{Hash: hash}
-	req := NewJSON2Request("entry", apiCounter(), params)
+	req := NewJSON2Request("entry", APICounter(), params)
 	resp, err := factomdRequest(req)
 	if err != nil {
 		return nil, err
@@ -163,7 +163,7 @@ func GetChainHead(chainid string) (string, error) {
 	}
 
 	params := chainIDRequest{ChainID: chainid}
-	req := NewJSON2Request("chain-head", apiCounter(), params)
+	req := NewJSON2Request("chain-head", APICounter(), params)
 	resp, err := factomdRequest(req)
 	if err != nil {
 		return "", err
@@ -203,7 +203,7 @@ func GetAllEBlockEntries(keymr string) ([]*Entry, error) {
 // GetEBlock requests an Entry Block from factomd by its Key Merkel Root
 func GetEBlock(keymr string) (*EBlock, error) {
 	params := keyMRRequest{KeyMR: keymr}
-	req := NewJSON2Request("entry-block", apiCounter(), params)
+	req := NewJSON2Request("entry-block", APICounter(), params)
 	resp, err := factomdRequest(req)
 	if err != nil {
 		return nil, err
@@ -222,7 +222,7 @@ func GetEBlock(keymr string) (*EBlock, error) {
 
 func GetRaw(keymr string) ([]byte, error) {
 	params := hashRequest{Hash: keymr}
-	req := NewJSON2Request("raw-data", apiCounter(), params)
+	req := NewJSON2Request("raw-data", APICounter(), params)
 	resp, err := factomdRequest(req)
 	if err != nil {
 		return nil, err
@@ -295,7 +295,7 @@ func GetProperties() (string, string, string, error) {
 		WalletVersion  string `json:"walletversion"`
 	}
 
-	req := NewJSON2Request("properties", apiCounter(), nil)
+	req := NewJSON2Request("properties", APICounter(), nil)
 	resp, err := factomdRequest(req)
 	if err != nil {
 		return "", "", "", err
