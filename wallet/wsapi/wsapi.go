@@ -203,7 +203,7 @@ func handleImportAddresses(params []byte) (interface{}, *factom.JSONError) {
 			if err != nil {
 				return nil, newCustomInternalError(err.Error())
 			}
-			if err := fctWallet.PutFCTAddress(f); err != nil {
+			if err := fctWallet.InsertFCTAddress(f); err != nil {
 				return nil, newCustomInternalError(err.Error())
 			}
 			a := mkAddressResponse(f)
@@ -213,7 +213,7 @@ func handleImportAddresses(params []byte) (interface{}, *factom.JSONError) {
 			if err != nil {
 				return nil, newCustomInternalError(err.Error())
 			}
-			if err := fctWallet.PutECAddress(e); err != nil {
+			if err := fctWallet.InsertECAddress(e); err != nil {
 				return nil, newCustomInternalError(err.Error())
 			}
 			a := mkAddressResponse(e)
@@ -235,7 +235,7 @@ func handleImportMnemonic(params []byte) (interface{}, *factom.JSONError) {
 	if err != nil {
 		return nil, newCustomInternalError(err.Error())
 	}
-	if err := fctWallet.PutFCTAddress(f); err != nil {
+	if err := fctWallet.InsertFCTAddress(f); err != nil {
 		return nil, newCustomInternalError(err.Error())
 	}
 
