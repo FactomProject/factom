@@ -289,10 +289,10 @@ func MakeFactoidAddress(sec []byte) (*FactoidAddress, error) {
 func MakeFactoidAddressFromMnemonic(mnemonic string) (*FactoidAddress, error) {
 	l := len(strings.Fields(mnemonic))
 	if l < 12 {
-		return nil, fmt.Errorf("words not enough")
+		return nil, fmt.Errorf("Not enough words in mnemonic. Expecitng 12, found %d", l)
 	}
 	if l > 12 {
-		return nil, fmt.Errorf("words too much")
+		return nil, fmt.Errorf("Too many words in mnemonic. Expecitng 12, found %d", l)
 	}
 	
 	mnemonic = strings.ToLower(strings.TrimSpace(mnemonic))
