@@ -287,6 +287,14 @@ func MakeFactoidAddress(sec []byte) (*FactoidAddress, error) {
 // MakeFactoidAddressFromMnemonic takes the 12 word string used in the Koinify
 // sale and returns a Factoid Address.
 func MakeFactoidAddressFromMnemonic(mnemonic string) (*FactoidAddress, error) {
+	l := len(strings.Fields(mnemonic))
+	if l < 12 {
+		return nil, fmt.Errorf("words not enough")
+	}
+	if l > 12 {
+		return nil, fmt.Errorf("words too much")
+	}
+	
 	mnemonic = strings.ToLower(strings.TrimSpace(mnemonic))
 	seed, err := bip39.NewSeedWithErrorChecking(mnemonic, "")
 	if err != nil {
