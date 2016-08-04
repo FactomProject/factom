@@ -294,7 +294,7 @@ func MakeFactoidAddressFromMnemonic(mnemonic string) (*FactoidAddress, error) {
 	if l > 12 {
 		return nil, fmt.Errorf("Too many words in mnemonic. Expecitng 12, found %d", l)
 	}
-	
+
 	mnemonic = strings.ToLower(strings.TrimSpace(mnemonic))
 	seed, err := bip39.NewSeedWithErrorChecking(mnemonic, "")
 	if err != nil {

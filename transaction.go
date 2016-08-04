@@ -315,7 +315,7 @@ func BuyEC(from, to string, amount uint64) (string, error) {
 }
 
 //Purchases the exact amount of ECs
-func BuyExactEC(from, to string, ammount uint64) (string, error) {
+func BuyExactEC(from, to string, amount uint64) (string, error) {
 	rate, err := GetRate()
 	if err != nil {
 		return "", err
@@ -330,10 +330,10 @@ func BuyExactEC(from, to string, ammount uint64) (string, error) {
 	if err := NewTransaction(name); err != nil {
 		return "", err
 	}
-	if err := AddTransactionInput(name, from, ammount*rate); err != nil {
+	if err := AddTransactionInput(name, from, amount*rate); err != nil {
 		return "", err
 	}
-	if err := AddTransactionECOutput(name, to, ammount*rate); err != nil {
+	if err := AddTransactionECOutput(name, to, amount*rate); err != nil {
 		return "", err
 	}
 	if err := AddTransactionFee(name, from); err != nil {
