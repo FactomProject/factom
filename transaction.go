@@ -285,7 +285,7 @@ func SendFactoid(from, to string, amount uint64) (string, error) {
 	return r, nil
 }
 
-func BuyEC(from, to string, ammount uint64) (string, error) {
+func BuyEC(from, to string, amount uint64) (string, error) {
 	n := make([]byte, 16)
 	if _, err := rand.Read(n); err != nil {
 		return "", err
@@ -294,10 +294,10 @@ func BuyEC(from, to string, ammount uint64) (string, error) {
 	if err := NewTransaction(name); err != nil {
 		return "", err
 	}
-	if err := AddTransactionInput(name, from, ammount); err != nil {
+	if err := AddTransactionInput(name, from, amount); err != nil {
 		return "", err
 	}
-	if err := AddTransactionECOutput(name, to, ammount); err != nil {
+	if err := AddTransactionECOutput(name, to, amount); err != nil {
 		return "", err
 	}
 	if err := AddTransactionFee(name, from); err != nil {
