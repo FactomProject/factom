@@ -313,3 +313,71 @@ func BuyEC(from, to string, ammount uint64) (string, error) {
 
 	return r, nil
 }
+
+//Purchases the exact amount of ECs
+func BuyExactEC(from, to string, ammount uint64) (string, error) {
+	rate, err := GetRate()
+	if err != nil {
+		return "", err
+	}
+
+	n := make([]byte, 16)
+	if _, err := rand.Read(n); err != nil {
+		return "", err
+	}
+	name := hex.EncodeToString(n)
+
+	if err := NewTransaction(name); err != nil {
+		return "", err
+	}
+	if err := AddTransactionInput(name, from, ammount*rate); err != nil {
+		return "", err
+	}
+	if err := AddTransactionECOutput(name, to, ammount*rate); err != nil {
+		return "", err
+	}
+	if err := AddTransactionFee(name, from); err != nil {
+		return "", err
+	}
+	if err := SignTransaction(name); err != nil {
+		return "", err
+	}
+	r, err := SendTransaction(name)
+	if err != nil {
+		return "", err
+	}
+
+	return r, nil
+}
+
+type TransactionResponse struct {
+	ECTranasction      interface{} `json:"ectransaction,omitempty"`
+	FactoidTransaction interface{} `json:"factoidtransaction,omitempty"`
+	Entry              interface{} `json:"entry,omitempty"`
+
+	//F/EC/E block the transaction is included in
+	IncludedInTransactionBlock string `json:"includedintransactionblock"`
+	//DirectoryBlock the tranasction is included in
+	IncludedInDirectoryBlock string `json:"includedindirectoryblock"`
+	//The DBlock height
+	IncludedInDirectoryBlockHeight int64 `json:"includedindirectoryblockheight"`
+}
+
+func GetTransaction(txID string) (*TransactionResponse, error) {
+	params := hashRequest{Hash: txID}
+	req := NewJSON2Request("get-transaction", APICounter(), params)
+	resp, err := factomdRequest(req)
+	if err != nil {
+		return nil, err
+	}
+	if resp.Error != nil {
+		return nil, resp.Error
+	}
+
+	txResp := new(TransactionResponse)
+	if err := json.Unmarshal(resp.JSONResult(), txResp); err != nil {
+		return nil, err
+	}
+
+	return txResp, nil
+}
