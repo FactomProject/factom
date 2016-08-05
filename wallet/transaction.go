@@ -70,6 +70,8 @@ func (w *Wallet) AddInput(name, address string, amount uint64) error {
 		return ErrNoSuchAddress
 	} else if err != nil {
 		return err
+	} else if a == nil {
+		return ErrNoSuchAddress
 	}
 	adr := factoid.NewAddress(a.RCDHash())
 
