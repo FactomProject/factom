@@ -57,7 +57,7 @@ type transactionResponse struct {
 	TotalInputs    uint64 `json:"totalinputs"`
 	TotalOutputs   uint64 `json:"totaloutputs"`
 	TotalECOutputs uint64 `json:"totalecoutputs"`
-	RawTransaction string `json:"rawtransaction"`
+	RawTransaction string `json:"rawtransaction,omitempty"`
 }
 
 type multiTransactionResponse struct {

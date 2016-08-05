@@ -384,7 +384,13 @@ func handleAddOutput(params []byte) (interface{}, *factom.JSONError) {
 	if err := fctWallet.AddOutput(req.Name, req.Address, req.Amount); err != nil {
 		return nil, newCustomInternalError(err.Error())
 	}
-	resp := transactionResponse{Name: req.Name}
+	t := fctWallet.GetTransactions()[req.Name]
+	resp, err := mkTransactionResponse(t)
+	if err != nil {
+		return nil, newCustomInternalError(err.Error())
+	}
+	resp.Name = req.Name
+
 	return resp, nil
 }
 
