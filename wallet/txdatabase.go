@@ -47,6 +47,40 @@ func NewTXLevelDB(ldbpath string) (*TXDatabaseOverlay, error) {
 	return NewTXOverlay(db), nil
 }
 
+func (db *TXDatabaseOverlay) Close() error {
+	return db.dbo.Close()
+}
+
+func (db *TXDatabaseOverlay) GetAllTXs(txout chan interfaces.ITransaction, errout chan error) {
+	defer close(txout)
+	defer close(errout)
+	
+	newest, err := db.update()
+	if err != nil {
+		errout <- err
+		return
+	}
+	fblock, err := db.GetFBlock(newest)
+	if err != nil {
+		errout <- err
+		return
+	}
+		
+	for prevmr := fblock.GetPrevKeyMR().String(); prevmr != factom.ZeroHash; {
+		for _, tx := range fblock.GetTransactions() {
+			txout <- tx
+		}
+		fblock, err = db.GetFBlock(prevmr)
+		if err != nil {
+			errout <- err
+			return
+		} else if fblock == nil {
+			errout <- fmt.Errorf("Missing fblock in database: %s", prevmr)
+			return
+		}
+	}
+}
+
 func (db *TXDatabaseOverlay) GetFBlock(keymr string) (interfaces.IFBlock, error) {
 	fblock := new(factoid.FBlock)
 	data, err := db.dbo.Get(fblockDBPrefix, []byte(keymr), fblock)
@@ -68,9 +102,45 @@ func (db *TXDatabaseOverlay) InsertFBlock(fblock interfaces.IFBlock) error {
 	return db.dbo.PutInBatch(batch)
 }
 
-// update gets all fblocks written since the database was last updated.
-func (db *TXDatabaseOverlay) update() error {
-	return nil
+// update gets all fblocks written since the database was last updated, and
+// returns the most recent fblock keymr.
+func (db *TXDatabaseOverlay) update() (string, error) {
+	fblock, err := fblockHead()
+	if err != nil {
+		return "", err
+	}
+	newest := fblock.GetKeyMR().String()
+	
+	for fblock.GetPrevKeyMR().String() != factom.ZeroHash {
+//		// stop when we reach an fblock that is already in the db
+//		if f, err := db.GetFBlock(fblock.GetKeyMR().String()); err != nil {
+//			return "", err
+//		} else if f != nil {
+//			return newest, nil
+//		}
+		
+		// add the fblock to the db
+		if err := db.InsertFBlock(fblock); err != nil {
+			return "", err
+		}
+		
+		// get the previous fblock
+		p, err := factom.GetRaw(fblock.GetPrevKeyMR().String())
+		if err != nil {
+			return "", err
+		}
+		fblock, err = factoid.UnmarshalFBlock(p)
+		if err != nil {
+			return "", err
+		}
+	}
+	
+	// write the last fblock into the db
+	if err := db.InsertFBlock(fblock); err != nil {
+		return "", err
+	}
+	
+	return newest, nil
 }
 
 // fblockHead gets the most recent fblock.
