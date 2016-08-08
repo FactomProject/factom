@@ -25,22 +25,13 @@ func TestTXDatabaseOverlay(t *testing.T) {
 	fblock, err := fblockHead()
 	if err != nil {
 		t.Error(err)
-	} else {
-		t.Logf("Got newest fblock: %s", fblock.GetKeyMR())
-	}
-	
+	}	
 	if err := db1.InsertFBlock(fblock); err != nil {
 		t.Error(err)
-	} else {
-		t.Logf("Inserted fblock: %s", fblock.GetKeyMR())
-	}
-	
-	t.Logf("retrieving fblock: %s", fblock.GetKeyMR().String())
+	}	
 	if f, err := db1.GetFBlock(fblock.GetKeyMR().String()); err != nil {
 		t.Error(err)
-	} else {
-		t.Logf("Got fblock from database: %s", f.GetKeyMR())
-	}		
+	}
 }
 
 // fblockHead gets the most recent fblock.

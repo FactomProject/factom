@@ -48,7 +48,7 @@ func NewTXLevelDB(ldbpath string) (*TXDatabaseOverlay, error) {
 }
 
 func (db *TXDatabaseOverlay) GetFBlock(keymr string) (interfaces.IFBlock, error) {
-	var fblock interfaces.IFBlock
+	fblock := new(factoid.FBlock)
 	data, err := db.dbo.Get(fblockDBPrefix, []byte(keymr), fblock)
 	if err != nil {
 		return nil, err
