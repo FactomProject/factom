@@ -9,12 +9,38 @@ import (
 	"fmt"
 )
 
-func GenerateFactoidAddress() (*FactoidAddress, error) {
-	type addressResponse struct {
-		Public string `json:"public"`
-		Secret string `json:"secret"`
+// BackupWallet returns a formatted string with the wallet seed and the secret
+// keys for all of the wallet addresses.
+func BackupWallet() (string, error) {
+	type walletBackupResponse struct {
+		Seed      string             `json:"wallet-seed"`
+		Addresses []*addressResponse `json:"addresses"`
+	}
+	
+	req := NewJSON2Request("wallet-backup", APICounter(), nil)
+	resp, err := walletRequest(req)
+	if err != nil {
+		return "", err
+	}
+	if resp.Error != nil {
+		return "", resp.Error
 	}
 
+	w := new(walletBackupResponse)
+	if err := json.Unmarshal(resp.JSONResult(), w); err != nil {
+		return "", err
+	}
+	
+	s := fmt.Sprintln("Seed:")
+	s += fmt.Sprintln(w.Seed)
+	s += fmt.Sprintln("Addresses:")
+	for _, adr := range w.Addresses {
+		s += fmt.Sprintln(adr.Secret)
+	}
+	return s, nil
+}
+
+func GenerateFactoidAddress() (*FactoidAddress, error) {
 	req := NewJSON2Request("generate-factoid-address", APICounter(), nil)
 	resp, err := walletRequest(req)
 	if err != nil {
@@ -37,11 +63,6 @@ func GenerateFactoidAddress() (*FactoidAddress, error) {
 }
 
 func GenerateECAddress() (*ECAddress, error) {
-	type addressResponse struct {
-		Public string `json:"public"`
-		Secret string `json:"secret"`
-	}
-
 	req := NewJSON2Request("generate-ec-address", APICounter(), nil)
 	resp, err := walletRequest(req)
 	if err != nil {
@@ -67,14 +88,6 @@ func ImportAddresses(addrs ...string) (
 	[]*FactoidAddress,
 	[]*ECAddress,
 	error) {
-
-	type addressResponse struct {
-		Public string `json:"public"`
-		Secret string `json:"secret"`
-	}
-	type multiAddressResponse struct {
-		Addresses []*addressResponse `json:"addresses"`
-	}
 
 	params := new(importRequest)
 	for _, addr := range addrs {
@@ -119,11 +132,6 @@ func ImportAddresses(addrs ...string) (
 }
 
 func ImportMnemonic(mnemonic string) (*FactoidAddress, error) {
-	type addressResponse struct {
-		Public string `json:"public"`
-		Secret string `json:"secret"`
-	}
-
 	params := new(importMnemonicRequest)
 	params.Words = mnemonic
 
@@ -149,15 +157,6 @@ func ImportMnemonic(mnemonic string) (*FactoidAddress, error) {
 }
 
 func FetchAddresses() ([]*FactoidAddress, []*ECAddress, error) {
-	type addressResponse struct {
-		Public string `json:"public"`
-		Secret string `json:"secret"`
-	}
-
-	type multiAddressResponse struct {
-		Addresses []*addressResponse `json:"addresses"`
-	}
-
 	req := NewJSON2Request("all-addresses", APICounter(), nil)
 	resp, err := walletRequest(req)
 	if err != nil {
@@ -198,11 +197,6 @@ func FetchAddresses() ([]*FactoidAddress, []*ECAddress, error) {
 }
 
 func FetchECAddress(ecpub string) (*ECAddress, error) {
-	type addressResponse struct {
-		Public string `json:"public"`
-		Secret string `json:"secret"`
-	}
-
 	if AddressStringType(ecpub) != ECPub {
 		return nil, fmt.Errorf(
 			"%s is not an Entry Credit Public Address", ecpub)
@@ -228,11 +222,6 @@ func FetchECAddress(ecpub string) (*ECAddress, error) {
 }
 
 func FetchFactoidAddress(fctpub string) (*FactoidAddress, error) {
-	type addressResponse struct {
-		Public string `json:"public"`
-		Secret string `json:"secret"`
-	}
-
 	if AddressStringType(fctpub) != FactoidPub {
 		return nil, fmt.Errorf("%s is not a Factoid Address", fctpub)
 	}
@@ -256,43 +245,12 @@ func FetchFactoidAddress(fctpub string) (*FactoidAddress, error) {
 	return GetFactoidAddress(r.Secret)
 }
 
-// TODO ----
-//func GenerateFactoidAddressFromMnemonic(name string, mnemonic string) (string, error) {
-//	name = strings.TrimSpace(name)
-//	params := GenerateAddressFromPrivateKeyRequest{Name: name, Mnemonic: mnemonic}
-//
-//	req := NewJSON2Request("factoid-generate-address-from-token-sale", APICounter(), params)
-//	resp, err := walletRequest(req)
-//	if err != nil {
-//		return "", err
-//	}
-//	if resp.Error != nil {
-//		return "", resp.Error
-//	}
-//
-//	add := new(GenerateAddressResponse)
-//	if err := json.Unmarshal(resp.JSONResult(), add); err != nil {
-//		return "", err
-//	}
-//
-//	return add.Address, nil
-//}
-//
-///*
-//func DnsBalance(addr string) (int64, int64, error) {
-//	fct, ec, err := ResolveDnsName(addr)
-//	if err != nil {
-//		return 0, 0, err
-//	}
-//
-//	f, err1 := FctBalance(fct)
-//	e, err2 := ECBalance(ec)
-//	if err1 != nil || err2 != nil {
-//		return f, e, fmt.Errorf("%s\n%s\n", err1, err2)
-//	}
-//
-//	return f, e, nil
-//}
-//
-//
-//*/
+type addressResponse struct {
+	Public string `json:"public"`
+	Secret string `json:"secret"`
+}
+
+type multiAddressResponse struct {
+	Addresses []*addressResponse `json:"addresses"`
+}
+

@@ -190,7 +190,7 @@ func (db *WalletDatabaseOverlay) GetFCTAddress(str string) (*factom.FactoidAddre
 		return nil, err
 	}
 	if data == nil {
-		return nil, nil
+		return nil, ErrNoSuchAddress
 	}
 	return data.(*factom.FactoidAddress), nil
 }
