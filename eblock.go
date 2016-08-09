@@ -30,6 +30,7 @@ func (e *EBlock) String() string {
 	s += fmt.Sprintln("ChainID:", e.Header.ChainID)
 	s += fmt.Sprintln("PrevKeyMR:", e.Header.PrevKeyMR)
 	s += fmt.Sprintln("Timestamp:", e.Header.Timestamp)
+	s += fmt.Sprintln("DBHeight:", e.Header.DBHeight)
 	for _, v := range e.EntryList {
 		s += fmt.Sprintln("EBEntry {")
 		s += fmt.Sprintln("	Timestamp", v.Timestamp)
