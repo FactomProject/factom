@@ -65,8 +65,9 @@ func (db *TXDatabaseOverlay) GetAllTXs(txout chan interfaces.ITransaction, errou
 		errout <- err
 		return
 	}
-		
-	for prevmr := fblock.GetPrevKeyMR().String(); prevmr != factom.ZeroHash; {
+	
+	prevmr := fblock.GetPrevKeyMR().String()
+	for prevmr != factom.ZeroHash {
 		for _, tx := range fblock.GetTransactions() {
 			txout <- tx
 		}
@@ -78,6 +79,7 @@ func (db *TXDatabaseOverlay) GetAllTXs(txout chan interfaces.ITransaction, errou
 			errout <- fmt.Errorf("Missing fblock in database: %s", prevmr)
 			return
 		}
+		prevmr = fblock.GetPrevKeyMR().String()
 	}
 }
 
@@ -111,9 +113,10 @@ func (db *TXDatabaseOverlay) update() (string, error) {
 	}
 	newest := fblock.GetKeyMR().String()
 	
-	for fblock.GetPrevKeyMR().String() != factom.ZeroHash {
+	prevmr := fblock.GetPrevKeyMR().String()
+	for prevmr != factom.ZeroHash {
 //		// stop when we reach an fblock that is already in the db
-//		if f, err := db.GetFBlock(fblock.GetKeyMR().String()); err != nil {
+//		if f, err := db.GetFBlock(prevmr); err != nil {
 //			return "", err
 //		} else if f != nil {
 //			return newest, nil
@@ -124,15 +127,11 @@ func (db *TXDatabaseOverlay) update() (string, error) {
 			return "", err
 		}
 		
-		// get the previous fblock
-		p, err := factom.GetRaw(fblock.GetPrevKeyMR().String())
+		fblock, err = getfblock(prevmr)
 		if err != nil {
 			return "", err
 		}
-		fblock, err = factoid.UnmarshalFBlock(p)
-		if err != nil {
-			return "", err
-		}
+		prevmr = fblock.GetPrevKeyMR().String()
 	}
 	
 	// write the last fblock into the db
@@ -166,12 +165,15 @@ func fblockHead() (interfaces.IFBlock, error) {
 			return nil, err
 		}
 		
-		// get the most recent block
-		p, err := factom.GetRaw(fblockmr)
-		if err != nil {
-			return nil, err
-		}
-		return factoid.UnmarshalFBlock(p)
+		return getfblock(fblockmr)
+}
+
+func getfblock(keymr string) (interfaces.IFBlock, error) {
+	p, err := factom.GetRaw(keymr)
+	if err != nil {
+		return nil, err
+	}
+	return factoid.UnmarshalFBlock(p)
 }
 
 //var getAllTransactions = func() *fctCmd {
