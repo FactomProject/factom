@@ -14,7 +14,7 @@ import (
 	"github.com/FactomProject/factomd/common/factoid"
 	"github.com/FactomProject/factomd/common/interfaces"
 	
-	"fmt" // DEBUG
+//	"fmt" // DEBUG
 )
 
 func TestTXDatabaseOverlay(t *testing.T) {
@@ -47,33 +47,65 @@ func TestGetAllTXs(t *testing.T) {
 	}
 	defer db1.Close()
 	
-	txs := make(chan interfaces.ITransaction, 500)
-	errs := make(chan error)
-	
-	fmt.Println("DEBUG: running getalltxs")
-	go db1.GetAllTXs(txs, errs)
-	
-	for {
-		fmt.Println("DEBUG: started select loop")
-		select {
-		case tx, ok := <-txs:
-			fmt.Println("Got TX:", tx)
-			if !ok {
-				txs = nil
-			}
-		case err, ok := <-errs:
-			fmt.Println("DEBUG: got error:", err)
-			t.Error(err)
-			if !ok {
-				errs = nil
-			}
-		}
-		
-		if txs == nil && errs == nil {
-			break
-		}
+	txs, err := db1.GetAllTXs()
+	if err != nil {
+		t.Error(err)
 	}
+	t.Logf("got %d txs", len(txs))
 }
+
+//func TestGetAllTXs(t *testing.T) {
+//	dbpath := os.TempDir() + "/test_txdb-01"
+//	db1, err := NewTXLevelDB(dbpath)
+//	if err != nil {
+//		t.Error(err)
+//	}
+//	defer db1.Close()
+//	
+//	txs := make(chan interfaces.ITransaction, 500)
+//	errs := make(chan error)
+//	output := make(chan string)
+//	
+//	fmt.Println("DEBUG: running getalltxs")
+//	go db1.GetAllTXs(txs, errs)
+//	
+//	go func() {
+//		for tx := range txs {
+//			output <- fmt.Sprint("Got TX:", tx)
+//		}
+//		output <- fmt.Sprint("end of txs")
+//	}()
+//
+//	go func() {
+//		for err := range errs {
+//			output <- fmt.Sprintln("Got error:", err)
+//		}
+//		output <- fmt.Sprint("end of errs")
+//	}()
+//	
+//	for {
+//		fmt.Println(<-output)
+//	}
+//	
+////	for {
+////		select {
+////		case tx, ok := <-txs:
+////			fmt.Println("Got TX:", tx)
+////			if !ok {
+////				txs = nil
+////			}
+////		case err, ok := <-errs:
+////			fmt.Println("DEBUG: got error:", err)
+////			if !ok {
+////				errs = nil
+////			}
+////		}
+////		
+////		if txs == nil && errs == nil {
+////			break
+////		}
+////	}
+//}
 
 // fblockHead gets the most recent fblock.
 func fblockHead() (interfaces.IFBlock, error) {

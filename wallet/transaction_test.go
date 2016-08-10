@@ -54,7 +54,7 @@ func TestAddInput(t *testing.T) {
 	}
 
 	// write a new fct address to the db
-	f, err := factom.FetchFactoidAddress(zSec)
+	f, err := factom.GetFactoidAddress(zSec)
 	if err != nil {
 		t.Error(err)
 		t.FailNow()
@@ -100,7 +100,7 @@ func TestComposeTrasnaction(t *testing.T) {
 	}
 
 	// write a new fct address to the db
-	if in, err := factom.FetchFactoidAddress(f1Sec); err != nil {
+	if in, err := factom.GetFactoidAddress(f1Sec); err != nil {
 		t.Error(err)
 	} else {
 		if err := w1.InsertFCTAddress(in); err != nil {
@@ -110,7 +110,7 @@ func TestComposeTrasnaction(t *testing.T) {
 
 	// Get the address back out of the db
 	f1 := factom.NewFactoidAddress()
-	if out, err := factom.FetchFactoidAddress(f1Sec); err != nil {
+	if out, err := factom.GetFactoidAddress(f1Sec); err != nil {
 		t.Error(err)
 	} else {
 		if f, err := w1.GetFCTAddress(out.String()); err != nil {
@@ -121,9 +121,8 @@ func TestComposeTrasnaction(t *testing.T) {
 	}
 
 	// setup a factoid address for receving
-	f2, err := factom.FetchFactoidAddress(f2Sec)
+	f2, err := factom.GetFactoidAddress(f2Sec)
 	if err != nil {
-		t.FailNow()
 		t.Error(err)
 	}
 

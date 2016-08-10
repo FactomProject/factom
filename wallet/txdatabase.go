@@ -51,36 +51,35 @@ func (db *TXDatabaseOverlay) Close() error {
 	return db.dbo.Close()
 }
 
-func (db *TXDatabaseOverlay) GetAllTXs(txout chan interfaces.ITransaction, errout chan error) {
-	defer close(txout)
-	defer close(errout)
-	
+func (db *TXDatabaseOverlay) GetAllTXs() ([]interfaces.ITransaction, error) {
 	newest, err := db.update()
 	if err != nil {
-		errout <- err
-		return
+		return nil, err
 	}
 	fblock, err := db.GetFBlock(newest)
 	if err != nil {
-		errout <- err
-		return
+		return nil, err
 	}
+	
+	txs := make([]interfaces.ITransaction, 0)
 	
 	prevmr := fblock.GetPrevKeyMR().String()
 	for prevmr != factom.ZeroHash {
 		for _, tx := range fblock.GetTransactions() {
-			txout <- tx
+			txs = append(txs, tx)
 		}
 		fblock, err = db.GetFBlock(prevmr)
 		if err != nil {
-			errout <- err
-			return
+			return nil, err
 		} else if fblock == nil {
-			errout <- fmt.Errorf("Missing fblock in database: %s", prevmr)
-			return
+			return nil, fmt.Errorf("Missing fblock in database: %s", prevmr)
 		}
 		prevmr = fblock.GetPrevKeyMR().String()
 	}
+	for _, tx := range fblock.GetTransactions() {
+		txs = append(txs, tx)
+	}
+	return txs, nil
 }
 
 func (db *TXDatabaseOverlay) GetFBlock(keymr string) (interfaces.IFBlock, error) {
