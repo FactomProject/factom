@@ -17,6 +17,7 @@ import (
 type Wallet struct {
 	*WalletDatabaseOverlay
 	transactions map[string]*factoid.Transaction
+	txdb *TXDatabaseOverlay
 }
 
 func (w *Wallet) InitWallet() error {
@@ -95,6 +96,15 @@ func NewMapDBWallet() (*Wallet, error) {
 // Close closes a Factom Wallet Database
 func (w *Wallet) Close() error {
 	return w.dbo.Close()
+}
+
+// AddTXDB allows the wallet api to read from a local transaction cashe.
+func (w *Wallet) AddTXDB(t *TXDatabaseOverlay) {
+	w.txdb = t
+}
+
+func (w *Wallet) TXDB() *TXDatabaseOverlay {
+	return w.txdb
 }
 
 // GenerateECAddress creates and stores a new Entry Credit Address in the

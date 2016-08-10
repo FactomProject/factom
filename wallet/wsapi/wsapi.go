@@ -80,6 +80,8 @@ func handleV2Request(j *factom.JSON2Request) (*factom.JSON2Response, *factom.JSO
 		resp, jsonError = handleImportMnemonic(params)
 	case "wallet-backup":
 		resp, jsonError = handleWalletBackup(params)
+	case "all-transactions":
+		resp, jsonError = handleAllTransactions(params)
 	case "new-transaction":
 		resp, jsonError = handleNewTransaction(params)
 	case "delete-transaction":
@@ -265,6 +267,32 @@ func handleWalletBackup(params []byte) (interface{}, *factom.JSONError) {
 		resp.Addresses = append(resp.Addresses, a)
 	}
 
+	return resp, nil
+}
+
+func handleAllTransactions(params []byte) (interface{}, *factom.JSONError) {
+	type transactionList struct {
+		Transactions []json.RawMessage `json:"transactions"`
+	}
+
+	if fctWallet.TXDB() == nil {
+		return nil, newCustomInternalError(
+			"Wallet does not have a transaction database")
+	}
+	
+	resp := new(transactionList)
+	txs, err := fctWallet.TXDB().GetAllTXs()
+	if err != nil {
+		return nil, newCustomInternalError(err.Error())
+	}
+	for _, tx := range txs {
+		p, err := tx.JSONByte()
+		if err != nil {
+			return nil, newCustomInternalError(err.Error())
+		}
+		resp.Transactions = append(resp.Transactions, p)
+	}
+	
 	return resp, nil
 }
 
