@@ -271,8 +271,18 @@ func SendFactoid(from, to string, amount uint64) (string, error) {
 	if err := AddTransactionOutput(name, to, amount); err != nil {
 		return "", err
 	}
-	if err := AddTransactionFee(name, from); err != nil {
+	balance, err := GetFactoidBalance(from)
+	if err != nil {
 		return "", err
+	}
+	if balance > int64(amount) {
+		if err := AddTransactionFee(name, from); err != nil {
+			return "", err
+		}
+	} else {
+		if err := SubTransactionFee(name, to); err != nil {
+			return "", err
+		}
 	}
 	if err := SignTransaction(name); err != nil {
 		return "", err
