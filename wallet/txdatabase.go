@@ -16,7 +16,7 @@ import (
 
 // Database keys and key prefixes
 var (
-	fblockDBPrefix    = []byte("FBlock")
+	fblockDBPrefix = []byte("FBlock")
 )
 
 type TXDatabaseOverlay struct {
@@ -51,7 +51,10 @@ func (db *TXDatabaseOverlay) Close() error {
 	return db.dbo.Close()
 }
 
+// GetAllTXs returns a list of all transactions in the history of Factom. A
+// local database is used to cache the factoid blocks.
 func (db *TXDatabaseOverlay) GetAllTXs() ([]interfaces.ITransaction, error) {
+	// update the database and get the newest fblock
 	newest, err := db.update()
 	if err != nil {
 		return nil, err
@@ -60,14 +63,17 @@ func (db *TXDatabaseOverlay) GetAllTXs() ([]interfaces.ITransaction, error) {
 	if err != nil {
 		return nil, err
 	}
-	
+
 	txs := make([]interfaces.ITransaction, 0)
-	
+
 	prevmr := fblock.GetPrevKeyMR().String()
 	for prevmr != factom.ZeroHash {
+		// get all of the txs from the block
 		for _, tx := range fblock.GetTransactions() {
 			txs = append(txs, tx)
 		}
+
+		// get the previous block
 		fblock, err = db.GetFBlock(prevmr)
 		if err != nil {
 			return nil, err
@@ -76,9 +82,12 @@ func (db *TXDatabaseOverlay) GetAllTXs() ([]interfaces.ITransaction, error) {
 		}
 		prevmr = fblock.GetPrevKeyMR().String()
 	}
+
+	// get the transactions from the last block
 	for _, tx := range fblock.GetTransactions() {
 		txs = append(txs, tx)
 	}
+
 	return txs, nil
 }
 
@@ -111,60 +120,60 @@ func (db *TXDatabaseOverlay) update() (string, error) {
 		return "", err
 	}
 	newest := fblock.GetKeyMR().String()
-	
+
 	prevmr := fblock.GetPrevKeyMR().String()
 	for prevmr != factom.ZeroHash {
-//		// stop when we reach an fblock that is already in the db
-//		if f, err := db.GetFBlock(prevmr); err != nil {
-//			return "", err
-//		} else if f != nil {
-//			return newest, nil
-//		}
-		
+		//		// stop when we reach an fblock that is already in the db
+		//		if f, err := db.GetFBlock(prevmr); err != nil {
+		//			return "", err
+		//		} else if f != nil {
+		//			return newest, nil
+		//		}
+
 		// add the fblock to the db
 		if err := db.InsertFBlock(fblock); err != nil {
 			return "", err
 		}
-		
+
 		fblock, err = getfblock(prevmr)
 		if err != nil {
 			return "", err
 		}
 		prevmr = fblock.GetPrevKeyMR().String()
 	}
-	
+
 	// write the last fblock into the db
 	if err := db.InsertFBlock(fblock); err != nil {
 		return "", err
 	}
-	
+
 	return newest, nil
 }
 
 // fblockHead gets the most recent fblock.
 func fblockHead() (interfaces.IFBlock, error) {
-		fblockID := "000000000000000000000000000000000000000000000000000000000000000f"
+	fblockID := "000000000000000000000000000000000000000000000000000000000000000f"
 
-		dbhead, err := factom.GetDBlockHead()
-		if err != nil {
-			return nil, err
+	dbhead, err := factom.GetDBlockHead()
+	if err != nil {
+		return nil, err
+	}
+	dblock, err := factom.GetDBlock(dbhead)
+	if err != nil {
+		return nil, err
+	}
+
+	var fblockmr string
+	for _, eblock := range dblock.EntryBlockList {
+		if eblock.ChainID == fblockID {
+			fblockmr = eblock.KeyMR
 		}
-		dblock, err := factom.GetDBlock(dbhead)
-		if err != nil {
-			return nil, err
-		}
-		
-		var fblockmr string
-		for _, eblock := range dblock.EntryBlockList {
-			if eblock.ChainID == fblockID {
-				fblockmr = eblock.KeyMR
-			}
-		}
-		if fblockmr == "" {
-			return nil, err
-		}
-		
-		return getfblock(fblockmr)
+	}
+	if fblockmr == "" {
+		return nil, err
+	}
+
+	return getfblock(fblockmr)
 }
 
 func getfblock(keymr string) (interfaces.IFBlock, error) {
@@ -192,7 +201,7 @@ func getfblock(keymr string) (interfaces.IFBlock, error) {
 //			errorln(err)
 //			return
 //		}
-//		
+//
 //		var fblockmr string
 //		for _, eblock := range dblock.EntryBlockList {
 //			if eblock.ChainID == fblockID {
@@ -203,7 +212,7 @@ func getfblock(keymr string) (interfaces.IFBlock, error) {
 //			errorln("no fblock in current dblock")
 //			return
 //		}
-//		
+//
 //		// get the most recent block
 //		p, err := factom.GetRaw(fblockmr)
 //		if err != nil {
@@ -215,7 +224,7 @@ func getfblock(keymr string) (interfaces.IFBlock, error) {
 //			errorln(err)
 //			return
 //		}
-//		
+//
 //		for fblock.GetPrevKeyMR().String() != factom.ZeroHash {
 //			txs := fblock.GetTransactions()
 //			for _, tx := range txs {
@@ -232,7 +241,7 @@ func getfblock(keymr string) (interfaces.IFBlock, error) {
 //				return
 //			}
 //		}
-//		
+//
 //		// print the first fblock
 //		txs := fblock.GetTransactions()
 //		for _, tx := range txs {
