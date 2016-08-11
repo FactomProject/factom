@@ -306,6 +306,11 @@ func handleTransactions(params []byte) (interface{}, *factom.JSONError) {
 	resp := new(multiTransactionResponse)
 	txs := fctWallet.GetTransactions()
 
+	rate, err := factom.GetRate()
+	if err != nil {
+		return nil, newCustomInternalError(err.Error())
+	}
+
 	for name, tx := range txs {
 		r := transactionResponse{Name: name}
 		r.TxID = hex.EncodeToString(tx.GetSigHash().Bytes())
@@ -323,6 +328,11 @@ func handleTransactions(params []byte) (interface{}, *factom.JSONError) {
 			return nil, newCustomInternalError(err.Error())
 		} else {
 			r.TotalECOutputs = i
+		}
+		if i, err := tx.CalculateFee(rate); err != nil {
+			return nil, newCustomInternalError(err.Error())
+		} else {
+			r.FeesRequired = i 
 		}
 		if t, err := tx.MarshalBinary(); err != nil {
 			return nil, newCustomInternalError(err.Error())
