@@ -16,7 +16,7 @@ func BackupWallet() (string, error) {
 		Seed      string             `json:"wallet-seed"`
 		Addresses []*addressResponse `json:"addresses"`
 	}
-	
+
 	req := NewJSON2Request("wallet-backup", APICounter(), nil)
 	resp, err := walletRequest(req)
 	if err != nil {
@@ -30,7 +30,7 @@ func BackupWallet() (string, error) {
 	if err := json.Unmarshal(resp.JSONResult(), w); err != nil {
 		return "", err
 	}
-	
+
 	s := fmt.Sprintln("Seed:")
 	s += fmt.Sprintln(w.Seed)
 	s += fmt.Sprintln("Addresses:")
@@ -253,4 +253,3 @@ type addressResponse struct {
 type multiAddressResponse struct {
 	Addresses []*addressResponse `json:"addresses"`
 }
-
