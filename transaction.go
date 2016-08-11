@@ -17,6 +17,7 @@ type TXInfo struct {
 	TotalInputs    uint64 `json:"totalinputs"`
 	TotalOutputs   uint64 `json:"totaloutputs"`
 	TotalECOutputs uint64 `json:"totalecoutputs"`
+	FeesRequired   uint64 `json:"feesrequired,omitempty"`
 	RawTransaction string `json:"rawtransaction"`
 }
 
@@ -271,8 +272,18 @@ func SendFactoid(from, to string, amount uint64) (string, error) {
 	if err := AddTransactionOutput(name, to, amount); err != nil {
 		return "", err
 	}
-	if err := AddTransactionFee(name, from); err != nil {
+	balance, err := GetFactoidBalance(from)
+	if err != nil {
 		return "", err
+	}
+	if balance > int64(amount) {
+		if err := AddTransactionFee(name, from); err != nil {
+			return "", err
+		}
+	} else {
+		if err := SubTransactionFee(name, to); err != nil {
+			return "", err
+		}
 	}
 	if err := SignTransaction(name); err != nil {
 		return "", err
