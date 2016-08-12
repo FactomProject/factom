@@ -12,8 +12,7 @@ import (
 	"github.com/FactomProject/factom"
 	"github.com/FactomProject/factom/wallet"
 	"github.com/FactomProject/factomd/common/factoid"
-	"github.com/FactomProject/web"
-	
+	"github.com/FactomProject/web"	
 )
 
 const APIVersion string = "2.0"
@@ -136,6 +135,9 @@ func handleAddress(params []byte) (interface{}, *factom.JSONError) {
 		e, err := fctWallet.GetECAddress(req.Address)
 		if err != nil {
 			return nil, newCustomInternalError(err.Error())
+		}
+		if e == nil {
+			return nil, newCustomInternalError("Wallet: address not found")
 		}
 		resp = mkAddressResponse(e)
 	case factom.FactoidPub:
