@@ -71,7 +71,18 @@ func (db *TXDatabaseOverlay) GetAllTXs() ([]interfaces.ITransaction, error) {
 	for prevmr != factom.ZeroHash {
 		// get all of the txs from the block
 		for _, tx := range fblock.GetTransactions() {
-			txs = append(txs, tx)
+			ins, err := tx.TotalInputs()
+			if err != nil {
+				return nil, err
+			}
+			outs, err := tx.TotalOutputs()
+			if err != nil {
+				return nil, err
+			}
+			
+			if ins != 0 || outs != 0 {
+				txs = append(txs, tx)
+			}
 		}
 
 		// get the previous block
@@ -86,7 +97,18 @@ func (db *TXDatabaseOverlay) GetAllTXs() ([]interfaces.ITransaction, error) {
 
 	// get the transactions from the last block
 	for _, tx := range fblock.GetTransactions() {
-		txs = append(txs, tx)
+		ins, err := tx.TotalInputs()
+		if err != nil {
+			return nil, err
+		}
+		outs, err := tx.TotalOutputs()
+		if err != nil {
+			return nil, err
+		}
+		
+		if ins != 0 || outs != 0 {
+			txs = append(txs, tx)
+		}
 	}
 
 	return txs, nil
