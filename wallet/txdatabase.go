@@ -109,7 +109,7 @@ func (db *TXDatabaseOverlay) GetTXAddress(adr string) ([]interfaces.ITransaction
 
 	prevmr := fblock.GetPrevKeyMR().String()
 	for prevmr != factom.ZeroHash {
-		// get all of the txs from the block
+		// get all of the txs where an input or output matches the address.
 		for _, tx := range fblock.GetTransactions() {
 			for _, in := range tx.GetInputs() {
 				if primitives.ConvertFctAddressToUserStr(
@@ -154,6 +154,7 @@ func (db *TXDatabaseOverlay) GetTXAddress(adr string) ([]interfaces.ITransaction
 	return txs, nil
 }
 
+// GetFBlock retrives a Factoid Block from Factom
 func (db *TXDatabaseOverlay) GetFBlock(keymr string) (interfaces.IFBlock, error) {
 	fblock := new(factoid.FBlock)
 	data, err := db.dbo.Get(fblockDBPrefix, []byte(keymr), fblock)
