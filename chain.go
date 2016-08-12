@@ -9,6 +9,7 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
+	"fmt"
 )
 
 type Chain struct {
@@ -69,7 +70,16 @@ func ComposeChainCommit(c *Chain, ec *ECAddress) (*JSON2Request, error) {
 	if d, err := entryCost(e); err != nil {
 		return nil, err
 	} else {
-		buf.WriteByte(byte(d + 10))
+		balance, err := GetECBalance(ec.String())
+		if err != nil {
+			return nil, err
+		} else {
+			if balance < int64(d + 10) {
+				return nil, fmt.Errorf("The EC balance available (%d) is insufficent for this Entry (%d)", balance, d + 10)
+			} else {
+				buf.WriteByte(byte(d + 10))
+			}
+		}
 	}
 
 	// 32 byte Entry Credit Address Public Key + 64 byte Signature
