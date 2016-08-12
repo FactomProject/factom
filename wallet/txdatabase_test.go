@@ -54,6 +54,22 @@ func TestGetAllTXs(t *testing.T) {
 	t.Logf("got %d txs", len(txs))
 }
 
+func TestGetTXAddress(t *testing.T) {
+	dbpath := os.TempDir() + "/test_txdb-01"
+	db1, err := NewTXLevelDB(dbpath)
+	if err != nil {
+		t.Error(err)
+	}
+	defer db1.Close()
+	
+	adr := "FA2jK2HcLnRdS94dEcU27rF3meoJfpUcZPSinpb7AwQvPRY6RL1Q"
+	txs, err := db1.GetTXAddress(adr)
+	if err != nil {
+		t.Error(err)
+	}
+	t.Logf("got %d txs", len(txs))
+}
+
 //func TestGetAllTXs(t *testing.T) {
 //	dbpath := os.TempDir() + "/test_txdb-01"
 //	db1, err := NewTXLevelDB(dbpath)

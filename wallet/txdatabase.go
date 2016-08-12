@@ -10,6 +10,7 @@ import (
 	"github.com/FactomProject/factom"
 	"github.com/FactomProject/factomd/common/factoid"
 	"github.com/FactomProject/factomd/common/interfaces"
+	"github.com/FactomProject/factomd/common/primitives"
 	"github.com/FactomProject/factomd/database/databaseOverlay"
 	"github.com/FactomProject/factomd/database/hybridDB"
 )
@@ -86,6 +87,68 @@ func (db *TXDatabaseOverlay) GetAllTXs() ([]interfaces.ITransaction, error) {
 	// get the transactions from the last block
 	for _, tx := range fblock.GetTransactions() {
 		txs = append(txs, tx)
+	}
+
+	return txs, nil
+}
+
+// GetTXAddress returns a list of all transactions in the history of Factom that
+// include a specific address.
+func (db *TXDatabaseOverlay) GetTXAddress(adr string) ([]interfaces.ITransaction, error) {
+	// update the database and get the newest fblock
+	newest, err := db.update()
+	if err != nil {
+		return nil, err
+	}
+	fblock, err := db.GetFBlock(newest)
+	if err != nil {
+		return nil, err
+	}
+
+	txs := make([]interfaces.ITransaction, 0)
+
+	prevmr := fblock.GetPrevKeyMR().String()
+	for prevmr != factom.ZeroHash {
+		// get all of the txs from the block
+		for _, tx := range fblock.GetTransactions() {
+			for _, in := range tx.GetInputs() {
+				if primitives.ConvertFctAddressToUserStr(
+					in.GetAddress()) == adr {
+					txs = append(txs, tx)
+				}
+			}
+			for _, out := range tx.GetOutputs() {
+				if primitives.ConvertFctAddressToUserStr(
+					out.GetAddress()) == adr {
+					txs = append(txs, tx)
+				}
+			}
+		}
+
+		// get the previous block
+		fblock, err = db.GetFBlock(prevmr)
+		if err != nil {
+			return nil, err
+		} else if fblock == nil {
+			return nil, fmt.Errorf("Missing fblock in database: %s", prevmr)
+		}
+		prevmr = fblock.GetPrevKeyMR().String()
+	}
+
+	// get the transactions from the last block
+	for _, tx := range fblock.GetTransactions() {
+		for _, in := range tx.GetInputs() {
+			if primitives.ConvertFctAddressToUserStr(
+				in.GetAddress()) == adr {
+				txs = append(txs, tx)
+			}
+		}
+		for _, out := range tx.GetOutputs() {
+			if primitives.ConvertFctAddressToUserStr(
+				out.GetAddress()) == adr {
+				txs = append(txs, tx)
+			}
+		}
 	}
 
 	return txs, nil
