@@ -101,6 +101,23 @@ func (db *TXDatabaseOverlay) GetAllTXs() ([]interfaces.ITransaction, error) {
 	return txs, nil
 }
 
+// GetTX gets a transaction by the transaction id
+func (db *TXDatabaseOverlay) GetTX(txid string) (
+	interfaces.ITransaction, error) {
+	txs, err := db.GetAllTXs()
+	if err != nil {
+		return nil, err
+	}
+
+	for _, tx := range txs {
+		if tx.GetSigHash().String() == txid {
+			return tx, nil
+		}
+	}
+
+	return nil, fmt.Errorf("Transaction not found")
+}
+
 // GetTXAddress returns a list of all transactions in the history of Factom that
 // include a specific address.
 func (db *TXDatabaseOverlay) GetTXAddress(adr string) (
@@ -151,22 +168,6 @@ func (db *TXDatabaseOverlay) GetTXRange(start, end int) (
 	}
 
 	return filtered, nil
-}
-
-func (db *TXDatabaseOverlay) GetTX(txid string) (
-	interfaces.ITransaction, error) {
-	txs, err := db.GetAllTXs()
-	if err != nil {
-		return nil, err
-	}
-
-	for _, tx := range txs {
-		if tx.GetSigHash().String() == txid {
-			return tx, nil
-		}
-	}
-
-	return nil, fmt.Errorf("Transaction not found")
 }
 
 // GetFBlock retrives a Factoid Block from Factom
