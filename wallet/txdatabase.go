@@ -68,8 +68,9 @@ func (db *TXDatabaseOverlay) GetAllTXs() ([]interfaces.ITransaction, error) {
 	txs := make([]interfaces.ITransaction, 0)
 
 	prevmr := fblock.GetPrevKeyMR().String()
-	for prevmr != factom.ZeroHash {
+	for {
 		// get all of the txs from the block
+		height := fblock.GetDatabaseHeight()
 		for _, tx := range fblock.GetTransactions() {
 			ins, err := tx.TotalInputs()
 			if err != nil {
@@ -81,33 +82,22 @@ func (db *TXDatabaseOverlay) GetAllTXs() ([]interfaces.ITransaction, error) {
 			}
 			
 			if ins != 0 || outs != 0 {
+				tx.SetBlockHeight(height)
 				txs = append(txs, tx)
 			}
 		}
 
-		// get the previous block
-		fblock, err = db.GetFBlock(prevmr)
-		if err != nil {
-			return nil, err
-		} else if fblock == nil {
-			return nil, fmt.Errorf("Missing fblock in database: %s", prevmr)
-		}
-		prevmr = fblock.GetPrevKeyMR().String()
-	}
-
-	// get the transactions from the last block
-	for _, tx := range fblock.GetTransactions() {
-		ins, err := tx.TotalInputs()
-		if err != nil {
-			return nil, err
-		}
-		outs, err := tx.TotalOutputs()
-		if err != nil {
-			return nil, err
-		}
-		
-		if ins != 0 || outs != 0 {
-			txs = append(txs, tx)
+		if prevmr != factom.ZeroHash {
+			// get the previous block
+			fblock, err = db.GetFBlock(prevmr)
+			if err != nil {
+				return nil, err
+			} else if fblock == nil {
+				return nil, fmt.Errorf("Missing fblock in database: %s", prevmr)
+			}
+			prevmr = fblock.GetPrevKeyMR().String()
+		} else {
+			break
 		}
 	}
 

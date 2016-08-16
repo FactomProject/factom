@@ -14,7 +14,7 @@ import (
 	"github.com/FactomProject/factomd/common/factoid"
 	"github.com/FactomProject/factomd/common/interfaces"
 	
-//	"fmt" // DEBUG
+	"fmt" // DEBUG
 )
 
 func TestTXDatabaseOverlay(t *testing.T) {
@@ -51,6 +51,7 @@ func TestGetAllTXs(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
+	fmt.Println("DEBUG", txs)
 	t.Logf("got %d txs", len(txs))
 }
 
