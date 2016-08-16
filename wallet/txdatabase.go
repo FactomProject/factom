@@ -153,6 +153,22 @@ func (db *TXDatabaseOverlay) GetTXRange(start, end int) (
 	return filtered, nil
 }
 
+func (db *TXDatabaseOverlay) GetTX(txid string) (
+	interfaces.ITransaction, error) {
+	txs, err := db.GetAllTXs()
+	if err != nil {
+		return nil, err
+	}
+
+	for _, tx := range txs {
+		if tx.GetSigHash().String() == txid {
+			return tx, nil
+		}
+	}
+
+	return nil, fmt.Errorf("Transaction not found")
+}
+
 // GetFBlock retrives a Factoid Block from Factom
 func (db *TXDatabaseOverlay) GetFBlock(keymr string) (interfaces.IFBlock, error) {
 	fblock := new(factoid.FBlock)
