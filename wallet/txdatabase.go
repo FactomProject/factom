@@ -103,7 +103,8 @@ func (db *TXDatabaseOverlay) GetAllTXs() ([]interfaces.ITransaction, error) {
 
 // GetTXAddress returns a list of all transactions in the history of Factom that
 // include a specific address.
-func (db *TXDatabaseOverlay) GetTXAddress(adr string) ([]interfaces.ITransaction, error) {
+func (db *TXDatabaseOverlay) GetTXAddress(adr string) (
+	[]interfaces.ITransaction, error) {
 	filtered := make([]interfaces.ITransaction, 0)
 
 	txs, err := db.GetAllTXs()
@@ -123,6 +124,30 @@ func (db *TXDatabaseOverlay) GetTXAddress(adr string) ([]interfaces.ITransaction
 				out.GetAddress()) == adr {
 				txs = append(filtered, tx)
 			}
+		}
+	}
+	
+	return filtered, nil
+}
+
+func (db *TXDatabaseOverlay) GetTXRange(start, end int) (
+	[]interfaces.ITransaction, error) {
+	if start < 0 || end < 0 {
+		return nil, fmt.Errorf("Range cannot have negative numbers")
+	}
+	s := uint32(start)
+	e := uint32(end)
+	
+	filtered := make([]interfaces.ITransaction, 0)
+
+	txs, err := db.GetAllTXs()
+	if err != nil {
+		return nil, err
+	}
+	
+	for _, tx := range txs {
+		if s <= tx.GetBlockHeight() && tx.GetBlockHeight() <= e {
+			filtered = append(filtered, tx)
 		}
 	}
 	
