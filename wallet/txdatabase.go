@@ -78,7 +78,7 @@ func (db *TXDatabaseOverlay) GetAllTXs() ([]interfaces.ITransaction, error) {
 			if err != nil {
 				return nil, err
 			}
-			
+
 			if ins != 0 || outs != 0 {
 				tx.SetBlockHeight(height)
 				txs = append(txs, tx)
@@ -111,7 +111,7 @@ func (db *TXDatabaseOverlay) GetTXAddress(adr string) (
 	if err != nil {
 		return nil, err
 	}
-	
+
 	for _, tx := range txs {
 		for _, in := range tx.GetInputs() {
 			if primitives.ConvertFctAddressToUserStr(
@@ -126,7 +126,7 @@ func (db *TXDatabaseOverlay) GetTXAddress(adr string) (
 			}
 		}
 	}
-	
+
 	return filtered, nil
 }
 
@@ -135,22 +135,21 @@ func (db *TXDatabaseOverlay) GetTXRange(start, end int) (
 	if start < 0 || end < 0 {
 		return nil, fmt.Errorf("Range cannot have negative numbers")
 	}
-	s := uint32(start)
-	e := uint32(end)
-	
+	s, e := uint32(start), uint32(end)
+
 	filtered := make([]interfaces.ITransaction, 0)
 
 	txs, err := db.GetAllTXs()
 	if err != nil {
 		return nil, err
 	}
-	
+
 	for _, tx := range txs {
 		if s <= tx.GetBlockHeight() && tx.GetBlockHeight() <= e {
 			filtered = append(filtered, tx)
 		}
 	}
-	
+
 	return filtered, nil
 }
 
@@ -247,71 +246,3 @@ func getfblock(keymr string) (interfaces.IFBlock, error) {
 	}
 	return factoid.UnmarshalFBlock(p)
 }
-
-//var getAllTransactions = func() *fctCmd {
-//	cmd := new(fctCmd)
-//	cmd.helpMsg = "factom-cli get alltxs"
-//	cmd.description = "Get the entire history of transactions in Factom"
-//	cmd.execFunc = func(args []string) {
-//		fblockID := "000000000000000000000000000000000000000000000000000000000000000f"
-//
-//		dbhead, err := factom.GetDBlockHead()
-//		if err != nil {
-//			errorln(err)
-//			return
-//		}
-//		dblock, err := factom.GetDBlock(dbhead)
-//		if err != nil {
-//			errorln(err)
-//			return
-//		}
-//
-//		var fblockmr string
-//		for _, eblock := range dblock.EntryBlockList {
-//			if eblock.ChainID == fblockID {
-//				fblockmr = eblock.KeyMR
-//			}
-//		}
-//		if fblockmr == "" {
-//			errorln("no fblock in current dblock")
-//			return
-//		}
-//
-//		// get the most recent block
-//		p, err := factom.GetRaw(fblockmr)
-//		if err != nil {
-//			errorln(err)
-//			return
-//		}
-//		fblock, err := factoid.UnmarshalFBlock(p)
-//		if err != nil {
-//			errorln(err)
-//			return
-//		}
-//
-//		for fblock.GetPrevKeyMR().String() != factom.ZeroHash {
-//			txs := fblock.GetTransactions()
-//			for _, tx := range txs {
-//				fmt.Println(tx)
-//			}
-//			p, err := factom.GetRaw(fblock.GetPrevKeyMR().String())
-//			if err != nil {
-//				errorln(err)
-//				return
-//			}
-//			fblock, err = factoid.UnmarshalFBlock(p)
-//			if err != nil {
-//				errorln(err)
-//				return
-//			}
-//		}
-//
-//		// print the first fblock
-//		txs := fblock.GetTransactions()
-//		for _, tx := range txs {
-//			fmt.Println(tx)
-//		}
-//	}
-//	help.Add("get alltxs", cmd)
-//	return cmd
-//}()
