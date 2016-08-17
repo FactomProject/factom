@@ -282,13 +282,27 @@ func handleAllTransactions(params []byte) (interface{}, *factom.JSONError) {
 			"Wallet does not have a transaction database")
 	}
 	req := new(txdbRequest)
-	if err := json.Unmarshal(params, req); err != nil {
+	if params == nil {
+		skip
+	} else if err := json.Unmarshal(params, req); err != nil {
 		return nil, newInvalidParamsError()
 	}
 	
 	resp := new(transactionList)
 	
 	switch {
+	case req == nil:
+		txs, err := fctWallet.TXDB().GetAllTXs()
+		if err != nil {
+			return nil, newCustomInternalError(err.Error())
+		}
+		for _, tx := range txs {
+			p, err := tx.JSONByte()
+			if err != nil {
+				return nil, newCustomInternalError(err.Error())
+			}
+			resp.Transactions = append(resp.Transactions, p)
+		}
 	case req.TxID != "":
 		tx, err := fctWallet.TXDB().GetTX(req.TxID)
 		if err != nil {
