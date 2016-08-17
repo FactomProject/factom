@@ -281,18 +281,60 @@ func handleAllTransactions(params []byte) (interface{}, *factom.JSONError) {
 		return nil, newCustomInternalError(
 			"Wallet does not have a transaction database")
 	}
+	req := new(txdbRequest)
+	if err := json.Unmarshal(params, req); err != nil {
+		return nil, newInvalidParamsError()
+	}
 	
 	resp := new(transactionList)
-	txs, err := fctWallet.TXDB().GetAllTXs()
-	if err != nil {
-		return nil, newCustomInternalError(err.Error())
-	}
-	for _, tx := range txs {
+	
+	switch {
+	case req.TxID != "":
+		tx, err := fctWallet.TXDB().GetTX(req.TxID)
+		if err != nil {
+			return nil, newCustomInternalError(err.Error())
+		}
 		p, err := tx.JSONByte()
 		if err != nil {
 			return nil, newCustomInternalError(err.Error())
 		}
 		resp.Transactions = append(resp.Transactions, p)
+	case req.Address != "":
+		txs, err := fctWallet.TXDB().GetTXAddress(req.Address)
+		if err != nil {
+			return nil, newCustomInternalError(err.Error())
+		}
+		for _, tx := range txs {
+			p, err := tx.JSONByte()
+			if err != nil {
+				return nil, newCustomInternalError(err.Error())
+			}
+			resp.Transactions = append(resp.Transactions, p)
+		}
+	case req.Range != nil:
+		txs, err := fctWallet.TXDB().GetTXRange(req.Range.Start, req.Range.End)
+		if err != nil {
+			return nil, newCustomInternalError(err.Error())
+		}
+		for _, tx := range txs {
+			p, err := tx.JSONByte()
+			if err != nil {
+				return nil, newCustomInternalError(err.Error())
+			}
+			resp.Transactions = append(resp.Transactions, p)
+		}
+	default:
+		txs, err := fctWallet.TXDB().GetAllTXs()
+		if err != nil {
+			return nil, newCustomInternalError(err.Error())
+		}
+		for _, tx := range txs {
+			p, err := tx.JSONByte()
+			if err != nil {
+				return nil, newCustomInternalError(err.Error())
+			}
+			resp.Transactions = append(resp.Transactions, p)
+		}
 	}
 	
 	return resp, nil

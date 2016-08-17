@@ -35,6 +35,15 @@ type transactionAddressRequest struct {
 	Address string `json:"address"`
 }
 
+type txdbRequest struct {
+	TxID    string `json:"txid,omitempty"`
+	Address string `json:"address,omitempty"`
+	Range   struct {
+		Start int `json:"start"`
+		End   int `json:"end"`
+	} `json:"range,omitempty"`
+}
+
 // responses
 
 type addressResponse struct {
