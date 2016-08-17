@@ -79,14 +79,14 @@ func handleV2Request(j *factom.JSON2Request) (*factom.JSON2Response, *factom.JSO
 		resp, jsonError = handleImportMnemonic(params)
 	case "wallet-backup":
 		resp, jsonError = handleWalletBackup(params)
-	case "all-transactions":
+	case "transactions":
 		resp, jsonError = handleAllTransactions(params)
 	case "new-transaction":
 		resp, jsonError = handleNewTransaction(params)
 	case "delete-transaction":
 		resp, jsonError = handleDeleteTransaction(params)
-	case "transactions":
-		resp, jsonError = handleTransactions(params)
+	case "tmp-transactions":
+		resp, jsonError = handleTmpTransactions(params)
 	case "transaction-hash":
 		resp, jsonError = handleTransactionHash(params)
 	case "add-input":
@@ -390,7 +390,7 @@ func handleDeleteTransaction(params []byte) (interface{}, *factom.JSONError) {
 	return resp, nil
 }
 
-func handleTransactions(params []byte) (interface{}, *factom.JSONError) {
+func handleTmpTransactions(params []byte) (interface{}, *factom.JSONError) {
 	resp := new(multiTransactionResponse)
 	txs := fctWallet.GetTransactions()
 
