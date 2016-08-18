@@ -70,12 +70,120 @@ func TransactionHash(name string) (string, error) {
 	return tx.TxID, nil
 }
 
-func ListTransactions() ([]TXInfo, error) {
+func ListTransactionsAll() ([]json.RawMessage, error) {
+	type transactionList struct {
+		Transactions []json.RawMessage `json:"transactions"`
+	}
+
+	req := NewJSON2Request("transactions", APICounter(), nil)
+	resp, err := walletRequest(req)
+	if err != nil {
+		return nil, err
+	}
+	if resp.Error != nil {
+		return nil, resp.Error
+	}
+
+	list := new(transactionList)
+	if err := json.Unmarshal(resp.JSONResult(), list); err != nil {
+		return nil, err
+	}
+
+	return list.Transactions, nil
+}
+
+func ListTransactionsAddress(addr string) ([]json.RawMessage, error) {
+	type transactionList struct {
+		Transactions []json.RawMessage `json:"transactions"`
+	}
+	type txReq struct {
+		Address string `json:"address"`
+	}
+
+	params := txReq{Address: addr}
+
+	req := NewJSON2Request("transactions", APICounter(), params)
+	resp, err := walletRequest(req)
+	if err != nil {
+		return nil, err
+	}
+	if resp.Error != nil {
+		return nil, resp.Error
+	}
+
+	list := new(transactionList)
+	if err := json.Unmarshal(resp.JSONResult(), list); err != nil {
+		return nil, err
+	}
+
+	return list.Transactions, nil
+}
+
+func ListTransactionsID(id string) ([]json.RawMessage, error) {
+	type transactionList struct {
+		Transactions []json.RawMessage `json:"transactions"`
+	}
+	type txReq struct {
+		TxID string `json:"txid"`
+	}
+
+	params := txReq{TxID: id}
+
+	req := NewJSON2Request("transactions", APICounter(), params)
+	resp, err := walletRequest(req)
+	if err != nil {
+		return nil, err
+	}
+	if resp.Error != nil {
+		return nil, resp.Error
+	}
+
+	list := new(transactionList)
+	if err := json.Unmarshal(resp.JSONResult(), list); err != nil {
+		return nil, err
+	}
+
+	return list.Transactions, nil
+}
+
+func ListTransactionsRange(start, end int) ([]json.RawMessage, error) {
+	type transactionList struct {
+		Transactions []json.RawMessage `json:"transactions"`
+	}
+	type txReq struct {
+		Range struct {
+			Start int `json:"start"`
+			End   int `json:"end"`
+		} `json:"range"`
+	}
+
+	params := new(txReq)
+	params.Range.Start = start
+	params.Range.End = end
+
+	req := NewJSON2Request("transactions", APICounter(), params)
+	resp, err := walletRequest(req)
+	if err != nil {
+		return nil, err
+	}
+	if resp.Error != nil {
+		return nil, resp.Error
+	}
+
+	list := new(transactionList)
+	if err := json.Unmarshal(resp.JSONResult(), list); err != nil {
+		return nil, err
+	}
+
+	return list.Transactions, nil
+}
+
+func ListTransactionsTmp() ([]TXInfo, error) {
 	type multiTransactionResponse struct {
 		Transactions []TXInfo `json:"transactions"`
 	}
 
-	req := NewJSON2Request("transactions", APICounter(), nil)
+	req := NewJSON2Request("tmp-transactions", APICounter(), nil)
 	resp, err := walletRequest(req)
 	if err != nil {
 		return nil, err
