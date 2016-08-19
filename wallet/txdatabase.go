@@ -48,6 +48,13 @@ func NewTXLevelDB(ldbpath string) (*TXDatabaseOverlay, error) {
 	return NewTXOverlay(db), nil
 }
 
+func NewTXBoltDB(boltPath string) (*TXDatabaseOverlay, error) {
+	db := hybridDB.NewBoltMapHybridDB(nil, boltPath)
+
+	fmt.Println("Database started from: " + boltPath)
+	return NewTXOverlay(db), nil
+}
+
 func (db *TXDatabaseOverlay) Close() error {
 	return db.dbo.Close()
 }
