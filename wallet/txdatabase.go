@@ -138,20 +138,17 @@ func (db *TXDatabaseOverlay) GetTXAddress(adr string) (
 
 	for _, tx := range txs {
 		for _, in := range tx.GetInputs() {
-			if primitives.ConvertFctAddressToUserStr(
-				in.GetAddress()) == adr {
+			if primitives.ConvertFctAddressToUserStr(in.GetAddress()) == adr {
 				txs = append(filtered, tx)
 			}
 		}
 		for _, out := range tx.GetOutputs() {
-			if primitives.ConvertFctAddressToUserStr(
-				out.GetAddress()) == adr {
+			if primitives.ConvertFctAddressToUserStr(out.GetAddress()) == adr {
 				txs = append(filtered, tx)
 			}
 		}
 		for _, out := range tx.GetECOutputs() {
-			if primitives.ConvertECAddressToUserStr(
-				out.GetAddress()) == adr {
+			if primitives.ConvertECAddressToUserStr(out.GetAddress()) == adr {
 				txs = append(filtered, tx)
 			}
 		}
