@@ -149,6 +149,12 @@ func (db *TXDatabaseOverlay) GetTXAddress(adr string) (
 				txs = append(filtered, tx)
 			}
 		}
+		for _, out := range tx.GetECOutputs() {
+			if primitives.ConvertECAddressToUserStr(
+				out.GetAddress()) == adr {
+				txs = append(filtered, tx)
+			}
+		}
 	}
 
 	return filtered, nil
