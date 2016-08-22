@@ -169,16 +169,7 @@ func ComposeEntryCommit(e *Entry, ec *ECAddress) (*JSON2Request, error) {
 	if c, err := entryCost(e); err != nil {
 		return nil, err
 	} else {
-		balance, err := GetECBalance(ec.String())
-		if err != nil {
-			return nil, err
-		} else {
-			if balance < int64(c) {
-				return nil, fmt.Errorf("The EC balance available (%d) is insufficent for this Entry (%d)", balance, c)
-			} else {
-				buf.WriteByte(byte(c))
-			}
-		}
+		buf.WriteByte(byte(c))
 	}
 
 	// 32 byte Entry Credit Address Public Key + 64 byte Signature
