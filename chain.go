@@ -75,7 +75,7 @@ func ComposeChainCommit(c *Chain, ec *ECAddress) (*JSON2Request, error) {
 			return nil, err
 		} else {
 			if balance < int64(d + 10) {
-				return nil, fmt.Errorf("The EC balance available (%d) is insufficent for this Entry (%d)", balance, d + 10)
+				return nil, fmt.Errorf("The EC balance available (%d) is insufficent to create this Chain (%d)", balance, d + 10)
 			} else {
 				buf.WriteByte(byte(d + 10))
 			}
