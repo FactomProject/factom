@@ -68,3 +68,9 @@ type multiTransactionResponse struct {
 type propertiesResponse struct {
 	WalletVersion string `json:"walletversion"`
 }
+
+type TLSConfig struct {
+	TLSEnable   bool   `json:"TLS-enable"`
+	TLSKeyFile  string `json:"TLS-keyfile"`
+	TLSCertFile string `json:"TLS-certfile"`
+}
