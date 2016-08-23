@@ -136,22 +136,29 @@ func (db *TXDatabaseOverlay) GetTXAddress(adr string) (
 		return nil, err
 	}
 
-	for _, tx := range txs {
-		for _, in := range tx.GetInputs() {
-			if primitives.ConvertFctAddressToUserStr(in.GetAddress()) == adr {
-				txs = append(filtered, tx)
+	if factom.AddressStringType(adr) == factom.FactoidPub {
+		for _, tx := range txs {
+			for _, in := range tx.GetInputs() {
+				if primitives.ConvertFctAddressToUserStr(in.GetAddress()) == adr {
+					txs = append(filtered, tx)
+				}
+			}
+			for _, out := range tx.GetOutputs() {
+				if primitives.ConvertFctAddressToUserStr(out.GetAddress()) == adr {
+					txs = append(filtered, tx)
+				}
 			}
 		}
-		for _, out := range tx.GetOutputs() {
-			if primitives.ConvertFctAddressToUserStr(out.GetAddress()) == adr {
-				txs = append(filtered, tx)
+	} else if factom.AddressStringType(adr) == factom.ECPub {
+		for _, tx := range txs {
+			for _, out := range tx.GetECOutputs() {
+				if primitives.ConvertECAddressToUserStr(out.GetAddress()) == adr {
+					txs = append(filtered, tx)
+				}
 			}
 		}
-		for _, out := range tx.GetECOutputs() {
-			if primitives.ConvertECAddressToUserStr(out.GetAddress()) == adr {
-				txs = append(filtered, tx)
-			}
-		}
+	} else {
+		return nil, fmt.Errorf("not a valid address")
 	}
 
 	return filtered, nil
@@ -210,25 +217,26 @@ func (db *TXDatabaseOverlay) update() (string, error) {
 		return "", err
 	}
 	newest := fblock.GetKeyMR().String()
+	// add the fblock to the db
+	if err := db.InsertFBlock(fblock); err != nil {
+		return "", err
+	}
 
 	prevmr := fblock.GetPrevKeyMR().String()
 	for prevmr != factom.ZeroHash {
-		//		// stop when we reach an fblock that is already in the db
-		//		if f, err := db.GetFBlock(prevmr); err != nil {
-		//			return "", err
-		//		} else if f != nil {
-		//			return newest, nil
-		//		}
-
-		// add the fblock to the db
-		if err := db.InsertFBlock(fblock); err != nil {
-			return "", err
+		if f, _ := db.GetFBlock(prevmr); f != nil {
+			fblock = f
+		} else {
+			f, err := getfblock(prevmr)
+			if err != nil {
+				return "", err
+			}
+			fblock = f
+			if err := db.InsertFBlock(fblock); err != nil {
+				return "", err
+			}
 		}
-
-		fblock, err = getfblock(prevmr)
-		if err != nil {
-			return "", err
-		}
+		
 		prevmr = fblock.GetPrevKeyMR().String()
 	}
 
