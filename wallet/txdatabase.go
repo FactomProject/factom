@@ -130,7 +130,7 @@ func (db *TXDatabaseOverlay) GetTX(txid string) (
 func (db *TXDatabaseOverlay) GetTXAddress(adr string) (
 	[]interfaces.ITransaction, error) {
 	filtered := make([]interfaces.ITransaction, 0)
-
+	
 	txs, err := db.GetAllTXs()
 	if err != nil {
 		return nil, err
@@ -140,12 +140,12 @@ func (db *TXDatabaseOverlay) GetTXAddress(adr string) (
 		for _, tx := range txs {
 			for _, in := range tx.GetInputs() {
 				if primitives.ConvertFctAddressToUserStr(in.GetAddress()) == adr {
-					txs = append(filtered, tx)
+					filtered = append(filtered, tx)
 				}
 			}
 			for _, out := range tx.GetOutputs() {
 				if primitives.ConvertFctAddressToUserStr(out.GetAddress()) == adr {
-					txs = append(filtered, tx)
+					filtered = append(filtered, tx)
 				}
 			}
 		}
@@ -153,7 +153,7 @@ func (db *TXDatabaseOverlay) GetTXAddress(adr string) (
 		for _, tx := range txs {
 			for _, out := range tx.GetECOutputs() {
 				if primitives.ConvertECAddressToUserStr(out.GetAddress()) == adr {
-					txs = append(filtered, tx)
+					filtered = append(filtered, tx)
 				}
 			}
 		}
