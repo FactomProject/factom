@@ -10,12 +10,12 @@ import (
 
 // GetECBalance returns the balance in factoshi (factoid * 1e8) of a given Entry
 // Credit Public Address.
-func GetECBalance(key string) (int64, error) {
+func GetECBalance(addr string) (int64, error) {
 	type balanceResponse struct {
 		Balance int64 `json:"balance"`
 	}
 
-	params := addressRequest{Address: key}
+	params := addressRequest{Address: addr}
 	req := NewJSON2Request("entry-credit-balance", APICounter(), params)
 	resp, err := factomdRequest(req)
 	if err != nil {
@@ -35,12 +35,12 @@ func GetECBalance(key string) (int64, error) {
 
 // GetFactoidBalance returns the balance in factoshi (factoid * 1e8) of a given
 // Factoid Public Address.
-func GetFactoidBalance(key string) (int64, error) {
+func GetFactoidBalance(addr string) (int64, error) {
 	type balanceResponse struct {
 		Balance int64 `json:"balance"`
 	}
 
-	params := addressRequest{Address: key}
+	params := addressRequest{Address: addr}
 	req := NewJSON2Request("factoid-balance", APICounter(), params)
 	resp, err := factomdRequest(req)
 	if err != nil {
