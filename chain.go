@@ -10,11 +10,15 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
+	"net/http"
+
+	ed "github.com/FactomProject/ed25519"
 )
 
 type Chain struct {
-	ChainID    string `json:"chainid"`
-	FirstEntry *Entry `json:"firstentry"`
+	ChainID    string
+	FirstEntry *Entry
 }
 
 func NewChain(e *Entry) *Chain {
@@ -33,10 +37,86 @@ func NewChain(e *Entry) *Chain {
 	return c
 }
 
-// ComposeChainCommit creates a JSON2Request to commit a new Chain via the
-// factomd web api. The request includes the marshaled MessageRequest with the
-// Entry Credit Signature.
-func ComposeChainCommit(c *Chain, ec *ECAddress) (*JSON2Request, error) {
+type ChainHead struct {
+	ChainHead string
+}
+
+// CommitChain sends the signed ChainID, the Entry Hash, and the Entry Credit
+// public key to the factom network. Once the payment is verified and the
+// network is commited to publishing the Chain it may be published by revealing
+// the First Entry in the Chain.
+func CommitChain(c *Chain, name string) error {
+	type walletcommit struct {
+		Message string
+	}
+
+	buf := new(bytes.Buffer)
+
+	// 1 byte version
+	buf.Write([]byte{0})
+
+	// 6 byte milliTimestamp
+	buf.Write(milliTime())
+
+	e := c.FirstEntry
+
+	// 32 byte ChainID Hash
+	if p, err := hex.DecodeString(c.ChainID); err != nil {
+		return err
+	} else {
+		// double sha256 hash of ChainID
+		buf.Write(shad(p))
+	}
+
+	// 32 byte Weld; sha256(sha256(EntryHash + ChainID))
+	if cid, err := hex.DecodeString(c.ChainID); err != nil {
+		return err
+	} else {
+		s := append(e.Hash(), cid...)
+		buf.Write(shad(s))
+	}
+
+	// 32 byte Entry Hash of the First Entry
+	buf.Write(e.Hash())
+
+	// 1 byte number of Entry Credits to pay
+	if d, err := entryCost(e); err != nil {
+		return err
+	} else {
+		buf.WriteByte(byte(d + 10))
+	}
+
+	com := new(walletcommit)
+	com.Message = hex.EncodeToString(buf.Bytes())
+	j, err := json.Marshal(com)
+	if err != nil {
+		return err
+	}
+	resp, err := http.Post(
+		fmt.Sprintf("http://%s/v1/commit-chain/%s", serverFct, name),
+		"application/json",
+		bytes.NewBuffer(j))
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != 200 {
+		p, err := ioutil.ReadAll(resp.Body)
+		if err != nil {
+			return err
+		}
+		return fmt.Errorf(string(p))
+	}
+
+	return nil
+}
+
+func ComposeChainCommit(pub *[32]byte, pri *[64]byte, c *Chain) ([]byte, error) {
+	type commit struct {
+		CommitChainMsg string
+	}
+
 	buf := new(bytes.Buffer)
 
 	// 1 byte version
@@ -70,94 +150,139 @@ func ComposeChainCommit(c *Chain, ec *ECAddress) (*JSON2Request, error) {
 	if d, err := entryCost(e); err != nil {
 		return nil, err
 	} else {
-		balance, err := GetECBalance(ec.String())
-		if err != nil {
-			return nil, err
-		} else {
-			if balance < int64(d + 10) {
-				return nil, fmt.Errorf("The EC balance available (%d) is insufficent for this Entry (%d)", balance, d + 10)
-			} else {
-				buf.WriteByte(byte(d + 10))
-			}
-		}
+		buf.WriteByte(byte(d + 10))
 	}
 
-	// 32 byte Entry Credit Address Public Key + 64 byte Signature
-	sig := ec.Sign(buf.Bytes())
-	buf.Write(ec.PubBytes())
+	// sign the commit
+	sig := ed.Sign(pri, buf.Bytes())
+
+	// 32 byte pubkey
+	buf.Write(pub[:])
+
+	// 64 byte Signature
 	buf.Write(sig[:])
 
-	params := messageRequest{Message: hex.EncodeToString(buf.Bytes())}
-	req := NewJSON2Request("commit-chain", APICounter(), params)
-
-	return req, nil
-}
-
-// ComposeChainReveal creates a JSON2Request to reveal the Chain via the factomd
-// web api.
-func ComposeChainReveal(c *Chain) (*JSON2Request, error) {
-	p, err := c.FirstEntry.MarshalBinary()
+	com := new(commit)
+	com.CommitChainMsg = hex.EncodeToString(buf.Bytes())
+	j, err := json.Marshal(com)
 	if err != nil {
 		return nil, err
 	}
-	params := entryRequest{Entry: hex.EncodeToString(p)}
 
-	req := NewJSON2Request("reveal-chain", APICounter(), params)
-	return req, nil
+	return j, nil
 }
 
-// CommitChain sends the signed ChainID, the Entry Hash, and the Entry Credit
-// public key to the factom network. Once the payment is verified and the
-// network is commited to publishing the Chain it may be published by revealing
-// the First Entry in the Chain.
-func CommitChain(c *Chain, ec *ECAddress) (string, error) {
-	type commitResponse struct {
-		Message string `json:"message"`
-		TxID    string `json:"txid"`
+func RevealChain(c *Chain) error {
+	type reveal struct {
+		Entry string
 	}
 
-	req, err := ComposeChainCommit(c, ec)
+	r := new(reveal)
+	if p, err := c.FirstEntry.MarshalBinary(); err != nil {
+		return err
+	} else {
+		r.Entry = hex.EncodeToString(p)
+	}
+
+	j, err := json.Marshal(r)
 	if err != nil {
-		return "", err
+		return err
 	}
 
-	resp, err := factomdRequest(req)
+	resp, err := http.Post(
+		fmt.Sprintf("http://%s/v1/reveal-chain/", server),
+		"application/json",
+		bytes.NewBuffer(j))
 	if err != nil {
-		return "", err
+		return err
 	}
-	if resp.Error != nil {
-		return "", resp.Error
-	}
-	r := new(commitResponse)
-	if err := json.Unmarshal(resp.JSONResult(), r); err != nil {
-		return "", err
+	defer resp.Body.Close()
+
+	if resp.StatusCode != 200 {
+		p, err := ioutil.ReadAll(resp.Body)
+		if err != nil {
+			return err
+		}
+		return fmt.Errorf(string(p))
 	}
 
-	return r.TxID, nil
+	return nil
 }
 
-func RevealChain(c *Chain) (string, error) {
-	type revealResponse struct {
-		Message string `json:"message"`
-		Entry   string `json:"entryhash"`
-	}
-
-	req, err := ComposeChainReveal(c)
+func GetChainHead(chainid string) (*ChainHead, error) {
+	resp, err := http.Get(
+		fmt.Sprintf("http://%s/v1/chain-head/%s", server, chainid))
 	if err != nil {
-		return "", err
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != 200 {
+		p, err := ioutil.ReadAll(resp.Body)
+		if err != nil {
+			return nil, err
+		}
+		return nil, fmt.Errorf(string(p))
 	}
 
-	resp, err := factomdRequest(req)
+	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		return "", err
-	}
-	if resp.Error != nil {
-		return "", resp.Error
+		return nil, err
 	}
 
-	r := new(revealResponse)
-	if err := json.Unmarshal(resp.JSONResult(), r); err != nil {
-		return "", err
+	c := new(ChainHead)
+	if err := json.Unmarshal(body, c); err != nil {
+		return nil, err
 	}
-	return r.Entry, nil
+
+	return c, nil
+}
+
+func GetAllChainEntries(chainid string) ([]*Entry, error) {
+	es := make([]*Entry, 0)
+
+	head, err := GetChainHead(chainid)
+	if err != nil {
+		return es, err
+	}
+
+	for ebhash := head.ChainHead; ebhash != ZeroHash; {
+		eb, err := GetEBlock(ebhash)
+		if err != nil {
+			return es, err
+		}
+		s, err := GetAllEBlockEntries(ebhash)
+		if err != nil {
+			return es, err
+		}
+		es = append(s, es...)
+
+		ebhash = eb.Header.PrevKeyMR
+	}
+
+	return es, nil
+}
+
+func GetFirstEntry(chainid string) (*Entry, error) {
+	e := NewEntry()
+
+	head, err := GetChainHead(chainid)
+	if err != nil {
+		return e, err
+	}
+
+	eb, err := GetEBlock(head.ChainHead)
+	if err != nil {
+		return e, err
+	}
+
+	for eb.Header.PrevKeyMR != ZeroHash {
+		ebhash := eb.Header.PrevKeyMR
+		eb, err = GetEBlock(ebhash)
+		if err != nil {
+			return e, err
+		}
+	}
+
+	return GetEntry(eb.EntryList[0].EntryHash)
 }

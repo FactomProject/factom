@@ -1,3 +1,3 @@
 factom api
 ===
-golang client implementation of the Factom web service api.
+golang library implementation of the Factom web service api.

@@ -1,27 +1,71 @@
-// Copyright 2016 Factom Foundation
+// Copyright 2015 Factom Foundation
 // Use of this source code is governed by the MIT
 // license that can be found in the LICENSE file.
 
 package factom
 
 import (
+	"encoding/json"
 	"fmt"
+	"io/ioutil"
+	"net/http"
 )
+
+func GetAllEBlockEntries(ebhash string) ([]*Entry, error) {
+	es := make([]*Entry, 0)
+
+	eb, err := GetEBlock(ebhash)
+	if err != nil {
+		return es, err
+	}
+
+	for _, v := range eb.EntryList {
+		e, err := GetEntry(v.EntryHash)
+		if err != nil {
+			return es, err
+		}
+		es = append(es, e)
+	}
+
+	return es, nil
+}
 
 type EBlock struct {
 	Header struct {
-		BlockSequenceNumber int64  `json:"blocksequencenumber"`
-		ChainID             string `json:"chainid"`
-		PrevKeyMR           string `json:"prevkeymr"`
-		Timestamp           int64  `json:"timestamp"`
-		DBHeight            int64  `json:"dbheight"`
-	} `json:"header"`
-	EntryList []EBEntry `json:"entrylist"`
+		BlockSequenceNumber int
+		ChainID             string
+		PrevKeyMR           string
+		Timestamp           uint64
+	}
+	EntryList []EBEntry
 }
 
 type EBEntry struct {
-	EntryHash string `json:"entryhash"`
-	Timestamp int64  `json:"timestamp"`
+	Timestamp int64
+	EntryHash string
+}
+
+func GetEBlock(keymr string) (*EBlock, error) {
+	resp, err := http.Get(
+		fmt.Sprintf("http://%s/v1/entry-block-by-keymr/%s", server, keymr))
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+	if resp.StatusCode != 200 {
+		return nil, fmt.Errorf(string(body))
+	}
+
+	e := new(EBlock)
+	if err := json.Unmarshal(body, e); err != nil {
+		return nil, err
+	}
+
+	return e, nil
 }
 
 func (e *EBlock) String() string {
@@ -30,7 +74,6 @@ func (e *EBlock) String() string {
 	s += fmt.Sprintln("ChainID:", e.Header.ChainID)
 	s += fmt.Sprintln("PrevKeyMR:", e.Header.PrevKeyMR)
 	s += fmt.Sprintln("Timestamp:", e.Header.Timestamp)
-	s += fmt.Sprintln("DBHeight:", e.Header.DBHeight)
 	for _, v := range e.EntryList {
 		s += fmt.Sprintln("EBEntry {")
 		s += fmt.Sprintln("	Timestamp", v.Timestamp)

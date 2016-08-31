@@ -1,4 +1,4 @@
-// Copyright 2016 Factom Foundation
+// Copyright 2015 Factom Foundation
 // Use of this source code is governed by the MIT
 // license that can be found in the LICENSE file.
 
@@ -10,12 +10,196 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
+	"net/http"
+
+	ed "github.com/FactomProject/ed25519"
 )
 
 type Entry struct {
-	ChainID string   `json:"chainid"`
-	ExtIDs  [][]byte `json:"extids"`
-	Content []byte   `json:"content"`
+	ChainID string
+	ExtIDs  [][]byte
+	Content []byte
+}
+
+func NewEntry() *Entry {
+	e := new(Entry)
+
+	return e
+}
+
+// CommitEntry sends the signed Entry Hash and the Entry Credit public key to
+// the factom network. Once the payment is verified and the network is commited
+// to publishing the Entry it may be published with a call to RevealEntry.
+func CommitEntry(e *Entry, name string) error {
+	type walletcommit struct {
+		Message string
+	}
+
+	buf := new(bytes.Buffer)
+
+	// 1 byte version
+	buf.Write([]byte{0})
+
+	// 6 byte milliTimestamp (truncated unix time)
+	buf.Write(milliTime())
+
+	// 32 byte Entry Hash
+	buf.Write(e.Hash())
+
+	// 1 byte number of entry credits to pay
+	if c, err := entryCost(e); err != nil {
+		return err
+	} else {
+		buf.WriteByte(byte(c))
+	}
+
+	com := new(walletcommit)
+	com.Message = hex.EncodeToString(buf.Bytes())
+	j, err := json.Marshal(com)
+	if err != nil {
+		return err
+	}
+	resp, err := http.Post(
+		fmt.Sprintf("http://%s/v1/commit-entry/%s", serverFct, name),
+		"application/json",
+		bytes.NewBuffer(j))
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != 200 {
+		p, err := ioutil.ReadAll(resp.Body)
+		if err != nil {
+			return err
+		}
+		return fmt.Errorf(string(p))
+	}
+
+	return nil
+}
+
+func ComposeEntryCommit(pub *[32]byte, pri *[64]byte, e *Entry) ([]byte, error) {
+	type commit struct {
+		CommitEntryMsg string
+	}
+
+	buf := new(bytes.Buffer)
+
+	// 1 byte version
+	buf.Write([]byte{0})
+
+	// 6 byte milliTimestamp (truncated unix time)
+	buf.Write(milliTime())
+
+	// 32 byte Entry Hash
+	buf.Write(e.Hash())
+
+	// 1 byte number of entry credits to pay
+	if c, err := entryCost(e); err != nil {
+		return nil, err
+	} else {
+		buf.WriteByte(byte(c))
+	}
+
+	// sign the commit
+	sig := ed.Sign(pri, buf.Bytes())
+
+	// 32 byte Entry Credit Public Key
+	buf.Write(pub[:])
+
+	// 64 byte Signature
+	buf.Write(sig[:])
+
+	com := new(commit)
+	com.CommitEntryMsg = hex.EncodeToString(buf.Bytes())
+	j, err := json.Marshal(com)
+	if err != nil {
+		return nil, err
+	}
+
+	return j, nil
+}
+
+func ComposeEntryReveal(e *Entry) ([]byte, error) {
+	type reveal struct {
+		Entry string
+	}
+
+	r := new(reveal)
+	if p, err := e.MarshalBinary(); err != nil {
+		return nil, err
+	} else {
+		r.Entry = hex.EncodeToString(p)
+	}
+
+	j, err := json.Marshal(r)
+	if err != nil {
+		return nil, err
+	}
+
+	return j, nil
+}
+
+func RevealEntry(e *Entry) error {
+	type reveal struct {
+		Entry string
+	}
+
+	r := new(reveal)
+	if p, err := e.MarshalBinary(); err != nil {
+		return err
+	} else {
+		r.Entry = hex.EncodeToString(p)
+	}
+
+	j, err := json.Marshal(r)
+	if err != nil {
+		return err
+	}
+
+	resp, err := http.Post(
+		fmt.Sprintf("http://%s/v1/reveal-entry/", server),
+		"application/json",
+		bytes.NewBuffer(j))
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != 200 {
+		p, err := ioutil.ReadAll(resp.Body)
+		if err != nil {
+			return err
+		}
+		return fmt.Errorf(string(p))
+	}
+
+	return nil
+}
+
+func GetEntry(hash string) (*Entry, error) {
+	resp, err := http.Get(
+		fmt.Sprintf("http://%s/v1/entry-by-hash/%s", server, hash))
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+	if resp.StatusCode != 200 {
+		return nil, fmt.Errorf(string(body))
+	}
+
+	e := new(Entry)
+	if err := json.Unmarshal(body, e); err != nil {
+		return nil, err
+	}
+
+	return e, nil
 }
 
 func (e *Entry) Hash() []byte {
@@ -50,7 +234,7 @@ func (e *Entry) MarshalBinary() ([]byte, error) {
 		return buf.Bytes(), err
 	}
 
-	// Body
+	// Payload
 
 	// ExtIDs
 	buf.Write(ids)
@@ -76,9 +260,9 @@ func (e *Entry) MarshalExtIDsBinary() ([]byte, error) {
 
 func (e *Entry) MarshalJSON() ([]byte, error) {
 	type js struct {
-		ChainID string   `json:"chainid"`
-		ExtIDs  []string `json:"extids"`
-		Content string   `json:"content"`
+		ChainID string
+		ExtIDs  []string
+		Content string
 	}
 
 	j := new(js)
@@ -107,10 +291,10 @@ func (e *Entry) String() string {
 
 func (e *Entry) UnmarshalJSON(data []byte) error {
 	type js struct {
-		ChainID   string   `json:"chainid"`
-		ChainName []string `json:"chainname"`
-		ExtIDs    []string `json:"extids"`
-		Content   string   `json:"content"`
+		ChainID   string
+		ChainName []string
+		ExtIDs    []string
+		Content   string
 	}
 
 	j := new(js)
@@ -121,7 +305,7 @@ func (e *Entry) UnmarshalJSON(data []byte) error {
 	e.ChainID = j.ChainID
 
 	if e.ChainID == "" {
-		n := new(Entry)
+		n := NewEntry()
 		for _, v := range j.ChainName {
 			if p, err := hex.DecodeString(v); err != nil {
 				return fmt.Errorf("Could not decode ChainName %s: %s", v, err)
@@ -150,113 +334,29 @@ func (e *Entry) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-// ComposeEntryCommit creates a JSON2Request to commit a new Entry via the
-// factomd web api. The request includes the marshaled MessageRequest with the
-// Entry Credit Signature.
-func ComposeEntryCommit(e *Entry, ec *ECAddress) (*JSON2Request, error) {
-	buf := new(bytes.Buffer)
-
-	// 1 byte version
-	buf.Write([]byte{0})
-
-	// 6 byte milliTimestamp (truncated unix time)
-	buf.Write(milliTime())
-
-	// 32 byte Entry Hash
-	buf.Write(e.Hash())
-
-	// 1 byte number of entry credits to pay
-	if c, err := entryCost(e); err != nil {
-		return nil, err
-	} else {
-		balance, err := GetECBalance(ec.String())
-		if err != nil {
-			return nil, err
-		} else {
-			if balance < int64(c) {
-				return nil, fmt.Errorf("The EC balance available (%d) is insufficent for this Entry (%d)", balance, c)
-			} else {
-				buf.WriteByte(byte(c))
-			}
-		}
-	}
-
-	// 32 byte Entry Credit Address Public Key + 64 byte Signature
-	sig := ec.Sign(buf.Bytes())
-	buf.Write(ec.PubBytes())
-	buf.Write(sig[:])
-
-	params := entryRequest{Entry: hex.EncodeToString(buf.Bytes())}
-	req := NewJSON2Request("commit-entry", APICounter(), params)
-
-	return req, nil
-}
-
-// ComposeEntryReveal creates a JSON2Request to reveal the Entry via the factomd
-// web api.
-func ComposeEntryReveal(e *Entry) (*JSON2Request, error) {
+func entryCost(e *Entry) (int8, error) {
 	p, err := e.MarshalBinary()
 	if err != nil {
-		return nil, err
+		return 0, err
 	}
 
-	params := entryRequest{Entry: hex.EncodeToString(p)}
-	req := NewJSON2Request("reveal-entry", APICounter(), params)
+	// caulculaate the length exluding the header size 35 for Milestone 1
+	l := len(p) - 35
 
-	return req, nil
-}
-
-// CommitEntry sends the signed Entry Hash and the Entry Credit public key to
-// the factom network. Once the payment is verified and the network is commited
-// to publishing the Entry it may be published with a call to RevealEntry.
-func CommitEntry(e *Entry, ec *ECAddress) (string, error) {
-	type commitResponse struct {
-		Message string `json:"message"`
-		TxID    string `json:"txid"`
+	if l > 10240 {
+		return 10, fmt.Errorf("Entry cannot be larger than 10KB")
 	}
 
-	req, err := ComposeEntryCommit(e, ec)
-	if err != nil {
-		return "", err
+	// n is the capacity of the entry payment in KB
+	r := l % 1024
+	n := int8(l / 1024)
+
+	if r > 0 {
+		n += 1
 	}
 
-	resp, err := factomdRequest(req)
-	if err != nil {
-		return "", err
+	if n < 1 {
+		n = 1
 	}
-	if resp.Error != nil {
-		return "", resp.Error
-	}
-	r := new(commitResponse)
-	if err := json.Unmarshal(resp.JSONResult(), r); err != nil {
-		return "", err
-	}
-
-	return r.TxID, nil
-}
-
-func RevealEntry(e *Entry) (string, error) {
-	type revealResponse struct {
-		Message string `json:"message"`
-		Entry   string `json:"entryhash"`
-	}
-
-	req, err := ComposeEntryReveal(e)
-	if err != nil {
-		return "", err
-	}
-
-	resp, err := factomdRequest(req)
-	if err != nil {
-		return "", err
-	}
-	if resp.Error != nil {
-		return "", resp.Error
-	}
-
-	r := new(revealResponse)
-	if err := json.Unmarshal(resp.JSONResult(), r); err != nil {
-		return "", err
-	}
-	return r.Entry, nil
+	return n, nil
 }

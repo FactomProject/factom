@@ -1,17 +1,41 @@
-// Copyright 2016 Factom Foundation
-// Use of this source code is governed by the MIT
-// license that can be found in the LICENSE file.
-
 package factom
 
 import (
 	"encoding/hex"
+	"encoding/json"
+	"fmt"
+	"io/ioutil"
+	"net/http"
 )
 
-type RawData struct {
-	Data string `json:"data"`
+type Data struct {
+	Data string
 }
 
-func (r *RawData) GetDataBytes() ([]byte, error) {
-	return hex.DecodeString(r.Data)
+func GetRaw(keymr string) ([]byte, error) {
+	resp, err := http.Get(
+		fmt.Sprintf("http://%s/v1/get-raw-data/%s", server, keymr))
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+	if resp.StatusCode != 200 {
+		return nil, fmt.Errorf(string(body))
+	}
+
+	d := new(Data)
+	if err := json.Unmarshal(body, d); err != nil {
+		return nil, err
+	}
+
+	raw, err := hex.DecodeString(d.Data)
+	if err != nil {
+		return nil, err
+	}
+
+	return raw, nil
 }

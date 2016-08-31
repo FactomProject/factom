@@ -13,7 +13,6 @@ _obj
 _test
 bin
 pkg
-tmp
 
 # Architecture specific extensions/prefixes
 *.[568vq]
