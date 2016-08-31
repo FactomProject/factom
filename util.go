@@ -1,4 +1,4 @@
-// Copyright 2015 Factom Foundation
+// Copyright 2016 Factom Foundation
 // Use of this source code is governed by the MIT
 // license that can be found in the LICENSE file.
 
@@ -9,6 +9,7 @@ import (
 	"crypto/sha256"
 	"crypto/sha512"
 	"encoding/binary"
+	"fmt"
 	"time"
 )
 
@@ -17,23 +18,28 @@ const (
 )
 
 var (
-	server    = "localhost:8088"
-	serverFct = "localhost:8089"
+	factomdServer = "localhost:8088"
+	walletServer  = "localhost:8089"
 )
 
-// SetServer sets the gloabal target for the factomd server
-func SetServer(s string) {
-	server = s
+// SetFactomdServer sets the gloabal target for the factomd server
+func SetFactomdServer(s string) {
+	factomdServer = s
 }
 
-// SetWallet sets the global target for the fctwallet server
-func SetWallet(s string) {
-	serverFct = s
+// SetWalletServer sets the global target for the fctwallet server
+func SetWalletServer(s string) {
+	walletServer = s
 }
 
-// Server() returns the global server string for debugging
-func Server() string {
-	return server
+// FactomdServer returns the global server string for debugging
+func FactomdServer() string {
+	return factomdServer
+}
+
+// FactomdServer returns the global wallet server string for debugging
+func WalletServer() string {
+	return walletServer
 }
 
 // milliTime returns a 6 byte slice representing the unix time in milliseconds
@@ -52,9 +58,35 @@ func shad(data []byte) []byte {
 	return h2[:]
 }
 
-// sha52
+// sha52 Sha512+Sha256 Hash; sha256(sha512(data)+data)
 func sha52(data []byte) []byte {
 	h1 := sha512.Sum512(data)
 	h2 := sha256.Sum256(append(h1[:], data...))
 	return h2[:]
+}
+
+func entryCost(e *Entry) (int8, error) {
+	p, err := e.MarshalBinary()
+	if err != nil {
+		return 0, err
+	}
+
+	// caulculate the length exluding the header size 35 for Milestone 1
+	l := len(p) - 35
+
+	if l > 10240 {
+		return 10, fmt.Errorf("Entry cannot be larger than 10KB")
+	}
+
+	// n is the capacity of the entry payment in KB
+	n := int8(l / 1024)
+
+	if r := l % 1024; r > 0 {
+		n += 1
+	}
+
+	if n < 1 {
+		n = 1
+	}
+	return n, nil
 }
