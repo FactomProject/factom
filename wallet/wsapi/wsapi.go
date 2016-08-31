@@ -5,6 +5,8 @@
 package wsapi
 
 import (
+	"crypto/subtle"
+	"encoding/base64"
 	"crypto/tls"
 	"encoding/hex"
 	"encoding/json"
@@ -13,11 +15,13 @@ import (
 	"log"
 	"os"
 	"time"
+	"net/http"
 
 	"github.com/FactomProject/btcutil/certs"
 	"github.com/FactomProject/factom"
 	"github.com/FactomProject/factom/wallet"
 	"github.com/FactomProject/factomd/common/factoid"
+	"github.com/FactomProject/fastsha256"
 	"github.com/FactomProject/web"	
 )
 
@@ -26,7 +30,35 @@ const APIVersion string = "2.0"
 var (
 	webServer *web.Server
 	fctWallet *wallet.Wallet
+	RpcUser   string
+	RpcPass   string
+	Authsha   [fastsha256.Size]byte
 )
+
+func setRpcConfig(user, pass string) {
+	RpcUser = user
+	RpcPass = pass
+}
+
+// httpBasicAuth returns the UTF-8 bytes of the HTTP Basic authentication
+// string:
+//
+//   "Basic " + base64(username + ":" + password)
+func httpBasicAuth(username, password string) []byte {
+	const header = "Basic "
+	base64 := base64.StdEncoding
+
+	b64InputLen := len(username) + len(":") + len(password)
+	b64Input := make([]byte, 0, b64InputLen)
+	b64Input = append(b64Input, username...)
+	b64Input = append(b64Input, ':')
+	b64Input = append(b64Input, password...)
+
+	output := make([]byte, len(header)+base64.EncodedLen(b64InputLen))
+	copy(output, header)
+	base64.Encode(output[len(header):], b64Input)
+	return output
+}
 
 func genCertPair(certFile, keyFile string) error {
 	fmt.Println("Generating TLS certificates...")
@@ -61,9 +93,11 @@ func fileExists(name string) bool {
 	return true
 }
 
-func Start(w *wallet.Wallet, net string, c TLSConfig) {
+func Start(w *wallet.Wallet, net string, c TLSConfig, c factom.RPCConfig) {
 	webServer = web.NewServer()
 	fctWallet = w
+	setRpcConfig(c.RPCUser, c.RPCPassword)
+	Authsha = fastsha256.Sum256(httpBasicAuth(c.RPCUser, c.RPCPassword))
 
 	webServer.Post("/v2", handleV2)
 	webServer.Get("/v2", handleV2)
@@ -94,7 +128,33 @@ func Stop() {
 	webServer.Close()
 }
 
+func checkAuthHeader(r *http.Request) error {
+	authhdr := r.Header["Authorization"]
+	if len(authhdr) == 0 {
+		fmt.Println("no auth")
+		return errors.New("no auth")
+	}
+	fmt.Println(authhdr)
+	authsha := fastsha256.Sum256([]byte(authhdr[0]))
+	cmp := subtle.ConstantTimeCompare(authsha[:], Authsha[:])
+	if cmp != 1 {
+		fmt.Println("bad auth")
+		return errors.New("bad auth")
+	}
+	return nil
+}
+
+func jsonAuthFail(w http.ResponseWriter) {
+	w.Header().Add("WWW-Authenticate", `Basic realm="btcwallet RPC"`)
+	http.Error(w, "401 Unauthorized.", http.StatusUnauthorized)
+}
+
 func handleV2(ctx *web.Context) {
+	if err := checkAuthHeader(ctx.Request); err != nil {
+		fmt.Println("Unauthorized client connection attempt")
+		jsonAuthFail(ctx.ResponseWriter)
+		return
+	}
 	body, err := ioutil.ReadAll(ctx.Request.Body)
 	if err != nil {
 		handleV2Error(ctx, nil, newInvalidRequestError())

@@ -111,8 +111,14 @@ func TestTransaction(t *testing.T) {
 }
 
 func apiCall(req string) (string, error) {
+	client := &http.Client{}
 	buf := bytes.NewBuffer([]byte(req))
-	resp, err := http.Post("http://"+testnet+"/v2", "text/plain", buf)
+	re, err := http.NewRequest("POST", "http://"+testnet+"/v2", buf)
+	if err != nil {
+		return "", err
+	}
+	re.SetBasicAuth(RpcUser, RpcPass)
+	resp, err := client.Do(re)
 	if err != nil {
 		return "", err
 	}
