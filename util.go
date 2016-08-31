@@ -20,6 +20,7 @@ const (
 var (
 	factomdServer = "localhost:8088"
 	walletServer  = "localhost:8089"
+	RpcConfig     = &RPCConfig{}
 )
 
 // SetFactomdServer sets the gloabal target for the factomd server

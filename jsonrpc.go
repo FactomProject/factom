@@ -10,7 +10,18 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+
+	"github.com/FactomProject/fastsha256"
 )
+
+type RPCConfig struct {
+	TLSEnable   bool   `json:"TLS-enable"`
+	TLSKeyFile  string `json:"TLS-keyfile"`
+	TLSCertFile string `json:"TLS-certfile"`
+	RPCUser     string `json:"rpcuser"`
+	RPCPassword string `json:"rpcpasswor"`
+	Authsha     [fastsha256.Size]byte
+}
 
 func EncodeJSON(data interface{}) ([]byte, error) {
 	encoded, err := json.Marshal(data)
@@ -106,16 +117,30 @@ func (j *JSON2Response) String() string {
 	return str
 }
 
+func SetRpcConfig(user string, password string) {
+	RpcConfig.RPCUser = user
+	RpcConfig.RPCPassword = password
+}
+
+func GetRpcConfig() (string, string) {
+	return RpcConfig.RPCUser, RpcConfig.RPCPassword
+}
+
 func factomdRequest(req *JSON2Request) (*JSON2Response, error) {
 	j, err := json.Marshal(req)
 	if err != nil {
 		return nil, err
 	}
 
-	resp, err := http.Post(
-		fmt.Sprintf("http://%s/v2", factomdServer),
-		"application/json",
+	client := &http.Client{}
+	re, err := http.NewRequest("POST", fmt.Sprintf("http://%s/v2", factomdServer),
 		bytes.NewBuffer(j))
+	if err != nil {
+		return nil, err
+	}
+	user, pass := GetRpcConfig()
+	re.SetBasicAuth(user, pass)
+	resp, err := client.Do(re)
 	if err != nil {
 		return nil, err
 	}
@@ -139,10 +164,17 @@ func walletRequest(req *JSON2Request) (*JSON2Response, error) {
 		return nil, err
 	}
 
-	resp, err := http.Post(
+	client := &http.Client{}
+	re, err := http.NewRequest("POST",
 		fmt.Sprintf("http://%s/v2", walletServer),
-		"application/json",
 		bytes.NewBuffer(j))
+	if err != nil {
+		return nil, err
+	}
+	user, pass := GetRpcConfig()
+	re.SetBasicAuth(user, pass)
+	re.Header.Add("Content-Type", "application/json")
+	resp, err := client.Do(re)
 	if err != nil {
 		return nil, err
 	}
