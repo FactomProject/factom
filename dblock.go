@@ -1,96 +1,24 @@
+// Copyright 2016 Factom Foundation
+// Use of this source code is governed by the MIT
+// license that can be found in the LICENSE file.
+
 package factom
 
 import (
-	"encoding/json"
 	"fmt"
-	"io/ioutil"
-	"net/http"
 )
 
-func GetDBlockHeight() (int, error) {
-	resp, err := http.Get(
-		fmt.Sprintf("http://%s/v1/directory-block-height/", server))
-	if err != nil {
-		return 0, err
-	}
-	defer resp.Body.Close()
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return 0, err
-	}
-	if resp.StatusCode != 200 {
-		return 0, fmt.Errorf(string(body))
-	}
-	type dbh struct {
-		Height int
-	}
-	d := new(dbh)
-	if err := json.Unmarshal(body, d); err != nil {
-		return 0, fmt.Errorf("%s: %s\n", err, body)
-	}
-
-	return d.Height, nil
-}
-
 type DBlock struct {
-	DBHash string
+	DBHash string `json:"dbhash"`
 	Header struct {
-		PrevBlockKeyMR string
-		Timestamp      uint64
-		SequenceNumber int
-	}
+		PrevBlockKeyMR string `json:"prevblockkeymr"`
+		SequenceNumber int64  `json:"sequencenumber"`
+		Timestamp      int64  `json:"timestamp"`
+	} `json:"header"`
 	EntryBlockList []struct {
-		ChainID string
-		KeyMR   string
-	}
-}
-
-type DBlockHead struct {
-	KeyMR string
-}
-
-func GetDBlock(keymr string) (*DBlock, error) {
-	resp, err := http.Get(
-		fmt.Sprintf("http://%s/v1/directory-block-by-keymr/%s", server, keymr))
-	if err != nil {
-		return nil, err
-	}
-	defer resp.Body.Close()
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return nil, err
-	}
-	if resp.StatusCode != 200 {
-		return nil, fmt.Errorf(string(body))
-	}
-
-	d := new(DBlock)
-	if err := json.Unmarshal(body, d); err != nil {
-		return nil, fmt.Errorf("%s: %s\n", err, body)
-	}
-
-	return d, nil
-}
-
-func GetDBlockHead() (*DBlockHead, error) {
-	resp, err := http.Get(
-		fmt.Sprintf("http://%s/v1/directory-block-head/", server))
-	if err != nil {
-		return nil, err
-	}
-	defer resp.Body.Close()
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return nil, err
-	}
-	if resp.StatusCode != 200 {
-		return nil, fmt.Errorf(string(body))
-	}
-
-	d := new(DBlockHead)
-	json.Unmarshal(body, d)
-
-	return d, nil
+		ChainID string `json:"chainid"`
+		KeyMR   string `json:"keymr"`
+	} `json:"entryblocklist"`
 }
 
 func (d *DBlock) String() string {
@@ -105,4 +33,12 @@ func (d *DBlock) String() string {
 		s += fmt.Sprintln("}")
 	}
 	return s
+}
+
+type DBHead struct {
+	KeyMR string `json:"keymr"`
+}
+
+type DirectoryBlockHeightResponse struct {
+	Height int64 `json:"height"`
 }
