@@ -32,6 +32,14 @@ func NewChain(e *Entry) *Chain {
 	return c
 }
 
+func ChainExists(chainid string) bool {
+	if _, err := GetChainHead(chainid); err == nil {
+		// no error means we found the Chain
+		return true
+	}
+	return false
+}
+
 // ComposeChainCommit creates a JSON2Request to commit a new Chain via the
 // factomd web api. The request includes the marshaled MessageRequest with the
 // Entry Credit Signature.
