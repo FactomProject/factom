@@ -12,6 +12,7 @@ import (
 	"github.com/FactomProject/factomd/database/databaseOverlay"
 	"github.com/FactomProject/factomd/database/hybridDB"
 	"github.com/FactomProject/factomd/database/mapdb"
+	"os"
 )
 
 // Database keys and key prefixes
@@ -55,6 +56,17 @@ func NewLevelDB(ldbpath string) (*WalletDatabaseOverlay, error) {
 }
 
 func NewBoltDB(boltPath string) (*WalletDatabaseOverlay, error) {
+	fileInfo, err := os.Stat(boltPath)
+	if err == nil {  //if it exists
+		if fileInfo.IsDir() {	//if it is a folder though
+			return nil, fmt.Errorf("The path %s is a directory.  Please specify a file name.", boltPath)
+		}
+	}
+	if err != nil && !os.IsNotExist(err) {  //some other error, besides the file not existing
+		fmt.Printf("database error %s\n", err)
+		return nil, err
+	}
+
 	db := hybridDB.NewBoltMapHybridDB(nil, boltPath)
 
 	fmt.Println("Database started from: " + boltPath)
