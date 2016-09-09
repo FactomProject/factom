@@ -16,6 +16,7 @@ import (
 	"os"
 	"time"
 	"net/http"
+	"errors"
 
 	"github.com/FactomProject/btcutil/certs"
 	"github.com/FactomProject/factom"
@@ -93,7 +94,7 @@ func fileExists(name string) bool {
 	return true
 }
 
-func Start(w *wallet.Wallet, net string, c TLSConfig, c factom.RPCConfig) {
+func Start(w *wallet.Wallet, net string, c factom.RPCConfig) {
 	webServer = web.NewServer()
 	fctWallet = w
 	setRpcConfig(c.RPCUser, c.RPCPassword)
