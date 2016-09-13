@@ -5,6 +5,7 @@
 package wsapi
 
 import (
+	"crypto/sha256"
 	"crypto/subtle"
 	"crypto/tls"
 	"encoding/base64"
@@ -17,7 +18,6 @@ import (
 	"net/http"
 	"os"
 	"time"
-	"crypto/sha256"
 
 	"github.com/FactomProject/btcutil/certs"
 	"github.com/FactomProject/factom"
@@ -92,10 +92,10 @@ func fileExists(name string) bool {
 func Start(w *wallet.Wallet, net string, c factom.RPCConfig) {
 	webServer = web.NewServer()
 	fctWallet = w
-	
+
 	RpcUser = c.RPCUser
 	RpcPass = c.RPCPassword
-	
+
 	h := sha256.New()
 	h.Write(httpBasicAuth(RpcUser, RpcPass))
 	Authsha = h.Sum(nil) //set this in the beginning to prevent timing attacks
@@ -140,7 +140,7 @@ func checkAuthHeader(r *http.Request) error {
 		return errors.New("no auth")
 	}
 	fmt.Println(authhdr)
-	
+
 	h := sha256.New()
 	h.Write([]byte(authhdr[0]))
 	presentedPassHash := h.Sum(nil)
