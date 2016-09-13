@@ -6,24 +6,24 @@ package wsapi
 
 import (
 	"crypto/subtle"
-	"encoding/base64"
 	"crypto/tls"
+	"encoding/base64"
 	"encoding/hex"
 	"encoding/json"
-	"io/ioutil"
+	"errors"
 	"fmt"
+	"io/ioutil"
 	"log"
+	"net/http"
 	"os"
 	"time"
-	"net/http"
-	"errors"
 
 	"github.com/FactomProject/btcutil/certs"
 	"github.com/FactomProject/factom"
 	"github.com/FactomProject/factom/wallet"
 	"github.com/FactomProject/factomd/common/factoid"
 	"github.com/FactomProject/fastsha256"
-	"github.com/FactomProject/web"	
+	"github.com/FactomProject/web"
 )
 
 const APIVersion string = "2.0"
@@ -407,9 +407,9 @@ func handleAllTransactions(params []byte) (interface{}, *factom.JSONError) {
 			return nil, newInvalidParamsError()
 		}
 	}
-	
+
 	resp := new(transactionList)
-	
+
 	switch {
 	case req == nil:
 		txs, err := fctWallet.TXDB().GetAllTXs()
@@ -470,7 +470,7 @@ func handleAllTransactions(params []byte) (interface{}, *factom.JSONError) {
 			resp.Transactions = append(resp.Transactions, p)
 		}
 	}
-	
+
 	return resp, nil
 }
 
@@ -539,7 +539,7 @@ func handleTmpTransactions(params []byte) (interface{}, *factom.JSONError) {
 		if i, err := tx.CalculateFee(rate); err != nil {
 			return nil, newCustomInternalError(err.Error())
 		} else {
-			r.FeesRequired = i 
+			r.FeesRequired = i
 		}
 		if t, err := tx.MarshalBinary(); err != nil {
 			return nil, newCustomInternalError(err.Error())

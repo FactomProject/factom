@@ -51,16 +51,16 @@ func NewTXLevelDB(ldbpath string) (*TXDatabaseOverlay, error) {
 
 func NewTXBoltDB(boltPath string) (*TXDatabaseOverlay, error) {
 	fileInfo, err := os.Stat(boltPath)
-	if err == nil {  //if it exists
-		if fileInfo.IsDir() {	//if it is a folder though
+	if err == nil { //if it exists
+		if fileInfo.IsDir() { //if it is a folder though
 			return nil, fmt.Errorf("The path %s is a directory.  Please specify a file name.", boltPath)
 		}
 	}
-	if err != nil && !os.IsNotExist(err) {  //some other error, besides the file not existing
+	if err != nil && !os.IsNotExist(err) { //some other error, besides the file not existing
 		fmt.Printf("database error %s\n", err)
 		return nil, err
 	}
-	
+
 	db := hybridDB.NewBoltMapHybridDB(nil, boltPath)
 
 	fmt.Println("Database started from: " + boltPath)
@@ -142,7 +142,7 @@ func (db *TXDatabaseOverlay) GetTX(txid string) (
 func (db *TXDatabaseOverlay) GetTXAddress(adr string) (
 	[]interfaces.ITransaction, error) {
 	filtered := make([]interfaces.ITransaction, 0)
-	
+
 	txs, err := db.GetAllTXs()
 	if err != nil {
 		return nil, err
@@ -248,7 +248,7 @@ func (db *TXDatabaseOverlay) update() (string, error) {
 				return "", err
 			}
 		}
-		
+
 		prevmr = fblock.GetPrevKeyMR().String()
 	}
 

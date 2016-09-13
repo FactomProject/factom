@@ -17,7 +17,7 @@ import (
 type Wallet struct {
 	*WalletDatabaseOverlay
 	transactions map[string]*factoid.Transaction
-	txdb *TXDatabaseOverlay
+	txdb         *TXDatabaseOverlay
 }
 
 func (w *Wallet) InitWallet() error {
