@@ -17,12 +17,12 @@ import (
 	"net/http"
 	"os"
 	"time"
+	"crypto/sha256"
 
 	"github.com/FactomProject/btcutil/certs"
 	"github.com/FactomProject/factom"
 	"github.com/FactomProject/factom/wallet"
 	"github.com/FactomProject/factomd/common/factoid"
-	"github.com/FactomProject/fastsha256"
 	"github.com/FactomProject/web"
 )
 
@@ -33,13 +33,8 @@ var (
 	fctWallet *wallet.Wallet
 	RpcUser   string
 	RpcPass   string
-	Authsha   [fastsha256.Size]byte
+	Authsha   []byte
 )
-
-func setRpcConfig(user, pass string) {
-	RpcUser = user
-	RpcPass = pass
-}
 
 // httpBasicAuth returns the UTF-8 bytes of the HTTP Basic authentication
 // string:
@@ -97,8 +92,13 @@ func fileExists(name string) bool {
 func Start(w *wallet.Wallet, net string, c factom.RPCConfig) {
 	webServer = web.NewServer()
 	fctWallet = w
-	setRpcConfig(c.RPCUser, c.RPCPassword)
-	Authsha = fastsha256.Sum256(httpBasicAuth(c.RPCUser, c.RPCPassword))
+	
+	RpcUser = c.RPCUser
+	RpcPass = c.RPCPassword
+	
+	h := sha256.New()
+	h.Write(httpBasicAuth(RpcUser, RpcPass))
+	Authsha = h.Sum(nil) //set this in the beginning to prevent timing attacks
 
 	webServer.Post("/v2", handleV2)
 	webServer.Get("/v2", handleV2)
@@ -130,23 +130,30 @@ func Stop() {
 }
 
 func checkAuthHeader(r *http.Request) error {
+	if "" == RpcUser {
+		//no username was specified in the config file or command line, meaning factomd API is open access
+		return nil
+	}
 	authhdr := r.Header["Authorization"]
 	if len(authhdr) == 0 {
-		fmt.Println("no auth")
+		fmt.Println("Username and Password expected, but none were received")
 		return errors.New("no auth")
 	}
 	fmt.Println(authhdr)
-	authsha := fastsha256.Sum256([]byte(authhdr[0]))
-	cmp := subtle.ConstantTimeCompare(authsha[:], Authsha[:])
+	
+	h := sha256.New()
+	h.Write([]byte(authhdr[0]))
+	presentedPassHash := h.Sum(nil)
+	cmp := subtle.ConstantTimeCompare(presentedPassHash, Authsha) //compare hashes because ConstantTimeCompare takes a constant time based on the slice size.  hashing gives a constant slice size.
 	if cmp != 1 {
-		fmt.Println("bad auth")
+		fmt.Println("Incorrect Username and Password were received")
 		return errors.New("bad auth")
 	}
 	return nil
 }
 
 func jsonAuthFail(w http.ResponseWriter) {
-	w.Header().Add("WWW-Authenticate", `Basic realm="btcwallet RPC"`)
+	w.Header().Add("WWW-Authenticate", `Basic realm="factom-walletd RPC"`)
 	http.Error(w, "401 Unauthorized.", http.StatusUnauthorized)
 }
 

@@ -10,8 +10,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
-
-	"github.com/FactomProject/fastsha256"
 )
 
 type RPCConfig struct {
@@ -19,8 +17,8 @@ type RPCConfig struct {
 	TLSKeyFile  string `json:"TLS-keyfile"`
 	TLSCertFile string `json:"TLS-certfile"`
 	RPCUser     string `json:"rpcuser"`
-	RPCPassword string `json:"rpcpasswor"`
-	Authsha     [fastsha256.Size]byte
+	RPCPassword string `json:"rpcpassword"`
+	Authsha     []byte
 }
 
 func EncodeJSON(data interface{}) ([]byte, error) {
