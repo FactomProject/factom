@@ -13,12 +13,14 @@ import (
 )
 
 type RPCConfig struct {
-	TLSEnable   bool   `json:"TLS-enable"`
-	TLSKeyFile  string `json:"TLS-keyfile"`
-	TLSCertFile string `json:"TLS-certfile"`
-	RPCUser     string `json:"rpcuser"`
-	RPCPassword string `json:"rpcpassword"`
-	Authsha     []byte
+	TLSEnable          bool   `json:"TLS-enable"`
+	TLSKeyFile         string `json:"TLS-keyfile"`
+	TLSCertFile        string `json:"TLS-certfile"`
+	WalletRPCUser      string `json:"walletrpcuser"`
+	WalletRPCPassword  string `json:"walletrpcpassword"`
+	FactomdRPCUser     string `json:"factomdrpcuser"`
+	FactomdRPCPassword string `json:"factomdrpcpassword"`
+	//Authsha     []byte
 }
 
 func EncodeJSON(data interface{}) ([]byte, error) {
@@ -115,13 +117,22 @@ func (j *JSON2Response) String() string {
 	return str
 }
 
-func SetRpcConfig(user string, password string) {
-	RpcConfig.RPCUser = user
-	RpcConfig.RPCPassword = password
+func SetFactomdRpcConfig(user string, password string) {
+	RpcConfig.FactomdRPCUser = user
+	RpcConfig.FactomdRPCPassword = password
 }
 
-func GetRpcConfig() (string, string) {
-	return RpcConfig.RPCUser, RpcConfig.RPCPassword
+func GetFactomdRpcConfig() (string, string) {
+	return RpcConfig.FactomdRPCUser, RpcConfig.FactomdRPCPassword
+}
+
+func SetWalletRpcConfig(user string, password string) {
+	RpcConfig.WalletRPCUser = user
+	RpcConfig.WalletRPCPassword = password
+}
+
+func GetWalletRpcConfig() (string, string) {
+	return RpcConfig.WalletRPCUser, RpcConfig.WalletRPCPassword
 }
 
 func factomdRequest(req *JSON2Request) (*JSON2Response, error) {
@@ -136,7 +147,7 @@ func factomdRequest(req *JSON2Request) (*JSON2Response, error) {
 	if err != nil {
 		return nil, err
 	}
-	user, pass := GetRpcConfig()
+	user, pass := GetFactomdRpcConfig()
 	re.SetBasicAuth(user, pass)
 	resp, err := client.Do(re)
 	if err != nil {
@@ -169,7 +180,7 @@ func walletRequest(req *JSON2Request) (*JSON2Response, error) {
 	if err != nil {
 		return nil, err
 	}
-	user, pass := GetRpcConfig()
+	user, pass := GetWalletRpcConfig()
 	re.SetBasicAuth(user, pass)
 	re.Header.Add("Content-Type", "application/json")
 	resp, err := client.Do(re)

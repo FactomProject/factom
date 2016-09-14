@@ -31,9 +31,9 @@ const APIVersion string = "2.0"
 var (
 	webServer *web.Server
 	fctWallet *wallet.Wallet
-	RpcUser   string
-	RpcPass   string
-	Authsha   []byte
+	rpcUser   string
+	rpcPass   string
+	authsha   []byte
 )
 
 // httpBasicAuth returns the UTF-8 bytes of the HTTP Basic authentication
@@ -93,12 +93,12 @@ func Start(w *wallet.Wallet, net string, c factom.RPCConfig) {
 	webServer = web.NewServer()
 	fctWallet = w
 
-	RpcUser = c.RPCUser
-	RpcPass = c.RPCPassword
+	rpcUser = c.WalletRPCUser
+	rpcPass = c.WalletRPCPassword
 
 	h := sha256.New()
-	h.Write(httpBasicAuth(RpcUser, RpcPass))
-	Authsha = h.Sum(nil) //set this in the beginning to prevent timing attacks
+	h.Write(httpBasicAuth(rpcUser, rpcPass))
+	authsha = h.Sum(nil) //set this in the beginning to prevent timing attacks
 
 	webServer.Post("/v2", handleV2)
 	webServer.Get("/v2", handleV2)
@@ -130,7 +130,7 @@ func Stop() {
 }
 
 func checkAuthHeader(r *http.Request) error {
-	if "" == RpcUser {
+	if "" == rpcUser {
 		//no username was specified in the config file or command line, meaning factomd API is open access
 		return nil
 	}
@@ -144,7 +144,7 @@ func checkAuthHeader(r *http.Request) error {
 	h := sha256.New()
 	h.Write([]byte(authhdr[0]))
 	presentedPassHash := h.Sum(nil)
-	cmp := subtle.ConstantTimeCompare(presentedPassHash, Authsha) //compare hashes because ConstantTimeCompare takes a constant time based on the slice size.  hashing gives a constant slice size.
+	cmp := subtle.ConstantTimeCompare(presentedPassHash, authsha) //compare hashes because ConstantTimeCompare takes a constant time based on the slice size.  hashing gives a constant slice size.
 	if cmp != 1 {
 		fmt.Println("Incorrect Username and Password were received")
 		return errors.New("bad auth")
