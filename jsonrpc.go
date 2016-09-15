@@ -80,6 +80,15 @@ func ParseJSON2Request(request string) (*JSON2Request, error) {
 	return j, nil
 }
 
+func (j *JSON2Request) JSONString() (string, error) {
+	return EncodeJSONString(j)
+}
+
+func (j *JSON2Request) String() string {
+	str, _ := j.JSONString()
+	return str
+}
+
 type JSON2Response struct {
 	JSONRPC string          `json:"jsonrpc"`
 	ID      interface{}     `json:"id"`
