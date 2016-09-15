@@ -17,6 +17,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/FactomProject/btcutil/certs"
@@ -146,21 +147,19 @@ func checkAuthHeader(r *http.Request) error {
 	presentedPassHash := h.Sum(nil)
 	cmp := subtle.ConstantTimeCompare(presentedPassHash, authsha) //compare hashes because ConstantTimeCompare takes a constant time based on the slice size.  hashing gives a constant slice size.
 	if cmp != 1 {
-		fmt.Println("Incorrect Username and Password were received")
+		fmt.Println("Incorrect Username and/or Password were received")
 		return errors.New("bad auth")
 	}
 	return nil
 }
 
-func jsonAuthFail(w http.ResponseWriter) {
-	w.Header().Add("WWW-Authenticate", `Basic realm="factom-walletd RPC"`)
-	http.Error(w, "401 Unauthorized.", http.StatusUnauthorized)
-}
-
 func handleV2(ctx *web.Context) {
 	if err := checkAuthHeader(ctx.Request); err != nil {
-		fmt.Println("Unauthorized client connection attempt")
-		jsonAuthFail(ctx.ResponseWriter)
+		remoteIP := ""
+		remoteIP += strings.Split(ctx.Request.RemoteAddr, ":")[0]
+		fmt.Printf("Unauthorized API client connection attempt from %s\n", remoteIP)
+		ctx.ResponseWriter.Header().Add("WWW-Authenticate", `Basic realm="factomd RPC"`)
+		http.Error(ctx.ResponseWriter, "401 Unauthorized.", http.StatusUnauthorized)
 		return
 	}
 	body, err := ioutil.ReadAll(ctx.Request.Body)
