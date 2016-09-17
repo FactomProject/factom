@@ -716,7 +716,8 @@ func handleComposeTransaction(params []byte) (interface{}, *factom.JSONError) {
 
 func handleProperties(params []byte) (interface{}, *factom.JSONError) {
 	props := new(propertiesResponse)
-	props.WalletVersion = fctWallet.GetProperties()
+	props.WalletVersion = fctWallet.GetVersion()
+	props.WalletApiVersion = fctWallet.GetApiVersion()
 	return props, nil
 }
 

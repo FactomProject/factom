@@ -288,40 +288,42 @@ func GetFirstEntry(chainid string) (*Entry, error) {
 	return GetEntry(eb.EntryList[0].EntryHash)
 }
 
-func GetProperties() (string, string, string, error) {
+func GetProperties() (string, string, string, string, string, string, string, string) {
 	type propertiesResponse struct {
-		FactomdVersion string `json:"factomdversion"`
-		APIVersion     string `json:"apiversion"`
-		WalletVersion  string `json:"walletversion"`
-	}
-
-	req := NewJSON2Request("properties", APICounter(), nil)
-	resp, err := factomdRequest(req)
-	if err != nil {
-		return "", "", "", err
-	}
-	if resp.Error != nil {
-		return "", "", "", resp.Error
+		FactomdVersion       string `json:"factomdversion"`
+		FactomdVersionErr    string `json:"factomdversionerr"`
+		FactomdAPIVersion    string `json:"factomdapiversion"`
+		FactomdAPIVersionErr string `json:"factomdapiversionerr"`
+		WalletVersion        string `json:"walletversion"`
+		WalletVersionErr     string `json:"walletversionerr"`
+		WalletAPIVersion     string `json:"walletapiversion"`
+		WalletAPIVersionErr  string `json:"walletapiversionerr"`
 	}
 
 	props := new(propertiesResponse)
-	if err := json.Unmarshal(resp.JSONResult(), props); err != nil {
-		return "", "", "", err
-	}
-
-	wresp, err := walletRequest(req)
-	if err != nil {
-		return props.FactomdVersion, props.APIVersion, props.WalletVersion, err
-	}
-	if wresp.Error != nil {
-		return props.FactomdVersion, props.APIVersion, props.WalletVersion,
-			wresp.Error
-	}
-
 	wprops := new(propertiesResponse)
-	if err := json.Unmarshal(wresp.JSONResult(), wprops); err != nil {
-		return "", "", "", err
+	req := NewJSON2Request("properties", APICounter(), nil)
+	wreq := NewJSON2Request("properties", APICounter(), nil)
+
+	resp, err := factomdRequest(req)
+	if err != nil {
+		props.FactomdVersionErr = err.Error()
+	} else if resp.Error != nil {
+		props.FactomdVersionErr = resp.Error.Error()
+	} else if jerr := json.Unmarshal(resp.JSONResult(), props); jerr != nil {
+		props.FactomdVersionErr = jerr.Error()
 	}
 
-	return props.FactomdVersion, props.APIVersion, wprops.WalletVersion, nil
+	wresp, werr := walletRequest(wreq)
+
+	if werr != nil {
+		wprops.WalletVersionErr = werr.Error()
+	} else if wresp.Error != nil {
+		wprops.WalletVersionErr = wresp.Error.Error()
+	} else if jwerr := json.Unmarshal(wresp.JSONResult(), wprops); jwerr != nil {
+		wprops.WalletVersionErr = jwerr.Error()
+	}
+
+	return props.FactomdVersion, props.FactomdVersionErr, props.FactomdAPIVersion, props.FactomdAPIVersionErr, wprops.WalletVersion, wprops.WalletVersionErr, wprops.WalletAPIVersion, wprops.WalletAPIVersionErr
+
 }

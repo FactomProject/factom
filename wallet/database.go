@@ -191,6 +191,10 @@ func (w *Wallet) GetSeed() (string, error) {
 	return SeedString(seed), nil
 }
 
-func (w *Wallet) GetProperties() string {
+func (w *Wallet) GetVersion() string {
 	return Version
+}
+
+func (w *Wallet) GetApiVersion() string {
+	return ApiVersion
 }

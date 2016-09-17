@@ -81,5 +81,6 @@ type multiTransactionResponse struct {
 }
 
 type propertiesResponse struct {
-	WalletVersion string `json:"walletversion"`
+	WalletVersion    string `json:"walletversion"`
+	WalletApiVersion string `json:"walletapiversion"`
 }
