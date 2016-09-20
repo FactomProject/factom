@@ -5,9 +5,9 @@
 package wsapi
 
 type TLSConfig struct {
-	TLSEnable   bool   `json:"TLS-enable"`
-	TLSKeyFile  string `json:"TLS-keyfile"`
-	TLSCertFile string `json:"TLS-certfile"`
+	TLSEnable   bool
+	TLSKeyFile  string
+	TLSCertFile string
 }
 
 // requests

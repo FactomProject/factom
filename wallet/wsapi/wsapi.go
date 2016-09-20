@@ -104,16 +104,16 @@ func Start(w *wallet.Wallet, net string, c factom.RPCConfig) {
 	webServer.Post("/v2", handleV2)
 	webServer.Get("/v2", handleV2)
 
-	if c.TLSEnable == false {
+	if c.WalletTLSEnable == false {
 		webServer.Run(net)
 	} else {
-		if !fileExists(c.TLSKeyFile) && !fileExists(c.TLSCertFile) {
-			err := genCertPair(c.TLSCertFile, c.TLSKeyFile)
+		if !fileExists(c.WalletTLSKeyFile) && !fileExists(c.WalletTLSCertFile) {
+			err := genCertPair(c.WalletTLSCertFile, c.WalletTLSKeyFile)
 			if err != nil {
 				log.Fatal(err)
 			}
 		}
-		keypair, err := tls.LoadX509KeyPair(c.TLSCertFile, c.TLSKeyFile)
+		keypair, err := tls.LoadX509KeyPair(c.WalletTLSCertFile, c.WalletTLSKeyFile)
 		if err != nil {
 			log.Fatal(err)
 		}

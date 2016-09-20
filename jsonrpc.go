@@ -13,14 +13,13 @@ import (
 )
 
 type RPCConfig struct {
-	TLSEnable          bool   `json:"TLS-enable"`
-	TLSKeyFile         string `json:"TLS-keyfile"`
-	TLSCertFile        string `json:"TLS-certfile"`
-	WalletRPCUser      string `json:"walletrpcuser"`
-	WalletRPCPassword  string `json:"walletrpcpassword"`
-	FactomdRPCUser     string `json:"factomdrpcuser"`
-	FactomdRPCPassword string `json:"factomdrpcpassword"`
-	//Authsha     []byte
+	WalletTLSEnable    bool
+	WalletTLSKeyFile   string
+	WalletTLSCertFile  string
+	WalletRPCUser      string
+	WalletRPCPassword  string
+	FactomdRPCUser     string
+	FactomdRPCPassword string
 }
 
 func EncodeJSON(data interface{}) ([]byte, error) {
