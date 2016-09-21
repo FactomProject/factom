@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"strings"
 )
 
 type RPCConfig struct {
@@ -187,6 +188,11 @@ func walletRequest(req *JSON2Request) (*JSON2Response, error) {
 	re.Header.Add("Content-Type", "application/json")
 	resp, err := client.Do(re)
 	if err != nil {
+		errs := fmt.Sprintf("%s", err)
+		if strings.Contains(errs, "\\x15\\x03\\x01\\x00\\x02\\x02\\x16") {
+			err = fmt.Errorf("Factom-walletd connection is encrypted.  Please specify a keyfile. %v", err.Error())
+
+		}
 		return nil, err
 	}
 	defer resp.Body.Close()
