@@ -24,7 +24,7 @@ type RPCConfig struct {
 	FactomdRPCUser     string
 	FactomdRPCPassword string
 	factomdServer      string
-	walletServer       string
+	WalletServer       string
 }
 
 func EncodeJSON(data interface{}) ([]byte, error) {
@@ -155,7 +155,7 @@ func SetFactomdServer(s string) {
 
 // SetWalletServer sets where to find the fctwallet server, and tells the server its public ip
 func SetWalletServer(s string) {
-	RpcConfig.walletServer = s
+	RpcConfig.WalletServer = s
 }
 
 // FactomdServer returns where to find the factomd server, and tells the server its public ip
@@ -165,7 +165,7 @@ func FactomdServer() string {
 
 // FactomdServer returns where to find the fctwallet server, and tells the server its public ip
 func WalletServer() string {
-	return RpcConfig.walletServer
+	return RpcConfig.WalletServer
 }
 
 func factomdRequest(req *JSON2Request) (*JSON2Response, error) {
@@ -232,7 +232,7 @@ func walletRequest(req *JSON2Request) (*JSON2Response, error) {
 	}
 
 	re, err := http.NewRequest("POST",
-		fmt.Sprintf("%s://%s/v2", httpx, RpcConfig.walletServer),
+		fmt.Sprintf("%s://%s/v2", httpx, RpcConfig.WalletServer),
 		bytes.NewBuffer(j))
 	if err != nil {
 		return nil, err
