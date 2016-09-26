@@ -18,30 +18,8 @@ const (
 )
 
 var (
-	factomdServer = "localhost:8088"
-	walletServer  = "localhost:8089"
-	RpcConfig     = &RPCConfig{}
+	RpcConfig = &RPCConfig{}
 )
-
-// SetFactomdServer sets the gloabal target for the factomd server
-func SetFactomdServer(s string) {
-	factomdServer = s
-}
-
-// SetWalletServer sets the global target for the fctwallet server
-func SetWalletServer(s string) {
-	walletServer = s
-}
-
-// FactomdServer returns the global server string for debugging
-func FactomdServer() string {
-	return factomdServer
-}
-
-// FactomdServer returns the global wallet server string for debugging
-func WalletServer() string {
-	return walletServer
-}
 
 // milliTime returns a 6 byte slice representing the unix time in milliseconds
 func milliTime() (r []byte) {

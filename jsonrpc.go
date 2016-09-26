@@ -6,6 +6,8 @@ package factom
 
 import (
 	"bytes"
+	"crypto/tls"
+	"crypto/x509"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -21,6 +23,8 @@ type RPCConfig struct {
 	WalletRPCPassword  string
 	FactomdRPCUser     string
 	FactomdRPCPassword string
+	factomdServer      string
+	walletServer       string
 }
 
 func EncodeJSON(data interface{}) ([]byte, error) {
@@ -131,8 +135,37 @@ func SetWalletRpcConfig(user string, password string) {
 	RpcConfig.WalletRPCPassword = password
 }
 
+func SetWalletEncryption(tls bool, certFile string) {
+	RpcConfig.WalletTLSEnable = tls
+	RpcConfig.WalletTLSCertFile = certFile
+}
+
+func GetWalletEncryption() (bool, string) {
+	return RpcConfig.WalletTLSEnable, RpcConfig.WalletTLSCertFile
+}
+
 func GetWalletRpcConfig() (string, string) {
 	return RpcConfig.WalletRPCUser, RpcConfig.WalletRPCPassword
+}
+
+// SetFactomdServer sets where to find the factomd server, and tells the server its public ip
+func SetFactomdServer(s string) {
+	RpcConfig.factomdServer = s
+}
+
+// SetWalletServer sets where to find the fctwallet server, and tells the server its public ip
+func SetWalletServer(s string) {
+	RpcConfig.walletServer = s
+}
+
+// FactomdServer returns where to find the factomd server, and tells the server its public ip
+func FactomdServer() string {
+	return RpcConfig.factomdServer
+}
+
+// FactomdServer returns where to find the fctwallet server, and tells the server its public ip
+func WalletServer() string {
+	return RpcConfig.walletServer
 }
 
 func factomdRequest(req *JSON2Request) (*JSON2Response, error) {
@@ -142,7 +175,7 @@ func factomdRequest(req *JSON2Request) (*JSON2Response, error) {
 	}
 
 	client := &http.Client{}
-	re, err := http.NewRequest("POST", fmt.Sprintf("http://%s/v2", factomdServer),
+	re, err := http.NewRequest("POST", fmt.Sprintf("http://%s/v2", RpcConfig.factomdServer),
 		bytes.NewBuffer(j))
 	if err != nil {
 		return nil, err
@@ -176,9 +209,30 @@ func walletRequest(req *JSON2Request) (*JSON2Response, error) {
 		return nil, err
 	}
 
-	client := &http.Client{}
+	walletTls, walletCertPath := GetWalletEncryption()
+
+	var client *http.Client
+	var httpx string
+
+	if walletTls == true {
+		caCert, err := ioutil.ReadFile(walletCertPath)
+		if err != nil {
+			return nil, err
+		}
+		caCertPool := x509.NewCertPool()
+		caCertPool.AppendCertsFromPEM(caCert)
+		tr := &http.Transport{TLSClientConfig: &tls.Config{RootCAs: caCertPool}}
+
+		client = &http.Client{Transport: tr}
+		httpx = "https"
+
+	} else {
+		client = &http.Client{}
+		httpx = "http"
+	}
+
 	re, err := http.NewRequest("POST",
-		fmt.Sprintf("http://%s/v2", walletServer),
+		fmt.Sprintf("%s://%s/v2", httpx, RpcConfig.walletServer),
 		bytes.NewBuffer(j))
 	if err != nil {
 		return nil, err
@@ -190,8 +244,7 @@ func walletRequest(req *JSON2Request) (*JSON2Response, error) {
 	if err != nil {
 		errs := fmt.Sprintf("%s", err)
 		if strings.Contains(errs, "\\x15\\x03\\x01\\x00\\x02\\x02\\x16") {
-			err = fmt.Errorf("Factom-walletd connection is encrypted.  Please specify a keyfile. %v", err.Error())
-
+			err = fmt.Errorf("Factom-walletd API connection is encrypted. Please specify wallettls=true and a walletcert=file.cert (%v)", err.Error())
 		}
 		return nil, err
 	}
