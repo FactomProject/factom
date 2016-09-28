@@ -118,7 +118,7 @@ func (a *ECAddress) UnmarshalBinaryData(data []byte) ([]byte, error) {
 		a.Sec = new([ed.PrivateKeySize]byte)
 	}
 
-	copy(t.Sec[:], data[:32])
+	copy(a.Sec[:], data[:32])
 	a.Pub = ed.GetPublicKey(a.Sec)
 
 	return data[32:], nil
