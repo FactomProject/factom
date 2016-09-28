@@ -14,6 +14,7 @@ import (
 )
 
 const (
+	// ZeroHash is the string of all 00s
 	ZeroHash = "0000000000000000000000000000000000000000000000000000000000000000"
 )
 
@@ -37,9 +38,36 @@ func FactomdServer() string {
 	return factomdServer
 }
 
-// FactomdServer returns the global wallet server string for debugging
+// WalletServer returns the global wallet server string for debugging
 func WalletServer() string {
 	return walletServer
+}
+
+// entryCost calculates the cost of adding the Entry to factom
+func entryCost(e *Entry) (int8, error) {
+	p, err := e.MarshalBinary()
+	if err != nil {
+		return 0, err
+	}
+
+	// caulculate the length exluding the header size 35 for Milestone 1
+	l := len(p) - 35
+
+	if l > 10240 {
+		return 10, fmt.Errorf("Entry cannot be larger than 10KB")
+	}
+
+	// n is the capacity of the entry payment in KB
+	n := int8(l / 1024)
+
+	if r := l % 1024; r > 0 {
+		n++
+	}
+
+	if n < 1 {
+		n = 1
+	}
+	return n, nil
 }
 
 // milliTime returns a 6 byte slice representing the unix time in milliseconds
@@ -63,30 +91,4 @@ func sha52(data []byte) []byte {
 	h1 := sha512.Sum512(data)
 	h2 := sha256.Sum256(append(h1[:], data...))
 	return h2[:]
-}
-
-func entryCost(e *Entry) (int8, error) {
-	p, err := e.MarshalBinary()
-	if err != nil {
-		return 0, err
-	}
-
-	// caulculate the length exluding the header size 35 for Milestone 1
-	l := len(p) - 35
-
-	if l > 10240 {
-		return 10, fmt.Errorf("Entry cannot be larger than 10KB")
-	}
-
-	// n is the capacity of the entry payment in KB
-	n := int8(l / 1024)
-
-	if r := l % 1024; r > 0 {
-		n += 1
-	}
-
-	if n < 1 {
-		n = 1
-	}
-	return n, nil
 }
