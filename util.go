@@ -22,9 +22,6 @@ var (
 	RpcConfig = &RPCConfig{}
 )
 
-
-}
-
 func entryCost(e *Entry) (int8, error) {
 	p, err := e.MarshalBinary()
 	if err != nil {
