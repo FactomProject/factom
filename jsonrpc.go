@@ -240,7 +240,7 @@ func factomdRequest(req *JSON2Request) (*JSON2Response, error) {
 		return nil, err
 	}
 	if resp.StatusCode == http.StatusUnauthorized {
-		return nil, fmt.Errorf("Factomd password protected.  Edit factomd.conf or\ncall factom-cli with -factomduser=<user> -factomdpassword=<pass>")
+		return nil, fmt.Errorf("Factomd username/password incorrect.  Edit factomd.conf or\ncall factom-cli with -factomduser=<user> -factomdpassword=<pass>")
 	}
 	r := NewJSON2Response()
 	if err := json.Unmarshal(body, r); err != nil {
@@ -303,7 +303,7 @@ func walletRequest(req *JSON2Request) (*JSON2Response, error) {
 		return nil, err
 	}
 	if resp.StatusCode == http.StatusUnauthorized {
-		return nil, fmt.Errorf("Wallet password protected.  Edit factomd.conf or\ncall factom-cli with -walletuser=<user> -walletpassword=<pass>")
+		return nil, fmt.Errorf("Wallet username/password incorrect.  Edit factomd.conf or\ncall factom-cli with -walletuser=<user> -walletpassword=<pass>")
 	}
 	r := NewJSON2Response()
 	if err := json.Unmarshal(body, r); err != nil {
