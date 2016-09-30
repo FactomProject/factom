@@ -104,28 +104,28 @@ func NewECAddress() *ECAddress {
 	return a
 }
 
-func (t *ECAddress) UnmarshalBinary(data []byte) error {
-	_, err := t.UnmarshalBinaryData(data)
+func (a *ECAddress) UnmarshalBinary(data []byte) error {
+	_, err := a.UnmarshalBinaryData(data)
 	return err
 }
 
-func (t *ECAddress) UnmarshalBinaryData(data []byte) ([]byte, error) {
+func (a *ECAddress) UnmarshalBinaryData(data []byte) ([]byte, error) {
 	if len(data) < 32 {
 		return nil, fmt.Errorf("secret key portion must be 32 bytes")
 	}
 
-	if t.Sec == nil {
-		t.Sec = new([ed.PrivateKeySize]byte)
+	if a.Sec == nil {
+		a.Sec = new([ed.PrivateKeySize]byte)
 	}
 
-	copy(t.Sec[:], data[:32])
-	t.Pub = ed.GetPublicKey(t.Sec)
+	copy(a.Sec[:], data[:32])
+	a.Pub = ed.GetPublicKey(a.Sec)
 
 	return data[32:], nil
 }
 
-func (t *ECAddress) MarshalBinary() ([]byte, error) {
-	return t.SecBytes(), nil
+func (a *ECAddress) MarshalBinary() ([]byte, error) {
+	return a.SecBytes(), nil
 }
 
 // GetECAddress takes a private address string (Es...) and returns an ECAddress.
@@ -158,14 +158,17 @@ func MakeECAddress(sec []byte) (*ECAddress, error) {
 	return a, nil
 }
 
+// PubBytes returns the []byte representation of the public key
 func (a *ECAddress) PubBytes() []byte {
 	return a.Pub[:]
 }
 
-func (a *ECAddress) PubFixed() *[32]byte {
+// PubFixed returns the fixed size public key
+func (a *ECAddress) PubFixed() *[ed.PublicKeySize]byte {
 	return a.Pub
 }
 
+// PubString returns the string encoding of the public key
 func (a *ECAddress) PubString() string {
 	buf := new(bytes.Buffer)
 
@@ -182,14 +185,17 @@ func (a *ECAddress) PubString() string {
 	return base58.Encode(buf.Bytes())
 }
 
+// SecBytes returns the []byte representation of the secret key
 func (a *ECAddress) SecBytes() []byte {
 	return a.Sec[:]
 }
 
+// SecFixed returns the fixed size secret key
 func (a *ECAddress) SecFixed() *[64]byte {
 	return a.Sec
 }
 
+// SecString returns the string encoding of the secret key
 func (a *ECAddress) SecString() string {
 	buf := new(bytes.Buffer)
 
@@ -206,6 +212,7 @@ func (a *ECAddress) SecString() string {
 	return base58.Encode(buf.Bytes())
 }
 
+// Sign the message with the ECAddress private key
 func (a *ECAddress) Sign(msg []byte) *[ed.SignatureSize]byte {
 	return ed.Sign(a.SecFixed(), msg)
 }

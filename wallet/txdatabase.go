@@ -60,7 +60,13 @@ func NewTXBoltDB(boltPath string) (*TXDatabaseOverlay, error) {
 		fmt.Printf("database error %s\n", err)
 		return nil, err
 	}
-
+	
+	defer func() {
+		if r := recover(); r != nil {
+			fmt.Printf("Could not use wallet cache database file \"%s\"\n%v\n",boltPath ,r)
+			os.Exit(1)
+		}
+	}()
 	db := hybridDB.NewBoltMapHybridDB(nil, boltPath)
 
 	fmt.Println("Database started from: " + boltPath)

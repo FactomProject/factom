@@ -137,6 +137,24 @@ func GetDBlockHeight() (int, error) {
 	return int(height.Height), nil
 }
 
+func GetHeight() (*HeightResponse, error) {
+	req := NewJSON2Request("get-height", APICounter(), nil)
+	resp, err := factomdRequest(req)
+	if err != nil {
+		return nil, err
+	}
+	if resp.Error != nil {
+		return nil, resp.Error
+	}
+
+	height := new(HeightResponse)
+	if err := json.Unmarshal(resp.JSONResult(), height); err != nil {
+		return nil, err
+	}
+
+	return height, nil
+}
+
 // GetEntry requests an Entry from factomd by its Entry Hash
 func GetEntry(hash string) (*Entry, error) {
 	params := hashRequest{Hash: hash}
