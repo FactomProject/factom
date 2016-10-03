@@ -69,7 +69,7 @@ func NewBoltDB(boltPath string) (*WalletDatabaseOverlay, error) {
 
 	defer func() {
 		if r := recover(); r != nil {
-			fmt.Printf("Could not use wallet file \"%s\"\n%v\n",boltPath ,r)
+			fmt.Printf("Could not use wallet file \"%s\"\n%v\n", boltPath, r)
 			os.Exit(1)
 		}
 	}()
