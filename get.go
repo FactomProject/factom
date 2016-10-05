@@ -177,7 +177,8 @@ func GetEntry(hash string) (*Entry, error) {
 
 func GetChainHead(chainid string) (string, error) {
 	type chainHeadResponse struct {
-		ChainHead string `json:"chainhead"`
+		ChainHead          string `json:"chainhead"`
+		ChainInProcessList bool   `json:"chaininprocesslist"`
 	}
 
 	params := chainIDRequest{ChainID: chainid}
