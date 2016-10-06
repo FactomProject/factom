@@ -13,6 +13,7 @@ import (
 	ed "github.com/FactomProject/ed25519"
 	"github.com/FactomProject/go-bip32"
 	"github.com/FactomProject/go-bip39"
+	"github.com/FactomProject/go-bip44"
 )
 
 type addressStringType byte
@@ -314,6 +315,24 @@ func MakeFactoidAddressFromMnemonic(mnemonic string) (*FactoidAddress, error) {
 	}
 
 	child, err := masterKey.NewChildKey(bip32.FirstHardenedChild + 7)
+	if err != nil {
+		return nil, err
+	}
+
+	return MakeFactoidAddress(child.Key)
+}
+
+func MakeBIP44FactoidAddressFromMnemonic(mnemonic string, account, chain, address uint32) (*FactoidAddress, error) {
+	l := len(strings.Fields(mnemonic))
+	if l < 12 {
+		return nil, fmt.Errorf("Not enough words in mnemonic. Expecitng 12, found %d", l)
+	}
+	if l > 12 {
+		return nil, fmt.Errorf("Too many words in mnemonic. Expecitng 12, found %d", l)
+	}
+	mnemonic = strings.ToLower(strings.TrimSpace(mnemonic))
+
+	child, err := bip44.NewKeyFromMnemonic(mnemonic, bip44.TypeFactomFactoids, account, chain, address)
 	if err != nil {
 		return nil, err
 	}

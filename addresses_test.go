@@ -5,10 +5,11 @@
 package factom_test
 
 import (
-	ed "github.com/FactomProject/ed25519"
 	"testing"
 
+	ed "github.com/FactomProject/ed25519"
 	. "github.com/FactomProject/factom"
+	"github.com/FactomProject/go-bip32"
 )
 
 var ()
@@ -167,6 +168,22 @@ func TestMakeFactoidAddressFromMnemonic(t *testing.T) {
 	cannonAdr := "FA3cih2o2tjEUsnnFR4jX1tQXPpSXFwsp3rhVp6odL5PNCHWvZV1"
 
 	fct, err := MakeFactoidAddressFromMnemonic(m)
+	if err != nil {
+		t.Error(err)
+	}
+
+	if fct.String() != cannonAdr {
+		t.Errorf(
+			"incorrect factoid address from 12 words: got %s expecting %s",
+			fct.String(), cannonAdr)
+	}
+}
+
+func TestMakeBIP44FactoidAddressFromMnemonic(t *testing.T) {
+	m := "yellow yellow yellow yellow yellow yellow yellow yellow yellow yellow yellow yellow"
+	cannonAdr := "FA22de5NSG2FA2HmMaD4h8qSAZAJyztmmnwgLPghCQKoSekwYYct"
+
+	fct, err := MakeBIP44FactoidAddressFromMnemonic(m, bip32.FirstHardenedChild, 0, 0)
 	if err != nil {
 		t.Error(err)
 	}
