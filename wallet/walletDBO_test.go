@@ -7,11 +7,50 @@ import (
 	. "github.com/FactomProject/factom/wallet"
 )
 
-/*
 func TestWalletDBO(t *testing.T) {
 	db := NewMapDB()
+	seed, err := db.GetOrCreateDBSeed()
+	if err != nil {
+		t.Errorf("%v", err)
+	}
 
-}*/
+	seed.MnemonicSeed = "yellow yellow yellow yellow yellow yellow yellow yellow yellow yellow yellow yellow"
+
+	err = db.InsertDBSeed(seed)
+	if err != nil {
+		t.Errorf("%v", err)
+	}
+
+	ec, err := db.GetNextECAddress()
+	if err != nil {
+		t.Errorf("%v", err)
+	}
+	if ec.String() != "EC2HAuRUAeK9aBAafkWwmPPbfHFBF67pa71j7sZ8PdFTvZtuzqfF" {
+		t.Errorf("%v", ec.String())
+	}
+	ec, err = db.GetNextECAddress()
+	if err != nil {
+		t.Errorf("%v", err)
+	}
+	if ec.String() != "EC3aCUr3PgrzSXZ2dczD4raXmxcqCxvk1EvwVVKwbB9fx71yA9pp" {
+		t.Errorf("%v", ec.String())
+	}
+
+	f, err := db.GetNextFCTAddress()
+	if err != nil {
+		t.Errorf("%v", err)
+	}
+	if f.String() != "FA22de5NSG2FA2HmMaD4h8qSAZAJyztmmnwgLPghCQKoSekwYYct" {
+		t.Errorf("%v", f.String())
+	}
+	f, err = db.GetNextFCTAddress()
+	if err != nil {
+		t.Errorf("%v", err)
+	}
+	if f.String() != "FA3heCmxKCk1tCCfiAMDmX8Ctg6XTQjRRaJrF5Jagc9rbo7wqQLV" {
+		t.Errorf("%v", f.String())
+	}
+}
 
 func TestDBSeed(t *testing.T) {
 	seed, err := NewRandomSeed()
