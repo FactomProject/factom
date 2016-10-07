@@ -5,8 +5,6 @@
 package wallet
 
 import (
-	"crypto/rand"
-	"crypto/sha512"
 	"fmt"
 
 	"github.com/FactomProject/factom"
@@ -21,32 +19,12 @@ type Wallet struct {
 }
 
 func (w *Wallet) InitWallet() error {
-	dbSeed, err := w.GetDBSeed()
+	dbSeed, err := w.GetOrCreateDBSeed()
 	if err != nil {
 		return err
 	}
 	if dbSeed == nil {
-		seed := make([]byte, 64)
-		if n, err := rand.Read(seed); err != nil {
-			return err
-		} else if n != 64 {
-			return fmt.Errorf("Wrong number of bytes read: %d", n)
-		}
-		err = w.InsertDBSeed(seed)
-		if err != nil {
-			return err
-		}
-		err = w.InsertNextDBSeed(seed)
-		if err != nil {
-			return err
-		}
-	}
-	nextSeed, err := w.GetNextDBSeed()
-	if err != nil {
-		return err
-	}
-	if nextSeed == nil {
-		return fmt.Errorf("Database does not contain nextSeed!")
+		return fmt.Errorf("dbSeed not present in DB!")
 	}
 	return nil
 }
@@ -110,57 +88,13 @@ func (w *Wallet) TXDB() *TXDatabaseOverlay {
 // GenerateECAddress creates and stores a new Entry Credit Address in the
 // Wallet. The address can be reproduced in the future using the Wallet Seed.
 func (w *Wallet) GenerateECAddress() (*factom.ECAddress, error) {
-	// get the next seed from the db
-	seed, err := w.GetNextDBSeed()
-	if err != nil {
-		return nil, err
-	}
-
-	// create the new seed
-	newseed := sha512.Sum512(seed)
-	a, err := factom.MakeECAddress(newseed[:32])
-	if err != nil {
-		return nil, err
-	}
-
-	// save the new seed and the address in the db
-	if err := w.InsertNextDBSeed(newseed[:]); err != nil {
-		return nil, err
-	}
-
-	if err := w.InsertECAddress(a); err != nil {
-		return nil, err
-	}
-
-	return a, nil
+	return w.GetNextECAddress()
 }
 
 // GenerateFCTAddress creates and stores a new Factoid Address in the Wallet.
 // The address can be reproduced in the future using the Wallet Seed.
 func (w *Wallet) GenerateFCTAddress() (*factom.FactoidAddress, error) {
-	// get the next seed from the db
-	seed, err := w.GetNextDBSeed()
-	if err != nil {
-		return nil, err
-	}
-
-	// create the new seed
-	newseed := sha512.Sum512(seed)
-	a, err := factom.MakeFactoidAddress(newseed[:32])
-	if err != nil {
-		return nil, err
-	}
-
-	// save the new seed and the address in the db
-	if err := w.InsertNextDBSeed(newseed[:]); err != nil {
-		return nil, err
-	}
-
-	if err := w.InsertFCTAddress(a); err != nil {
-		return nil, err
-	}
-
-	return a, nil
+	return w.GetNextFCTAddress()
 }
 
 // GetAllAddresses retrieves all Entry Credit and Factoid Addresses from the
@@ -188,7 +122,7 @@ func (w *Wallet) GetSeed() (string, error) {
 		return "", err
 	}
 
-	return SeedString(seed), nil
+	return seed.MnemonicSeed, nil
 }
 
 func (w *Wallet) GetVersion() string {

@@ -5,7 +5,6 @@
 package wallet_test
 
 import (
-	"bytes"
 	"os"
 	"testing"
 
@@ -25,11 +24,8 @@ func TestNewWallet(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	if len(seed) != 64 {
-		t.Errorf("stored db seed is the wrong length: %x", seed)
-	}
-	if bytes.Equal(seed, make([]byte, 64)) {
-		t.Errorf("stored db seed is blank")
+	if len(seed.MnemonicSeed) == 0 {
+		t.Errorf("stored db seed is empty")
 	}
 
 	if err := w1.Close(); err != nil {
@@ -55,11 +51,8 @@ func TestOpenWallet(t *testing.T) {
 
 	// check that the seed is there
 	seed, err := w1.GetDBSeed()
-	if len(seed) != 64 {
-		t.Errorf("stored db seed is the wrong length: %x", seed)
-	}
-	if bytes.Equal(seed, make([]byte, 64)) {
-		t.Errorf("stored db seed is blank")
+	if len(seed.MnemonicSeed) == 0 {
+		t.Errorf("stored db seed is empty")
 	}
 
 	if err := w2.Close(); err != nil {

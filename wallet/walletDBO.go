@@ -1,11 +1,16 @@
 package wallet
 
 import (
+	"bytes"
+	"crypto/rand"
+	"encoding/gob"
 	"fmt"
 	"sort"
 	"strings"
 
 	"github.com/FactomProject/factom"
+	"github.com/FactomProject/go-bip32"
+	"github.com/FactomProject/go-bip39"
 
 	"github.com/FactomProject/factomd/common/interfaces"
 	"github.com/FactomProject/factomd/common/primitives"
@@ -79,64 +84,181 @@ func NewBoltDB(boltPath string) (*WalletDatabaseOverlay, error) {
 	return NewWalletOverlay(db), nil
 }
 
-func (db *WalletDatabaseOverlay) InsertDBSeed(dbSeed []byte) error {
-	if dbSeed == nil {
-		return nil
-	}
-	if len(dbSeed) != SeedLength {
-		return fmt.Errorf("Provided Seed is the wrong length: %d", len(dbSeed))
-	}
-	data := new(primitives.ByteSlice)
-	err := data.UnmarshalBinary(dbSeed)
+type DBSeedBase struct {
+	MnemonicSeed            string
+	NextFactoidAddressIndex uint32
+	NextECAddressIndex      uint32
+}
+
+type DBSeed struct {
+	DBSeedBase
+}
+
+var _ interfaces.BinaryMarshallable = (*DBSeed)(nil)
+
+func (e *DBSeed) MarshalBinary() ([]byte, error) {
+	var data primitives.Buffer
+
+	enc := gob.NewEncoder(&data)
+
+	err := enc.Encode(e.DBSeedBase)
 	if err != nil {
-		return err
+		return nil, err
+	}
+	return data.DeepCopyBytes(), nil
+}
+
+func (e *DBSeed) UnmarshalBinaryData(data []byte) (newData []byte, err error) {
+	dec := gob.NewDecoder(primitives.NewBuffer(data))
+	dbsb := DBSeedBase{}
+	err = dec.Decode(&dbsb)
+	if err != nil {
+		return nil, err
+	}
+	e.DBSeedBase = dbsb
+	return nil, nil
+}
+
+func (e *DBSeed) UnmarshalBinary(data []byte) (err error) {
+	_, err = e.UnmarshalBinaryData(data)
+	return
+}
+
+func (e *DBSeed) JSONByte() ([]byte, error) {
+	return primitives.EncodeJSON(e)
+}
+
+func (e *DBSeed) JSONString() (string, error) {
+	return primitives.EncodeJSONString(e)
+}
+
+func (e *DBSeed) JSONBuffer(b *bytes.Buffer) error {
+	return primitives.EncodeJSONToBuffer(e, b)
+}
+
+func (e *DBSeed) String() string {
+	str, _ := e.JSONString()
+	return str
+}
+
+func (e *DBSeed) NextFCTAddress() (*factom.FactoidAddress, error) {
+	add, err := factom.MakeBIP44FactoidAddressFromMnemonic(e.MnemonicSeed, bip32.FirstHardenedChild, 0, e.NextFactoidAddressIndex)
+	if err != nil {
+		return nil, err
+	}
+	e.NextFactoidAddressIndex++
+	return add, nil
+}
+
+func (e *DBSeed) NextECAddress() (*factom.ECAddress, error) {
+	add, err := factom.MakeBIP44ECAddressFromMnemonic(e.MnemonicSeed, bip32.FirstHardenedChild, 0, e.NextECAddressIndex)
+	if err != nil {
+		return nil, err
+	}
+	e.NextECAddressIndex++
+	return add, nil
+}
+
+func NewRandomSeed() (*DBSeed, error) {
+	seed := make([]byte, 16)
+	if n, err := rand.Read(seed); err != nil {
+		panic(err)
+		return nil, err
+	} else if n != 16 {
+		return nil, fmt.Errorf("Wrong number of bytes read: %d", n)
+	}
+
+	mnemonic, err := bip39.NewMnemonic(seed)
+	if err != nil {
+		panic(err)
+		return nil, err
+	}
+
+	dbSeed := new(DBSeed)
+	dbSeed.MnemonicSeed = mnemonic
+
+	return dbSeed, nil
+}
+
+func (db *WalletDatabaseOverlay) InsertDBSeed(seed *DBSeed) error {
+	if seed == nil {
+		return nil
 	}
 
 	batch := []interfaces.Record{}
-	batch = append(batch, interfaces.Record{seedDBKey, seedDBKey, data})
+	batch = append(batch, interfaces.Record{seedDBKey, seedDBKey, seed})
 
 	return db.dbo.PutInBatch(batch)
 }
 
-func (db *WalletDatabaseOverlay) GetDBSeed() ([]byte, error) {
-	data, err := db.dbo.Get(seedDBKey, seedDBKey, new(primitives.ByteSlice))
+func (db *WalletDatabaseOverlay) GetDBSeed() (*DBSeed, error) {
+	data, err := db.dbo.Get(seedDBKey, seedDBKey, new(DBSeed))
 	if err != nil {
 		return nil, err
 	}
 	if data == nil {
 		return nil, nil
 	}
-	return data.MarshalBinary()
+	return data.(*DBSeed), nil
 }
 
-func (db *WalletDatabaseOverlay) InsertNextDBSeed(dbSeed []byte) error {
-	if dbSeed == nil {
-		return nil
-	}
-	if len(dbSeed) != SeedLength {
-		return fmt.Errorf("Provided Seed is the wrong length: %d", len(dbSeed))
-	}
-	data := new(primitives.ByteSlice)
-	err := data.UnmarshalBinary(dbSeed)
-	if err != nil {
-		return err
-	}
-
-	batch := []interfaces.Record{}
-	batch = append(batch, interfaces.Record{nextSeedDBKey, nextSeedDBKey, data})
-
-	return db.dbo.PutInBatch(batch)
-}
-
-func (db *WalletDatabaseOverlay) GetNextDBSeed() ([]byte, error) {
-	data, err := db.dbo.Get(nextSeedDBKey, nextSeedDBKey, new(primitives.ByteSlice))
+func (db *WalletDatabaseOverlay) GetOrCreateDBSeed() (*DBSeed, error) {
+	data, err := db.dbo.Get(seedDBKey, seedDBKey, new(DBSeed))
 	if err != nil {
 		return nil, err
 	}
 	if data == nil {
-		return nil, nil
+		seed, err := NewRandomSeed()
+		if err != nil {
+			return nil, err
+		}
+		err = db.InsertDBSeed(seed)
+		if err != nil {
+			return nil, err
+		}
+		return seed, nil
 	}
-	return data.MarshalBinary()
+	return data.(*DBSeed), nil
+}
+
+func (db *WalletDatabaseOverlay) GetNextECAddress() (*factom.ECAddress, error) {
+	seed, err := db.GetOrCreateDBSeed()
+	if err != nil {
+		return nil, err
+	}
+	add, err := seed.NextECAddress()
+	if err != nil {
+		return nil, err
+	}
+	err = db.InsertDBSeed(seed)
+	if err != nil {
+		return nil, err
+	}
+	err = db.InsertECAddress(add)
+	if err != nil {
+		return nil, err
+	}
+	return add, nil
+}
+
+func (db *WalletDatabaseOverlay) GetNextFCTAddress() (*factom.FactoidAddress, error) {
+	seed, err := db.GetOrCreateDBSeed()
+	if err != nil {
+		return nil, err
+	}
+	add, err := seed.NextFCTAddress()
+	if err != nil {
+		return nil, err
+	}
+	err = db.InsertDBSeed(seed)
+	if err != nil {
+		return nil, err
+	}
+	err = db.InsertFCTAddress(add)
+	if err != nil {
+		return nil, err
+	}
+	return add, nil
 }
 
 func (db *WalletDatabaseOverlay) InsertECAddress(e *factom.ECAddress) error {

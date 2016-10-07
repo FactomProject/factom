@@ -340,6 +340,24 @@ func MakeBIP44FactoidAddressFromMnemonic(mnemonic string, account, chain, addres
 	return MakeFactoidAddress(child.Key)
 }
 
+func MakeBIP44ECAddressFromMnemonic(mnemonic string, account, chain, address uint32) (*ECAddress, error) {
+	l := len(strings.Fields(mnemonic))
+	if l < 12 {
+		return nil, fmt.Errorf("Not enough words in mnemonic. Expecitng 12, found %d", l)
+	}
+	if l > 12 {
+		return nil, fmt.Errorf("Too many words in mnemonic. Expecitng 12, found %d", l)
+	}
+	mnemonic = strings.ToLower(strings.TrimSpace(mnemonic))
+
+	child, err := bip44.NewKeyFromMnemonic(mnemonic, bip44.TypeFactomFactoids, account, chain, address)
+	if err != nil {
+		return nil, err
+	}
+
+	return MakeECAddress(child.Key)
+}
+
 func (a *FactoidAddress) RCDHash() []byte {
 	return a.RCD.Hash()
 }
