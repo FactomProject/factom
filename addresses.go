@@ -350,7 +350,7 @@ func MakeBIP44ECAddressFromMnemonic(mnemonic string, account, chain, address uin
 	}
 	mnemonic = strings.ToLower(strings.TrimSpace(mnemonic))
 
-	child, err := bip44.NewKeyFromMnemonic(mnemonic, bip44.TypeFactomFactoids, account, chain, address)
+	child, err := bip44.NewKeyFromMnemonic(mnemonic, bip44.TypeFactomEntryCredits, account, chain, address)
 	if err != nil {
 		return nil, err
 	}
