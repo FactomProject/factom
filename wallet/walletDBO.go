@@ -25,7 +25,6 @@ var (
 	fcDBPrefix    = []byte("Factoids")
 	ecDBPrefix    = []byte("Entry Credits")
 	seedDBKey     = []byte("DB Seed")
-	nextSeedDBKey = []byte("Next Seed")
 )
 
 type WalletDatabaseOverlay struct {
