@@ -119,25 +119,7 @@ func GetDBlockHead() (string, error) {
 	return head.KeyMR, nil
 }
 
-func GetDBlockHeight() (int, error) {
-	req := NewJSON2Request("directory-block-height", APICounter(), nil)
-	resp, err := factomdRequest(req)
-	if err != nil {
-		return 0, err
-	}
-	if resp.Error != nil {
-		return 0, resp.Error
-	}
-
-	height := new(DirectoryBlockHeightResponse)
-	if err := json.Unmarshal(resp.JSONResult(), height); err != nil {
-		return 0, err
-	}
-
-	return int(height.Height), nil
-}
-
-func GetHeight() (*HeightResponse, error) {
+func GetHeights() (*HeightsResponse, error) {
 	req := NewJSON2Request("get-height", APICounter(), nil)
 	resp, err := factomdRequest(req)
 	if err != nil {
@@ -147,12 +129,12 @@ func GetHeight() (*HeightResponse, error) {
 		return nil, resp.Error
 	}
 
-	height := new(HeightResponse)
-	if err := json.Unmarshal(resp.JSONResult(), height); err != nil {
+	heights := new(HeightsResponse)
+	if err := json.Unmarshal(resp.JSONResult(), heights); err != nil {
 		return nil, err
 	}
 
-	return height, nil
+	return heights, nil
 }
 
 // GetEntry requests an Entry from factomd by its Entry Hash
