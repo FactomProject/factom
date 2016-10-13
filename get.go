@@ -120,7 +120,7 @@ func GetDBlockHead() (string, error) {
 }
 
 func GetHeights() (*HeightsResponse, error) {
-	req := NewJSON2Request("get-height", APICounter(), nil)
+	req := NewJSON2Request("heights", APICounter(), nil)
 	resp, err := factomdRequest(req)
 	if err != nil {
 		return nil, err
