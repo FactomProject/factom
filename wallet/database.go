@@ -24,7 +24,7 @@ func (w *Wallet) InitWallet() error {
 		return err
 	}
 	if dbSeed == nil {
-		return fmt.Errorf("dbSeed not present in DB!")
+		return fmt.Errorf("dbSeed not present in DB")
 	}
 	return nil
 }

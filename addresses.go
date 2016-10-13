@@ -26,6 +26,13 @@ const (
 	ECSec
 )
 
+const (
+	AddressLength  = 38
+	PrefixLength   = 2
+	ChecksumLength = 4
+	BodyLength     = AddressLength - ChecksumLength
+)
+
 var (
 	ecPubPrefix = []byte{0x59, 0x2a}
 	ecSecPrefix = []byte{0x5d, 0xb6}
@@ -36,18 +43,18 @@ var (
 func AddressStringType(s string) addressStringType {
 	p := base58.Decode(s)
 
-	if len(p) != 38 {
+	if len(p) != AddressLength {
 		return InvalidAddress
 	}
 
 	// verify the address checksum
-	body := p[:len(p)-4]
-	check := p[len(p)-4:]
-	if !bytes.Equal(shad(body)[:4], check) {
+	body := p[:BodyLength]
+	check := p[AddressLength-ChecksumLength:]
+	if !bytes.Equal(shad(body)[:ChecksumLength], check) {
 		return InvalidAddress
 	}
 
-	prefix := p[:2]
+	prefix := p[:PrefixLength]
 	switch {
 	case bytes.Equal(prefix, ecPubPrefix):
 		return ECPub
@@ -65,11 +72,11 @@ func AddressStringType(s string) addressStringType {
 func IsValidAddress(s string) bool {
 	p := base58.Decode(s)
 
-	if len(p) != 38 {
+	if len(p) != AddressLength {
 		return false
 	}
 
-	prefix := p[:2]
+	prefix := p[:PrefixLength]
 	switch {
 	case bytes.Equal(prefix, ecPubPrefix):
 		break
@@ -84,9 +91,9 @@ func IsValidAddress(s string) bool {
 	}
 
 	// verify the address checksum
-	body := p[:len(p)-4]
-	check := p[len(p)-4:]
-	if bytes.Equal(shad(body)[:4], check) {
+	body := p[:BodyLength]
+	check := p[AddressLength-ChecksumLength:]
+	if bytes.Equal(shad(body)[:ChecksumLength], check) {
 		return true
 	}
 
@@ -137,11 +144,11 @@ func GetECAddress(s string) (*ECAddress, error) {
 
 	p := base58.Decode(s)
 
-	if !bytes.Equal(p[:2], ecSecPrefix) {
+	if !bytes.Equal(p[:PrefixLength], ecSecPrefix) {
 		return nil, fmt.Errorf("Invalid Entry Credit Private Address")
 	}
 
-	return MakeECAddress(p[2:34])
+	return MakeECAddress(p[PrefixLength:BodyLength])
 }
 
 func MakeECAddress(sec []byte) (*ECAddress, error) {
@@ -180,7 +187,7 @@ func (a *ECAddress) PubString() string {
 	buf.Write(a.PubBytes())
 
 	// Checksum
-	check := shad(buf.Bytes())[:4]
+	check := shad(buf.Bytes())[:ChecksumLength]
 	buf.Write(check)
 
 	return base58.Encode(buf.Bytes())
@@ -192,7 +199,7 @@ func (a *ECAddress) SecBytes() []byte {
 }
 
 // SecFixed returns the fixed size secret key
-func (a *ECAddress) SecFixed() *[64]byte {
+func (a *ECAddress) SecFixed() *[ed.PrivateKeySize]byte {
 	return a.Sec
 }
 
@@ -207,7 +214,7 @@ func (a *ECAddress) SecString() string {
 	buf.Write(a.SecBytes()[:32])
 
 	// Checksum
-	check := shad(buf.Bytes())[:4]
+	check := shad(buf.Bytes())[:ChecksumLength]
 	buf.Write(check)
 
 	return base58.Encode(buf.Bytes())
@@ -271,11 +278,11 @@ func GetFactoidAddress(s string) (*FactoidAddress, error) {
 
 	p := base58.Decode(s)
 
-	if !bytes.Equal(p[:2], fcSecPrefix) {
+	if !bytes.Equal(p[:PrefixLength], fcSecPrefix) {
 		return nil, fmt.Errorf("Invalid Factoid Private Address")
 	}
 
-	return MakeFactoidAddress(p[2:34])
+	return MakeFactoidAddress(p[PrefixLength:BodyLength])
 }
 
 func MakeFactoidAddress(sec []byte) (*FactoidAddress, error) {
@@ -374,7 +381,7 @@ func (a *FactoidAddress) SecBytes() []byte {
 	return a.Sec[:]
 }
 
-func (a *FactoidAddress) SecFixed() *[64]byte {
+func (a *FactoidAddress) SecFixed() *[ed.PrivateKeySize]byte {
 	return a.Sec
 }
 
@@ -388,7 +395,7 @@ func (a *FactoidAddress) SecString() string {
 	buf.Write(a.SecBytes()[:32])
 
 	// Checksum
-	check := shad(buf.Bytes())[:4]
+	check := shad(buf.Bytes())[:ChecksumLength]
 	buf.Write(check)
 
 	return base58.Encode(buf.Bytes())
@@ -404,7 +411,7 @@ func (a *FactoidAddress) String() string {
 	buf.Write(a.RCDHash())
 
 	// Checksum
-	check := shad(buf.Bytes())[:4]
+	check := shad(buf.Bytes())[:ChecksumLength]
 	buf.Write(check)
 
 	return base58.Encode(buf.Bytes())

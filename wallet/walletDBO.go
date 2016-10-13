@@ -5,26 +5,25 @@ import (
 	"crypto/rand"
 	"encoding/gob"
 	"fmt"
+	"os"
 	"sort"
 	"strings"
 
 	"github.com/FactomProject/factom"
-	"github.com/FactomProject/go-bip32"
-	"github.com/FactomProject/go-bip39"
-
 	"github.com/FactomProject/factomd/common/interfaces"
 	"github.com/FactomProject/factomd/common/primitives"
 	"github.com/FactomProject/factomd/database/databaseOverlay"
 	"github.com/FactomProject/factomd/database/hybridDB"
 	"github.com/FactomProject/factomd/database/mapdb"
-	"os"
+	"github.com/FactomProject/go-bip32"
+	"github.com/FactomProject/go-bip39"
 )
 
 // Database keys and key prefixes
 var (
-	fcDBPrefix    = []byte("Factoids")
-	ecDBPrefix    = []byte("Entry Credits")
-	seedDBKey     = []byte("DB Seed")
+	fcDBPrefix = []byte("Factoids")
+	ecDBPrefix = []byte("Entry Credits")
+	seedDBKey  = []byte("DB Seed")
 )
 
 type WalletDatabaseOverlay struct {
@@ -141,7 +140,12 @@ func (e *DBSeed) String() string {
 }
 
 func (e *DBSeed) NextFCTAddress() (*factom.FactoidAddress, error) {
-	add, err := factom.MakeBIP44FactoidAddressFromMnemonic(e.MnemonicSeed, bip32.FirstHardenedChild, 0, e.NextFactoidAddressIndex)
+	add, err := factom.MakeBIP44FactoidAddressFromMnemonic(
+		e.MnemonicSeed,
+		bip32.FirstHardenedChild,
+		0,
+		e.NextFactoidAddressIndex,
+	)
 	if err != nil {
 		return nil, err
 	}
@@ -150,7 +154,12 @@ func (e *DBSeed) NextFCTAddress() (*factom.FactoidAddress, error) {
 }
 
 func (e *DBSeed) NextECAddress() (*factom.ECAddress, error) {
-	add, err := factom.MakeBIP44ECAddressFromMnemonic(e.MnemonicSeed, bip32.FirstHardenedChild, 0, e.NextECAddressIndex)
+	add, err := factom.MakeBIP44ECAddressFromMnemonic(
+		e.MnemonicSeed,
+		bip32.FirstHardenedChild,
+		0,
+		e.NextECAddressIndex
+	)
 	if err != nil {
 		return nil, err
 	}
