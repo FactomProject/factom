@@ -140,7 +140,7 @@ func (e *DBSeed) String() string {
 }
 
 func (e *DBSeed) NextFCTAddress() (*factom.FactoidAddress, error) {
-	add, err := factom.MakeBIP44FactoidAddressFromMnemonic(
+	add, err := factom.MakeBIP44FactoidAddress(
 		e.MnemonicSeed,
 		bip32.FirstHardenedChild,
 		0,
@@ -154,11 +154,11 @@ func (e *DBSeed) NextFCTAddress() (*factom.FactoidAddress, error) {
 }
 
 func (e *DBSeed) NextECAddress() (*factom.ECAddress, error) {
-	add, err := factom.MakeBIP44ECAddressFromMnemonic(
+	add, err := factom.MakeBIP44ECAddress(
 		e.MnemonicSeed,
 		bip32.FirstHardenedChild,
 		0,
-		e.NextECAddressIndex
+		e.NextECAddressIndex,
 	)
 	if err != nil {
 		return nil, err

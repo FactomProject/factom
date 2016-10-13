@@ -302,25 +302,20 @@ func MakeFactoidAddress(sec []byte) (*FactoidAddress, error) {
 // MakeFactoidAddressFromMnemonic takes the 12 word string used in the Koinify
 // sale and returns a Factoid Address.
 func MakeFactoidAddressFromMnemonic(mnemonic string) (*FactoidAddress, error) {
-	l := len(strings.Fields(mnemonic))
-	if l < 12 {
-		return nil, fmt.Errorf("Not enough words in mnemonic. Expecitng 12, found %d", l)
-	}
-	if l > 12 {
-		return nil, fmt.Errorf("Too many words in mnemonic. Expecitng 12, found %d", l)
+	if l := len(strings.Fields(mnemonic)); l != 12 {
+		return nil, fmt.Errorf("Incorrect mnemonic length. Expecitng 12 words, found %d", l)
 	}
 
 	mnemonic = strings.ToLower(strings.TrimSpace(mnemonic))
+
 	seed, err := bip39.NewSeedWithErrorChecking(mnemonic, "")
 	if err != nil {
 		return nil, err
 	}
-
 	masterKey, err := bip32.NewMasterKey(seed)
 	if err != nil {
 		return nil, err
 	}
-
 	child, err := masterKey.NewChildKey(bip32.FirstHardenedChild + 7)
 	if err != nil {
 		return nil, err
@@ -329,14 +324,11 @@ func MakeFactoidAddressFromMnemonic(mnemonic string) (*FactoidAddress, error) {
 	return MakeFactoidAddress(child.Key)
 }
 
-func MakeBIP44FactoidAddressFromMnemonic(mnemonic string, account, chain, address uint32) (*FactoidAddress, error) {
-	l := len(strings.Fields(mnemonic))
-	if l < 12 {
-		return nil, fmt.Errorf("Not enough words in mnemonic. Expecitng 12, found %d", l)
+func MakeBIP44FactoidAddress(mnemonic string, account, chain, address uint32) (*FactoidAddress, error) {
+	if l := len(strings.Fields(mnemonic)); l != 12 {
+		return nil, fmt.Errorf("Incorrect mnemonic length. Expecitng 12 words, found %d", l)
 	}
-	if l > 12 {
-		return nil, fmt.Errorf("Too many words in mnemonic. Expecitng 12, found %d", l)
-	}
+
 	mnemonic = strings.ToLower(strings.TrimSpace(mnemonic))
 
 	child, err := bip44.NewKeyFromMnemonic(mnemonic, bip44.TypeFactomFactoids, account, chain, address)
@@ -347,14 +339,11 @@ func MakeBIP44FactoidAddressFromMnemonic(mnemonic string, account, chain, addres
 	return MakeFactoidAddress(child.Key)
 }
 
-func MakeBIP44ECAddressFromMnemonic(mnemonic string, account, chain, address uint32) (*ECAddress, error) {
-	l := len(strings.Fields(mnemonic))
-	if l < 12 {
-		return nil, fmt.Errorf("Not enough words in mnemonic. Expecitng 12, found %d", l)
+func MakeBIP44ECAddress(mnemonic string, account, chain, address uint32) (*ECAddress, error) {
+	if l := len(strings.Fields(mnemonic)); l != 12 {
+		return nil, fmt.Errorf("Incorrect mnemonic length. Expecitng 12 words, found %d", l)
 	}
-	if l > 12 {
-		return nil, fmt.Errorf("Too many words in mnemonic. Expecitng 12, found %d", l)
-	}
+
 	mnemonic = strings.ToLower(strings.TrimSpace(mnemonic))
 
 	child, err := bip44.NewKeyFromMnemonic(mnemonic, bip44.TypeFactomEntryCredits, account, chain, address)

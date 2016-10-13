@@ -18,7 +18,7 @@ import (
 // ImportV1Wallet takes a version 1 wallet bolt.db file and imports all of its
 // addresses into a factom wallet.
 func ImportV1Wallet(v1path, v2path string) (*Wallet, error) {
-	w, err := NewOrOpenLevelDBWallet(v2path)
+	w, err := NewOrOpenBoltDBWallet(v2path)
 	if err != nil {
 		return nil, err
 	}
