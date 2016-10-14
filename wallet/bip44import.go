@@ -1,0 +1,45 @@
+// Copyright 2016 Factom Foundation
+// Use of this source code is governed by the MIT
+// license that can be found in the LICENSE file.
+
+package wallet
+
+import (
+	"fmt"
+	"os"
+	"strings"
+
+	"github.com/FactomProject/factomd/common/factoid"
+)
+
+// ImportWalletFromMnemonic creates a new wallet with a provided Mnemonic seed
+// defined in bip-0039.
+func ImportWalletFromMnemonic(mnemonic, path string) (*Wallet, error) {
+	// check the mnemonic length
+	if l := len(strings.Fields(mnemonic)); l != 12 {
+		return nil, fmt.Errorf("Incorrect mnemonic length. Expecitng 12 words, found %d", l)
+	}
+
+	// check if the file exists
+	_, err := os.Stat(path)
+	if err == nil {
+		return nil, fmt.Errorf("%s: file already exists", path)
+	}
+
+	db, err := NewBoltDB(path)
+	if err != nil {
+		return nil, err
+	}
+
+	seed := new(DBSeed)
+	seed.MnemonicSeed = mnemonic
+	if err := db.InsertDBSeed(seed); err != nil {
+		return nil, err
+	}
+
+	w := new(Wallet)
+	w.transactions = make(map[string]*factoid.Transaction)
+	w.WalletDatabaseOverlay = db
+
+	return w, nil
+}
