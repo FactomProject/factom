@@ -9,6 +9,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/FactomProject/factom"
 	"github.com/FactomProject/factomd/common/factoid"
 )
 
@@ -42,4 +43,27 @@ func ImportWalletFromMnemonic(mnemonic, path string) (*Wallet, error) {
 	w.WalletDatabaseOverlay = db
 
 	return w, nil
+}
+
+func ExportWallet(path string) (string, []*factom.FactoidAddress, []*factom.ECAddress, error) {
+	// check if the file exists
+	_, err := os.Stat(path)
+	if err != nil {
+		return "", nil, nil, err
+	}
+
+	w, err := NewOrOpenBoltDBWallet(path)
+	if err != nil {
+		return "", nil, nil, err
+	}
+	
+	m, err := w.GetSeed()
+	if err != nil {
+		return "", nil, nil, err
+	}
+	fs, es, err := w.GetAllAddresses()
+	if err != nil {
+		return "", nil, nil, err
+	}
+	return m, fs, es, nil
 }

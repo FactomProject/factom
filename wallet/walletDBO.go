@@ -59,12 +59,14 @@ func NewLevelDB(ldbpath string) (*WalletDatabaseOverlay, error) {
 }
 
 func NewBoltDB(boltPath string) (*WalletDatabaseOverlay, error) {
+	// check if the file exists or if it is a directory
 	fileInfo, err := os.Stat(boltPath)
-	if err == nil { //if it exists
-		if fileInfo.IsDir() { //if it is a folder though
+	if err == nil {
+		if fileInfo.IsDir() {
 			return nil, fmt.Errorf("The path %s is a directory.  Please specify a file name.", boltPath)
 		}
 	}
+	
 	if err != nil && !os.IsNotExist(err) { //some other error, besides the file not existing
 		fmt.Printf("database error %s\n", err)
 		return nil, err
