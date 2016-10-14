@@ -56,7 +56,7 @@ func ExportWallet(path string) (string, []*factom.FactoidAddress, []*factom.ECAd
 	if err != nil {
 		return "", nil, nil, err
 	}
-	
+
 	m, err := w.GetSeed()
 	if err != nil {
 		return "", nil, nil, err
