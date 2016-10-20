@@ -38,21 +38,3 @@ func (d *DBlock) String() string {
 type DBHead struct {
 	KeyMR string `json:"keymr"`
 }
-
-type HeightsResponse struct {
-	DirectoryBlockHeight int64 `json:"directoryblockheight"`
-	LeaderHeight         int64 `json:"leaderheight"`
-	EntryBlockHeight     int64 `json:"entryblockheight"`
-	EntryHeight          int64 `json:"entryheight"`
-}
-
-func (d *HeightsResponse) String() string {
-	var s string
-
-	s += fmt.Sprintln("DirectoryBlockHeight:", d.DirectoryBlockHeight)
-	s += fmt.Sprintln("LeaderHeight:", d.LeaderHeight)
-	s += fmt.Sprintln("EntryBlockHeight:", d.EntryBlockHeight)
-	s += fmt.Sprintln("EntryHeight:", d.EntryHeight)
-
-	return s
-}
