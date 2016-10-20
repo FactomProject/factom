@@ -6,6 +6,7 @@ import (
 	"encoding/gob"
 	"fmt"
 	"os"
+	"path/filepath"
 	"sort"
 	"strings"
 
@@ -66,7 +67,14 @@ func NewBoltDB(boltPath string) (*WalletDatabaseOverlay, error) {
 			return nil, fmt.Errorf("The path %s is a directory.  Please specify a file name.", boltPath)
 		}
 	}
-	
+
+	// create the wallet directory if it doesn't already exist
+	if os.IsNotExist(err) {
+		if err := os.MkdirAll(filepath.Dir(boltPath), 0700); err != nil {
+			fmt.Printf("database error %s\n", err)
+		}
+	}
+
 	if err != nil && !os.IsNotExist(err) { //some other error, besides the file not existing
 		fmt.Printf("database error %s\n", err)
 		return nil, err
