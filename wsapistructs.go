@@ -51,7 +51,7 @@ type importRequest struct {
 	Addresses []secretRequest `json:"addresses"`
 }
 
-type importMnemonicRequest struct {
+type importKoinifyRequest struct {
 	Words string `json:"words"`
 }
 

@@ -299,9 +299,9 @@ func MakeFactoidAddress(sec []byte) (*FactoidAddress, error) {
 	return a, nil
 }
 
-// MakeFactoidAddressFromMnemonic takes the 12 word string used in the Koinify
+// MakeFactoidAddressFromKoinify takes the 12 word string used in the Koinify
 // sale and returns a Factoid Address.
-func MakeFactoidAddressFromMnemonic(mnemonic string) (*FactoidAddress, error) {
+func MakeFactoidAddressFromKoinify(mnemonic string) (*FactoidAddress, error) {
 	if l := len(strings.Fields(mnemonic)); l != 12 {
 		return nil, fmt.Errorf("Incorrect mnemonic length. Expecitng 12 words, found %d", l)
 	}
