@@ -179,11 +179,11 @@ func TestMakeFactoidAddressFromMnemonic(t *testing.T) {
 	}
 }
 
-func TestMakeBIP44FactoidAddressFromMnemonic(t *testing.T) {
+func TestMakeBIP44FactoidAddress(t *testing.T) {
 	m := "yellow yellow yellow yellow yellow yellow yellow yellow yellow yellow yellow yellow"
 	cannonAdr := "FA22de5NSG2FA2HmMaD4h8qSAZAJyztmmnwgLPghCQKoSekwYYct"
 
-	fct, err := MakeBIP44FactoidAddressFromMnemonic(m, bip32.FirstHardenedChild, 0, 0)
+	fct, err := MakeBIP44FactoidAddress(m, bip32.FirstHardenedChild, 0, 0)
 	if err != nil {
 		t.Error(err)
 	}

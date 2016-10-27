@@ -9,16 +9,104 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"time"
 )
 
-type TXInfo struct {
-	Name           string `json:"tx-name"`
-	TxID           string `json:"txid,omitempty"`
-	TotalInputs    uint64 `json:"totalinputs"`
-	TotalOutputs   uint64 `json:"totaloutputs"`
-	TotalECOutputs uint64 `json:"totalecoutputs"`
-	FeesRequired   uint64 `json:"feesrequired,omitempty"`
-	RawTransaction string `json:"rawtransaction"`
+type Transaction struct {
+	BlockHeight    uint64    `json:"blockheight,omitempty"`
+	FeesPaid       uint64    `json:"feespaid,omitempty"`
+	FeesRequired   uint64    `json:"feesrequired,omitempty"`
+	IsSigned       bool      `json:"signed"`
+	Name           string    `json:"name,omitempty"`
+	Timestamp      time.Time `json:"timestamp"`
+	TotalECOutputs uint64    `json:"totalecoutputs"`
+	TotalInputs    uint64    `json:"totalinputs"`
+	TotalOutputs   uint64    `json:"totaloutputs"`
+	TxID           string    `json:"txid,omitempty"`
+}
+
+// String prints the formatted data of a transaction.
+func (tx *Transaction) String() (s string) {
+	if tx.Name != "" {
+		s += fmt.Sprintln("Name:", tx.Name)
+	}
+	if tx.IsSigned {
+		s += fmt.Sprintln("TxID:", tx.TxID)
+	}
+	s += fmt.Sprintln("Timestamp:", tx.Timestamp)
+	if tx.BlockHeight != 0 {
+		s += fmt.Sprintln("BlockHeight:", tx.BlockHeight)
+	}
+	s += fmt.Sprintln("TotalInputs:", tx.TotalInputs)
+	s += fmt.Sprintln("TotalOutputs:", tx.TotalOutputs)
+	s += fmt.Sprintln("ECOutputs:", tx.TotalECOutputs)
+	s += fmt.Sprintln("FeesPaid:", tx.FeesPaid)
+	s += fmt.Sprintln("FeesRequired:", tx.FeesRequired)
+	
+	return s
+}
+
+// MarshalJSON converts the Transaction into a JSON object
+func (tx *Transaction) MarshalJSON() ([]byte, error) {
+	tmp := &struct {
+		BlockHeight    uint64    `json:"blockheight,omitempty"`
+		FeesPaid       uint64    `json:"feespaid,omitempty"`
+		FeesRequired   uint64    `json:"feesrequired,omitempty"`
+		IsSigned       bool      `json:"signed"`
+		Name           string    `json:"name,omitempty"`
+		Timestamp      int64     `json:"timestamp"`
+		TotalECOutputs uint64    `json:"totalecoutputs"`
+		TotalInputs    uint64    `json:"totalinputs"`
+		TotalOutputs   uint64    `json:"totaloutputs"`
+		TxID           string    `json:"txid,omitempty"`
+	}{
+		BlockHeight:    tx.BlockHeight,
+		FeesPaid:       tx.FeesPaid,
+		FeesRequired:   tx.FeesRequired,
+		IsSigned:       tx.IsSigned,
+		Name:           tx.Name,
+		Timestamp:      tx.Timestamp.Unix(),
+		TotalECOutputs: tx.TotalECOutputs,
+		TotalInputs:    tx.TotalInputs,
+		TotalOutputs:   tx.TotalOutputs,
+		TxID:           tx.TxID,
+	}
+
+	return json.Marshal(tmp)
+}
+
+// UnmarshalJSON converts the JSON Transaction back into a Transaction
+func (tx *Transaction) UnmarshalJSON(data []byte) error {
+	type jsontx struct{
+		BlockHeight    uint64    `json:"blockheight,omitempty"`
+		FeesPaid       uint64    `json:"feespaid,omitempty"`
+		FeesRequired   uint64    `json:"feesrequired,omitempty"`
+		IsSigned       bool      `json:"signed"`
+		Name           string    `json:"name,omitempty"`
+		Timestamp      int64     `json:"timestamp"`
+		TotalECOutputs uint64    `json:"totalecoutputs"`
+		TotalInputs    uint64    `json:"totalinputs"`
+		TotalOutputs   uint64    `json:"totaloutputs"`
+		TxID           string    `json:"txid,omitempty"`
+	}
+	tmp := new(jsontx)
+	
+	if err := json.Unmarshal(data, tmp); err != nil {
+		return err
+	}
+	
+	tx.BlockHeight = tmp.BlockHeight
+	tx.FeesPaid = tmp.FeesPaid
+	tx.FeesRequired = tmp.FeesRequired
+	tx.IsSigned = tmp.IsSigned
+	tx.Name = tmp.Name
+	tx.Timestamp = time.Unix(tmp.Timestamp, 0)
+	tx.TotalECOutputs = tmp.TotalECOutputs
+	tx.TotalInputs = tmp.TotalInputs
+	tx.TotalOutputs = tmp.TotalOutputs
+	tx.TxID = tmp.TxID
+
+	return nil
 }
 
 func NewTransaction(name string) error {
@@ -62,7 +150,7 @@ func TransactionHash(name string) (string, error) {
 	if resp.Error != nil {
 		return "", resp.Error
 	}
-	tx := new(TXInfo)
+	tx := new(Transaction)
 	if err := json.Unmarshal(resp.JSONResult(), tx); err != nil {
 		return "", err
 	}
@@ -178,9 +266,9 @@ func ListTransactionsRange(start, end int) ([]json.RawMessage, error) {
 	return list.Transactions, nil
 }
 
-func ListTransactionsTmp() ([]TXInfo, error) {
+func ListTransactionsTmp() ([]*Transaction, error) {
 	type multiTransactionResponse struct {
-		Transactions []TXInfo `json:"transactions"`
+		Transactions []*Transaction `json:"transactions"`
 	}
 
 	req := NewJSON2Request("tmp-transactions", APICounter(), nil)
