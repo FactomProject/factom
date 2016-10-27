@@ -13,7 +13,7 @@ import (
 )
 
 type Transaction struct {
-	BlockHeight    uint64    `json:"blockheight,omitempty"`
+	BlockHeight    uint32    `json:"blockheight,omitempty"`
 	FeesPaid       uint64    `json:"feespaid,omitempty"`
 	FeesRequired   uint64    `json:"feesrequired,omitempty"`
 	IsSigned       bool      `json:"signed"`
@@ -42,23 +42,23 @@ func (tx *Transaction) String() (s string) {
 	s += fmt.Sprintln("ECOutputs:", tx.TotalECOutputs)
 	s += fmt.Sprintln("FeesPaid:", tx.FeesPaid)
 	s += fmt.Sprintln("FeesRequired:", tx.FeesRequired)
-	
+
 	return s
 }
 
 // MarshalJSON converts the Transaction into a JSON object
 func (tx *Transaction) MarshalJSON() ([]byte, error) {
 	tmp := &struct {
-		BlockHeight    uint64    `json:"blockheight,omitempty"`
-		FeesPaid       uint64    `json:"feespaid,omitempty"`
-		FeesRequired   uint64    `json:"feesrequired,omitempty"`
-		IsSigned       bool      `json:"signed"`
-		Name           string    `json:"name,omitempty"`
-		Timestamp      int64     `json:"timestamp"`
-		TotalECOutputs uint64    `json:"totalecoutputs"`
-		TotalInputs    uint64    `json:"totalinputs"`
-		TotalOutputs   uint64    `json:"totaloutputs"`
-		TxID           string    `json:"txid,omitempty"`
+		BlockHeight    uint32 `json:"blockheight,omitempty"`
+		FeesPaid       uint64 `json:"feespaid,omitempty"`
+		FeesRequired   uint64 `json:"feesrequired,omitempty"`
+		IsSigned       bool   `json:"signed"`
+		Name           string `json:"name,omitempty"`
+		Timestamp      int64  `json:"timestamp"`
+		TotalECOutputs uint64 `json:"totalecoutputs"`
+		TotalInputs    uint64 `json:"totalinputs"`
+		TotalOutputs   uint64 `json:"totaloutputs"`
+		TxID           string `json:"txid,omitempty"`
 	}{
 		BlockHeight:    tx.BlockHeight,
 		FeesPaid:       tx.FeesPaid,
@@ -77,24 +77,24 @@ func (tx *Transaction) MarshalJSON() ([]byte, error) {
 
 // UnmarshalJSON converts the JSON Transaction back into a Transaction
 func (tx *Transaction) UnmarshalJSON(data []byte) error {
-	type jsontx struct{
-		BlockHeight    uint64    `json:"blockheight,omitempty"`
-		FeesPaid       uint64    `json:"feespaid,omitempty"`
-		FeesRequired   uint64    `json:"feesrequired,omitempty"`
-		IsSigned       bool      `json:"signed"`
-		Name           string    `json:"name,omitempty"`
-		Timestamp      int64     `json:"timestamp"`
-		TotalECOutputs uint64    `json:"totalecoutputs"`
-		TotalInputs    uint64    `json:"totalinputs"`
-		TotalOutputs   uint64    `json:"totaloutputs"`
-		TxID           string    `json:"txid,omitempty"`
+	type jsontx struct {
+		BlockHeight    uint32 `json:"blockheight,omitempty"`
+		FeesPaid       uint64 `json:"feespaid,omitempty"`
+		FeesRequired   uint64 `json:"feesrequired,omitempty"`
+		IsSigned       bool   `json:"signed"`
+		Name           string `json:"name,omitempty"`
+		Timestamp      int64  `json:"timestamp"`
+		TotalECOutputs uint64 `json:"totalecoutputs"`
+		TotalInputs    uint64 `json:"totalinputs"`
+		TotalOutputs   uint64 `json:"totaloutputs"`
+		TxID           string `json:"txid,omitempty"`
 	}
 	tmp := new(jsontx)
-	
+
 	if err := json.Unmarshal(data, tmp); err != nil {
 		return err
 	}
-	
+
 	tx.BlockHeight = tmp.BlockHeight
 	tx.FeesPaid = tmp.FeesPaid
 	tx.FeesRequired = tmp.FeesRequired
@@ -109,6 +109,7 @@ func (tx *Transaction) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+// NewTransaction creates a new temporary Transaction in the wallet
 func NewTransaction(name string) error {
 	params := transactionRequest{Name: name}
 	req := NewJSON2Request("new-transaction", APICounter(), params)

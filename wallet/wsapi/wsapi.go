@@ -520,7 +520,7 @@ func handleDeleteTransaction(params []byte) (interface{}, *factom.JSONError) {
 	if err := fctWallet.DeleteTransaction(req.Name); err != nil {
 		return nil, newCustomInternalError(err.Error())
 	}
-	resp := transactionResponse{Name: req.Name}
+	resp := &factom.Transaction{Name: req.Name}
 	return resp, nil
 }
 
@@ -534,7 +534,7 @@ func handleTmpTransactions(params []byte) (interface{}, *factom.JSONError) {
 	}
 
 	for name, tx := range txs {
-		r := transactionResponse{Name: name}
+		r := &factom.Transaction{Name: name}
 		r.TxID = hex.EncodeToString(tx.GetSigHash().Bytes())
 		if i, err := tx.TotalInputs(); err != nil {
 			return nil, newCustomInternalError(err.Error())
@@ -556,11 +556,6 @@ func handleTmpTransactions(params []byte) (interface{}, *factom.JSONError) {
 		} else {
 			r.FeesRequired = i
 		}
-		if t, err := tx.MarshalBinary(); err != nil {
-			return nil, newCustomInternalError(err.Error())
-		} else {
-			r.RawTransaction = hex.EncodeToString(t)
-		}
 
 		resp.Transactions = append(resp.Transactions, r)
 	}
@@ -574,7 +569,7 @@ func handleTransactionHash(params []byte) (interface{}, *factom.JSONError) {
 		return nil, newInvalidParamsError()
 	}
 
-	resp := new(transactionResponse)
+	resp := new(factom.Transaction)
 	txs := fctWallet.GetTransactions()
 
 	for name, tx := range txs {
@@ -744,9 +739,16 @@ func mkAddressResponse(a addressResponder) *addressResponse {
 	return r
 }
 
-func mkTransactionResponse(t *factoid.Transaction) (*transactionResponse, error) {
-	r := new(transactionResponse)
+func mkTransactionResponse(t *factoid.Transaction) (*factom.Transaction, error) {
+	r := new(factom.Transaction)
 	r.TxID = hex.EncodeToString(t.GetSigHash().Bytes())
+
+	r.BlockHeight = t.GetBlockHeight()
+	r.Timestamp = t.GetTimestamp().GetTime()
+
+	if err := t.ValidateSignatures(); err == nil {
+		r.IsSigned = true
+	}
 
 	if i, err := t.TotalInputs(); err != nil {
 		return nil, err
