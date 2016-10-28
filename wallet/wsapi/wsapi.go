@@ -539,22 +539,22 @@ func handleTmpTransactions(params []byte) (interface{}, *factom.JSONError) {
 		if i, err := tx.TotalInputs(); err != nil {
 			return nil, newCustomInternalError(err.Error())
 		} else {
-			r.TotalInputs = i
+			r.TotalInputs = factoshiToFactoid(i)
 		}
 		if i, err := tx.TotalOutputs(); err != nil {
 			return nil, newCustomInternalError(err.Error())
 		} else {
-			r.TotalOutputs = i
+			r.TotalOutputs = factoshiToFactoid(i)
 		}
 		if i, err := tx.TotalECs(); err != nil {
 			return nil, newCustomInternalError(err.Error())
 		} else {
-			r.TotalECOutputs = i
+			r.TotalECOutputs = factoshiToFactoid(i)
 		}
 		if i, err := tx.CalculateFee(rate); err != nil {
 			return nil, newCustomInternalError(err.Error())
 		} else {
-			r.FeesRequired = i
+			r.FeesRequired = factoshiToFactoid(i)
 		}
 
 		resp.Transactions = append(resp.Transactions, r)
@@ -753,20 +753,31 @@ func mkTransactionResponse(t *factoid.Transaction) (*factom.Transaction, error) 
 	if i, err := t.TotalInputs(); err != nil {
 		return nil, err
 	} else {
-		r.TotalInputs = i
+		r.TotalInputs = factoshiToFactoid(i)
 	}
 
 	if i, err := t.TotalOutputs(); err != nil {
 		return nil, err
 	} else {
-		r.TotalOutputs = i
+		r.TotalOutputs = factoshiToFactoid(i)
 	}
 
 	if i, err := t.TotalECs(); err != nil {
 		return nil, err
 	} else {
-		r.TotalECOutputs = i
+		r.TotalECOutputs = factoshiToFactoid(i)
+	}
+
+	if r.TotalInputs <= r.TotalOutputs+r.TotalECOutputs {
+		r.FeesPaid = 0
+		r.FeesRequired = r.FeesRequired
+	} else {
+		r.FeesPaid = r.TotalInputs - (r.TotalOutputs + r.TotalECOutputs)
 	}
 
 	return r, nil
+}
+
+func factoshiToFactoid(v uint64) float64 {
+	return float64(v) / 1e8
 }
