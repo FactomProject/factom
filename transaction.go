@@ -292,9 +292,13 @@ func ListTransactionsTmp() ([]*Transaction, error) {
 	return txs.Transactions, nil
 }
 
-func AddTransactionInput(name, address string, amount uint64) error {
+func AddTransactionInput(
+	name,
+	address string,
+	amount uint64,
+) (*Transaction, error) {
 	if AddressStringType(address) != FactoidPub {
-		return fmt.Errorf("%s is not a Factoid address", address)
+		return nil, fmt.Errorf("%s is not a Factoid address", address)
 	}
 
 	params := transactionValueRequest{
@@ -305,13 +309,17 @@ func AddTransactionInput(name, address string, amount uint64) error {
 
 	resp, err := walletRequest(req)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	if resp.Error != nil {
-		return resp.Error
+		return nil, resp.Error
 	}
 
-	return nil
+	tx := new(Transaction)
+	if err := json.Unmarshal(resp.JSONResult(), tx); err != nil {
+		return nil, err
+	}
+	return tx, nil
 }
 
 func AddTransactionOutput(name, address string, amount uint64) error {
@@ -467,7 +475,7 @@ func SendFactoid(from, to string, amount uint64) (string, error) {
 	if err := NewTransaction(name); err != nil {
 		return "", err
 	}
-	if err := AddTransactionInput(name, from, amount); err != nil {
+	if _, err := AddTransactionInput(name, from, amount); err != nil {
 		return "", err
 	}
 	if err := AddTransactionOutput(name, to, amount); err != nil {
@@ -506,7 +514,7 @@ func BuyEC(from, to string, amount uint64) (string, error) {
 	if err := NewTransaction(name); err != nil {
 		return "", err
 	}
-	if err := AddTransactionInput(name, from, amount); err != nil {
+	if _, err := AddTransactionInput(name, from, amount); err != nil {
 		return "", err
 	}
 	if err := AddTransactionECOutput(name, to, amount); err != nil {
@@ -542,7 +550,7 @@ func BuyExactEC(from, to string, amount uint64) (string, error) {
 	if err := NewTransaction(name); err != nil {
 		return "", err
 	}
-	if err := AddTransactionInput(name, from, amount*rate); err != nil {
+	if _, err := AddTransactionInput(name, from, amount*rate); err != nil {
 		return "", err
 	}
 	if err := AddTransactionECOutput(name, to, amount*rate); err != nil {
