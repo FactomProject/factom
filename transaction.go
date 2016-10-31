@@ -111,19 +111,23 @@ func (tx *Transaction) UnmarshalJSON(data []byte) error {
 }
 
 // NewTransaction creates a new temporary Transaction in the wallet
-func NewTransaction(name string) error {
+func NewTransaction(name string) (*Transaction, error) {
 	params := transactionRequest{Name: name}
 	req := NewJSON2Request("new-transaction", APICounter(), params)
 
 	resp, err := walletRequest(req)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	if resp.Error != nil {
-		return resp.Error
+		return nil, resp.Error
 	}
 
-	return nil
+	tx := new(Transaction)
+	if err := json.Unmarshal(resp.JSONResult(), tx); err != nil {
+		return nil, err
+	}
+	return tx, nil
 }
 
 func DeleteTransaction(name string) error {
@@ -322,9 +326,13 @@ func AddTransactionInput(
 	return tx, nil
 }
 
-func AddTransactionOutput(name, address string, amount uint64) error {
+func AddTransactionOutput(
+	name,
+	address string,
+	amount uint64,
+) (*Transaction, error) {
 	if AddressStringType(address) != FactoidPub {
-		return fmt.Errorf("%s is not a Factoid address", address)
+		return nil, fmt.Errorf("%s is not a Factoid address", address)
 	}
 
 	params := transactionValueRequest{
@@ -335,18 +343,26 @@ func AddTransactionOutput(name, address string, amount uint64) error {
 
 	resp, err := walletRequest(req)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	if resp.Error != nil {
-		return resp.Error
+		return nil, resp.Error
 	}
 
-	return nil
+	tx := new(Transaction)
+	if err := json.Unmarshal(resp.JSONResult(), tx); err != nil {
+		return nil, err
+	}
+	return tx, nil
 }
 
-func AddTransactionECOutput(name, address string, amount uint64) error {
+func AddTransactionECOutput(
+	name,
+	address string,
+	amount uint64,
+) (*Transaction, error) {
 	if AddressStringType(address) != ECPub {
-		return fmt.Errorf("%s is not an Entry Credit address", address)
+		return nil, fmt.Errorf("%s is not an Entry Credit address", address)
 	}
 
 	params := transactionValueRequest{
@@ -357,13 +373,17 @@ func AddTransactionECOutput(name, address string, amount uint64) error {
 
 	resp, err := walletRequest(req)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	if resp.Error != nil {
-		return resp.Error
+		return nil, resp.Error
 	}
 
-	return nil
+	tx := new(Transaction)
+	if err := json.Unmarshal(resp.JSONResult(), tx); err != nil {
+		return nil, err
+	}
+	return tx, nil
 }
 
 func AddTransactionFee(name, address string) error {
@@ -472,13 +492,13 @@ func SendFactoid(from, to string, amount uint64) (string, error) {
 		return "", err
 	}
 	name := hex.EncodeToString(n)
-	if err := NewTransaction(name); err != nil {
+	if _, err := NewTransaction(name); err != nil {
 		return "", err
 	}
 	if _, err := AddTransactionInput(name, from, amount); err != nil {
 		return "", err
 	}
-	if err := AddTransactionOutput(name, to, amount); err != nil {
+	if _, err := AddTransactionOutput(name, to, amount); err != nil {
 		return "", err
 	}
 	balance, err := GetFactoidBalance(from)
@@ -511,13 +531,13 @@ func BuyEC(from, to string, amount uint64) (string, error) {
 		return "", err
 	}
 	name := hex.EncodeToString(n)
-	if err := NewTransaction(name); err != nil {
+	if _, err := NewTransaction(name); err != nil {
 		return "", err
 	}
 	if _, err := AddTransactionInput(name, from, amount); err != nil {
 		return "", err
 	}
-	if err := AddTransactionECOutput(name, to, amount); err != nil {
+	if _, err := AddTransactionECOutput(name, to, amount); err != nil {
 		return "", err
 	}
 	if err := AddTransactionFee(name, from); err != nil {
@@ -547,13 +567,13 @@ func BuyExactEC(from, to string, amount uint64) (string, error) {
 	}
 	name := hex.EncodeToString(n)
 
-	if err := NewTransaction(name); err != nil {
+	if _, err := NewTransaction(name); err != nil {
 		return "", err
 	}
 	if _, err := AddTransactionInput(name, from, amount*rate); err != nil {
 		return "", err
 	}
-	if err := AddTransactionECOutput(name, to, amount*rate); err != nil {
+	if _, err := AddTransactionECOutput(name, to, amount*rate); err != nil {
 		return "", err
 	}
 	if err := AddTransactionFee(name, from); err != nil {
