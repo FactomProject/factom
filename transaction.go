@@ -160,9 +160,9 @@ func TransactionHash(name string) (string, error) {
 	return tx.TxID, nil
 }
 
-func ListTransactionsAll() ([]json.RawMessage, error) {
-	type transactionList struct {
-		Transactions []json.RawMessage `json:"transactions"`
+func ListTransactionsAll() ([]*Transaction, error) {
+	type multiTransactionResponse struct {
+		Transactions []*Transaction `json:"transactions"`
 	}
 
 	req := NewJSON2Request("transactions", APICounter(), nil)
@@ -174,7 +174,7 @@ func ListTransactionsAll() ([]json.RawMessage, error) {
 		return nil, resp.Error
 	}
 
-	list := new(transactionList)
+	list := new(multiTransactionResponse)
 	if err := json.Unmarshal(resp.JSONResult(), list); err != nil {
 		return nil, err
 	}
@@ -182,10 +182,11 @@ func ListTransactionsAll() ([]json.RawMessage, error) {
 	return list.Transactions, nil
 }
 
-func ListTransactionsAddress(addr string) ([]json.RawMessage, error) {
-	type transactionList struct {
-		Transactions []json.RawMessage `json:"transactions"`
+func ListTransactionsAddress(addr string) ([]*Transaction, error) {
+	type multiTransactionResponse struct {
+		Transactions []*Transaction `json:"transactions"`
 	}
+
 	type txReq struct {
 		Address string `json:"address"`
 	}
@@ -201,7 +202,7 @@ func ListTransactionsAddress(addr string) ([]json.RawMessage, error) {
 		return nil, resp.Error
 	}
 
-	list := new(transactionList)
+	list := new(multiTransactionResponse)
 	if err := json.Unmarshal(resp.JSONResult(), list); err != nil {
 		return nil, err
 	}
@@ -209,10 +210,11 @@ func ListTransactionsAddress(addr string) ([]json.RawMessage, error) {
 	return list.Transactions, nil
 }
 
-func ListTransactionsID(id string) ([]json.RawMessage, error) {
-	type transactionList struct {
-		Transactions []json.RawMessage `json:"transactions"`
+func ListTransactionsID(id string) ([]*Transaction, error) {
+	type multiTransactionResponse struct {
+		Transactions []*Transaction `json:"transactions"`
 	}
+
 	type txReq struct {
 		TxID string `json:"txid"`
 	}
@@ -228,7 +230,7 @@ func ListTransactionsID(id string) ([]json.RawMessage, error) {
 		return nil, resp.Error
 	}
 
-	list := new(transactionList)
+	list := new(multiTransactionResponse)
 	if err := json.Unmarshal(resp.JSONResult(), list); err != nil {
 		return nil, err
 	}
@@ -236,10 +238,11 @@ func ListTransactionsID(id string) ([]json.RawMessage, error) {
 	return list.Transactions, nil
 }
 
-func ListTransactionsRange(start, end int) ([]json.RawMessage, error) {
-	type transactionList struct {
-		Transactions []json.RawMessage `json:"transactions"`
+func ListTransactionsRange(start, end int) ([]*Transaction, error) {
+	type multiTransactionResponse struct {
+		Transactions []*Transaction `json:"transactions"`
 	}
+
 	type txReq struct {
 		Range struct {
 			Start int `json:"start"`
@@ -260,7 +263,7 @@ func ListTransactionsRange(start, end int) ([]json.RawMessage, error) {
 		return nil, resp.Error
 	}
 
-	list := new(transactionList)
+	list := new(multiTransactionResponse)
 	if err := json.Unmarshal(resp.JSONResult(), list); err != nil {
 		return nil, err
 	}
