@@ -23,7 +23,7 @@ import (
 	"github.com/FactomProject/btcutil/certs"
 	"github.com/FactomProject/factom"
 	"github.com/FactomProject/factom/wallet"
-	"github.com/FactomProject/factomd/common/factoid"
+	"github.com/FactomProject/factomd/common/interfaces"
 	"github.com/FactomProject/web"
 )
 
@@ -407,10 +407,6 @@ func handleWalletBackup(params []byte) (interface{}, *factom.JSONError) {
 }
 
 func handleAllTransactions(params []byte) (interface{}, *factom.JSONError) {
-	type transactionList struct {
-		Transactions []json.RawMessage `json:"transactions"`
-	}
-
 	if fctWallet.TXDB() == nil {
 		return nil, newCustomInternalError(
 			"Wallet does not have a transaction database")
@@ -423,7 +419,7 @@ func handleAllTransactions(params []byte) (interface{}, *factom.JSONError) {
 		}
 	}
 
-	resp := new(transactionList)
+	resp := new(multiTransactionResponse)
 
 	switch {
 	case req == nil:
@@ -432,33 +428,33 @@ func handleAllTransactions(params []byte) (interface{}, *factom.JSONError) {
 			return nil, newCustomInternalError(err.Error())
 		}
 		for _, tx := range txs {
-			p, err := tx.JSONByte()
+			r, err := factoidTxToTransaction(tx)
 			if err != nil {
 				return nil, newCustomInternalError(err.Error())
 			}
-			resp.Transactions = append(resp.Transactions, p)
+			resp.Transactions = append(resp.Transactions, r)
 		}
 	case req.TxID != "":
 		tx, err := fctWallet.TXDB().GetTX(req.TxID)
 		if err != nil {
 			return nil, newCustomInternalError(err.Error())
 		}
-		p, err := tx.JSONByte()
+		r, err := factoidTxToTransaction(tx)
 		if err != nil {
 			return nil, newCustomInternalError(err.Error())
 		}
-		resp.Transactions = append(resp.Transactions, p)
+		resp.Transactions = append(resp.Transactions, r)
 	case req.Address != "":
 		txs, err := fctWallet.TXDB().GetTXAddress(req.Address)
 		if err != nil {
 			return nil, newCustomInternalError(err.Error())
 		}
 		for _, tx := range txs {
-			p, err := tx.JSONByte()
+			r, err := factoidTxToTransaction(tx)
 			if err != nil {
 				return nil, newCustomInternalError(err.Error())
 			}
-			resp.Transactions = append(resp.Transactions, p)
+			resp.Transactions = append(resp.Transactions, r)
 		}
 	case req.Range.End != 0:
 		txs, err := fctWallet.TXDB().GetTXRange(req.Range.Start, req.Range.End)
@@ -466,11 +462,11 @@ func handleAllTransactions(params []byte) (interface{}, *factom.JSONError) {
 			return nil, newCustomInternalError(err.Error())
 		}
 		for _, tx := range txs {
-			p, err := tx.JSONByte()
+			r, err := factoidTxToTransaction(tx)
 			if err != nil {
 				return nil, newCustomInternalError(err.Error())
 			}
-			resp.Transactions = append(resp.Transactions, p)
+			resp.Transactions = append(resp.Transactions, r)
 		}
 	default:
 		txs, err := fctWallet.TXDB().GetAllTXs()
@@ -478,11 +474,11 @@ func handleAllTransactions(params []byte) (interface{}, *factom.JSONError) {
 			return nil, newCustomInternalError(err.Error())
 		}
 		for _, tx := range txs {
-			p, err := tx.JSONByte()
+			r, err := factoidTxToTransaction(tx)
 			if err != nil {
 				return nil, newCustomInternalError(err.Error())
 			}
-			resp.Transactions = append(resp.Transactions, p)
+			resp.Transactions = append(resp.Transactions, r)
 		}
 	}
 
@@ -501,8 +497,8 @@ func handleNewTransaction(params []byte) (interface{}, *factom.JSONError) {
 		return nil, newCustomInternalError(err.Error())
 	}
 
-	t := fctWallet.GetTransactions()[req.Name]
-	resp, err := mkTransactionResponse(t)
+	tx := fctWallet.GetTransactions()[req.Name]
+	resp, err := factoidTxToTransaction(tx)
 	if err != nil {
 		return nil, newCustomInternalError(err.Error())
 	}
@@ -592,8 +588,8 @@ func handleAddInput(params []byte) (interface{}, *factom.JSONError) {
 	if err := fctWallet.AddInput(req.Name, req.Address, req.Amount); err != nil {
 		return nil, newCustomInternalError(err.Error())
 	}
-	t := fctWallet.GetTransactions()[req.Name]
-	resp, err := mkTransactionResponse(t)
+	tx := fctWallet.GetTransactions()[req.Name]
+	resp, err := factoidTxToTransaction(tx)
 	if err != nil {
 		return nil, newCustomInternalError(err.Error())
 	}
@@ -611,8 +607,8 @@ func handleAddOutput(params []byte) (interface{}, *factom.JSONError) {
 	if err := fctWallet.AddOutput(req.Name, req.Address, req.Amount); err != nil {
 		return nil, newCustomInternalError(err.Error())
 	}
-	t := fctWallet.GetTransactions()[req.Name]
-	resp, err := mkTransactionResponse(t)
+	tx := fctWallet.GetTransactions()[req.Name]
+	resp, err := factoidTxToTransaction(tx)
 	if err != nil {
 		return nil, newCustomInternalError(err.Error())
 	}
@@ -630,8 +626,8 @@ func handleAddECOutput(params []byte) (interface{}, *factom.JSONError) {
 	if err := fctWallet.AddECOutput(req.Name, req.Address, req.Amount); err != nil {
 		return nil, newCustomInternalError(err.Error())
 	}
-	t := fctWallet.GetTransactions()[req.Name]
-	resp, err := mkTransactionResponse(t)
+	tx := fctWallet.GetTransactions()[req.Name]
+	resp, err := factoidTxToTransaction(tx)
 	if err != nil {
 		return nil, newCustomInternalError(err.Error())
 	}
@@ -653,8 +649,8 @@ func handleAddFee(params []byte) (interface{}, *factom.JSONError) {
 	if err := fctWallet.AddFee(req.Name, req.Address, rate); err != nil {
 		return nil, newCustomInternalError(err.Error())
 	}
-	t := fctWallet.GetTransactions()[req.Name]
-	resp, err := mkTransactionResponse(t)
+	tx := fctWallet.GetTransactions()[req.Name]
+	resp, err := factoidTxToTransaction(tx)
 	if err != nil {
 		return nil, newCustomInternalError(err.Error())
 	}
@@ -676,8 +672,8 @@ func handleSubFee(params []byte) (interface{}, *factom.JSONError) {
 	if err := fctWallet.SubFee(req.Name, req.Address, rate); err != nil {
 		return nil, newCustomInternalError(err.Error())
 	}
-	t := fctWallet.GetTransactions()[req.Name]
-	resp, err := mkTransactionResponse(t)
+	tx := fctWallet.GetTransactions()[req.Name]
+	resp, err := factoidTxToTransaction(tx)
 	if err != nil {
 		return nil, newCustomInternalError(err.Error())
 	}
@@ -695,8 +691,8 @@ func handleSignTransaction(params []byte) (interface{}, *factom.JSONError) {
 	if err := fctWallet.SignTransaction(req.Name); err != nil {
 		return nil, newCustomInternalError(err.Error())
 	}
-	t := fctWallet.GetTransactions()[req.Name]
-	resp, err := mkTransactionResponse(t)
+	tx := fctWallet.GetTransactions()[req.Name]
+	resp, err := factoidTxToTransaction(tx)
 	if err != nil {
 		return nil, newCustomInternalError(err.Error())
 	}
@@ -739,7 +735,10 @@ func mkAddressResponse(a addressResponder) *addressResponse {
 	return r
 }
 
-func mkTransactionResponse(t *factoid.Transaction) (*factom.Transaction, error) {
+func factoidTxToTransaction(t interfaces.ITransaction) (
+	*factom.Transaction,
+	error,
+) {
 	r := new(factom.Transaction)
 	r.TxID = hex.EncodeToString(t.GetSigHash().Bytes())
 
