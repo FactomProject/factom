@@ -131,11 +131,11 @@ func ImportAddresses(addrs ...string) (
 	return fs, es, nil
 }
 
-func ImportMnemonic(mnemonic string) (*FactoidAddress, error) {
-	params := new(importMnemonicRequest)
+func ImportKoinify(mnemonic string) (*FactoidAddress, error) {
+	params := new(importKoinifyRequest)
 	params.Words = mnemonic
 
-	req := NewJSON2Request("import-mnemonic", APICounter(), params)
+	req := NewJSON2Request("import-koinify", APICounter(), params)
 	resp, err := walletRequest(req)
 	if err != nil {
 		return nil, err
