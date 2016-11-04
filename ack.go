@@ -30,10 +30,14 @@ type ReserveInfo struct {
 }
 
 type GeneralTransactionData struct {
-	TransactionDate       int64  `json:"transactiondate,omitempty"`       //Unix time
-	TransactionDateString string `json:"transactiondatestring,omitempty"` //ISO8601 time
-	BlockDate             int64  `json:"blockdate,omitempty"`             //Unix time
-	BlockDateString       string `json:"blockdatestring,omitempty"`       //ISO8601 time
+	// TransactionDate in Unix time
+	TransactionDate int64 `json:"transactiondate,omitempty"`
+	//TransactionDateString ISO8601 time
+	TransactionDateString string `json:"transactiondatestring,omitempty"`
+	//Unix time
+	BlockDate int64 `json:"blockdate,omitempty"`
+	//ISO8601 time
+	BlockDateString string `json:"blockdatestring,omitempty"`
 
 	Malleated *Malleated `json:"malleated,omitempty"`
 	Status    string     `json:"status"`
