@@ -6,11 +6,21 @@ package factom
 
 import (
 	"encoding/json"
+	"fmt"
 )
 
 type FactoidTxStatus struct {
 	TxID string `json:"txid"`
 	GeneralTransactionData
+}
+
+func (f *FactoidTxStatus) String() string {
+	var s string
+	s += fmt.Sprintln("TxID:", f.TxID)
+	s += fmt.Sprintln("Status:", f.Status)
+	s += fmt.Sprintln("Date:", f.TransactionDateString)
+
+	return s
 }
 
 type EntryStatus struct {
@@ -22,6 +32,15 @@ type EntryStatus struct {
 
 	ReserveTransactions          []ReserveInfo `json:"reserveinfo,omitempty"`
 	ConflictingRevealEntryHashes []string      `json:"conflictingrevealentryhashes,omitempty"`
+}
+
+func (e *EntryStatus) String() string {
+	var s string
+	s += fmt.Sprintln("TxID:", e.CommitTxID)
+	s += fmt.Sprintln("Status:", e.CommitData.Status)
+	s += fmt.Sprintln("Date:", e.CommitData.TransactionDateString)
+
+	return s
 }
 
 type ReserveInfo struct {
