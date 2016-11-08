@@ -145,25 +145,6 @@ func DeleteTransaction(name string) error {
 	return nil
 }
 
-func TransactionName(name string) (*Transaction, error) {
-	params := transactionRequest{Name: name}
-	req := NewJSON2Request("transaction-hash", APICounter(), params)
-
-	resp, err := walletRequest(req)
-	if err != nil {
-		return nil, err
-	}
-	if resp.Error != nil {
-		return nil, resp.Error
-	}
-	tx := new(Transaction)
-	if err := json.Unmarshal(resp.JSONResult(), tx); err != nil {
-		return nil, err
-	}
-
-	return tx, nil
-}
-
 func ListTransactionsAll() ([]*Transaction, error) {
 	type multiTransactionResponse struct {
 		Transactions []*Transaction `json:"transactions"`
@@ -487,7 +468,7 @@ func SendTransaction(name string) (*Transaction, error) {
 	if fresp.Error != nil {
 		return nil, fresp.Error
 	}
-	tx, err := TransactionName(name)
+	tx, err := GetTmpTransaction(name)
 	if err != nil {
 		return nil, err
 	}
@@ -632,4 +613,24 @@ func GetTransaction(txID string) (*TransactionResponse, error) {
 	}
 
 	return txResp, nil
+}
+
+// GetTmpTransaction gets a temporary transaction from the wallet
+func GetTmpTransaction(name string) (*Transaction, error) {
+	params := transactionRequest{Name: name}
+	req := NewJSON2Request("transaction-hash", APICounter(), params)
+
+	resp, err := walletRequest(req)
+	if err != nil {
+		return nil, err
+	}
+	if resp.Error != nil {
+		return nil, resp.Error
+	}
+	tx := new(Transaction)
+	if err := json.Unmarshal(resp.JSONResult(), tx); err != nil {
+		return nil, err
+	}
+
+	return tx, nil
 }
