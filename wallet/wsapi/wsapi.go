@@ -745,8 +745,10 @@ func factoidTxToTransaction(t interfaces.ITransaction) (
 	r.BlockHeight = t.GetBlockHeight()
 	r.Timestamp = t.GetTimestamp().GetTime()
 
-	if err := t.ValidateSignatures(); err == nil {
-		r.IsSigned = true
+	if len(t.GetSignatureBlocks()) > 0 {
+		if err := t.ValidateSignatures(); err == nil {
+			r.IsSigned = true
+		}
 	}
 
 	if i, err := t.TotalInputs(); err != nil {
