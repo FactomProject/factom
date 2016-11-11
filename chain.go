@@ -74,7 +74,7 @@ func ComposeChainCommit(c *Chain, ec *ECAddress) (*JSON2Request, error) {
 	buf.Write(e.Hash())
 
 	// 1 byte number of Entry Credits to pay
-	if d, err := entryCost(e); err != nil {
+	if d, err := EntryCost(e); err != nil {
 		return nil, err
 	} else {
 		buf.WriteByte(byte(d + 10))

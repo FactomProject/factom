@@ -166,7 +166,7 @@ func ComposeEntryCommit(e *Entry, ec *ECAddress) (*JSON2Request, error) {
 	buf.Write(e.Hash())
 
 	// 1 byte number of entry credits to pay
-	if c, err := entryCost(e); err != nil {
+	if c, err := EntryCost(e); err != nil {
 		return nil, err
 	} else {
 		buf.WriteByte(byte(c))

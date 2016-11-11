@@ -22,7 +22,7 @@ var (
 	RpcConfig = &RPCConfig{}
 )
 
-func entryCost(e *Entry) (int8, error) {
+func EntryCost(e *Entry) (int8, error) {
 	p, err := e.MarshalBinary()
 	if err != nil {
 		return 0, err
