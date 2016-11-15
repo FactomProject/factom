@@ -8,6 +8,10 @@ import "fmt"
 
 // requests
 
+type heightRequest struct {
+	Height int64 `json:"height"`
+}
+
 type ackRequest struct {
 	TxID            string `json:"txid,omitempty"`
 	FullTransaction string `json:"fulltransaction,omitempty"`

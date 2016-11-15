@@ -8,6 +8,93 @@ import (
 	"encoding/json"
 )
 
+type BlockByHeightResponse struct {
+	//TODO: implement all of the blocks as proper structures
+
+	DBlock  map[string]interface{} `json:"dblock,omitempty"`
+	ABlock  map[string]interface{} `json:"ablock,omitempty"`
+	FBlock  map[string]interface{} `json:"fblock,omitempty"`
+	ECBlock map[string]interface{} `json:"ecblock,omitempty"`
+
+	RawData string `json:"rawdata,omitempty"`
+}
+
+func GetDBlockByHeight(height int64) (*BlockByHeightResponse, error) {
+	params := heightRequest{Height: height}
+	req := NewJSON2Request("dblock-by-height", APICounter(), params)
+	resp, err := factomdRequest(req)
+	if err != nil {
+		return nil, err
+	}
+	if resp.Error != nil {
+		return nil, resp.Error
+	}
+
+	block := new(BlockByHeightResponse)
+	if err := json.Unmarshal(resp.JSONResult(), block); err != nil {
+		return nil, err
+	}
+
+	return block, nil
+}
+
+func GetECBlockByHeight(height int64) (*BlockByHeightResponse, error) {
+	params := heightRequest{Height: height}
+	req := NewJSON2Request("ecblock-by-height", APICounter(), params)
+	resp, err := factomdRequest(req)
+	if err != nil {
+		return nil, err
+	}
+	if resp.Error != nil {
+		return nil, resp.Error
+	}
+
+	block := new(BlockByHeightResponse)
+	if err := json.Unmarshal(resp.JSONResult(), block); err != nil {
+		return nil, err
+	}
+
+	return block, nil
+}
+
+func GetFBlockByHeight(height int64) (*BlockByHeightResponse, error) {
+	params := heightRequest{Height: height}
+	req := NewJSON2Request("fblock-by-height", APICounter(), params)
+	resp, err := factomdRequest(req)
+	if err != nil {
+		return nil, err
+	}
+	if resp.Error != nil {
+		return nil, resp.Error
+	}
+
+	block := new(BlockByHeightResponse)
+	if err := json.Unmarshal(resp.JSONResult(), block); err != nil {
+		return nil, err
+	}
+
+	return block, nil
+}
+
+func GetABlockByHeight(height int64) (*BlockByHeightResponse, error) {
+	params := heightRequest{Height: height}
+	req := NewJSON2Request("ablock-by-height", APICounter(), params)
+	resp, err := factomdRequest(req)
+	if err != nil {
+		return nil, err
+	}
+	if resp.Error != nil {
+		return nil, resp.Error
+	}
+
+	block := new(BlockByHeightResponse)
+	if err := json.Unmarshal(resp.JSONResult(), block); err != nil {
+		return nil, err
+	}
+
+	return block, nil
+}
+
 // GetECBalance returns the balance in factoshi (factoid * 1e8) of a given Entry
 // Credit Public Address.
 func GetECBalance(addr string) (int64, error) {
