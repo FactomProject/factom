@@ -5,6 +5,7 @@
 package wallet
 
 import (
+	"encoding/hex"
 	"fmt"
 
 	"github.com/FactomProject/factom"
@@ -207,63 +208,60 @@ func (db *TXDatabaseOverlay) GetTXRange(start, end int) (
 
 // GetFBlock retrives a Factoid Block from Factom
 func (db *TXDatabaseOverlay) GetFBlock(keymr string) (interfaces.IFBlock, error) {
-	fblock := new(factoid.FBlock)
-	data, err := db.dbo.Get(fblockDBPrefix, []byte(keymr), fblock)
+	h, err := primitives.NewShaHashFromStr(keymr)
 	if err != nil {
 		return nil, err
 	}
-	if data == nil {
-		return nil, nil
+
+	fBlock, err := db.dbo.FetchFBlock(h)
+	if err != nil {
+		return nil, err
 	}
-	return data.(interfaces.IFBlock), nil
+	return fBlock, nil
 }
 
-func (db *TXDatabaseOverlay) InsertFBlock(fblock interfaces.IFBlock) error {
-	fblockmr := []byte(fblock.GetKeyMR().String())
+func (db *TXDatabaseOverlay) FetchNextFBlockHeight() (uint32, error) {
+	block, err := db.dbo.FetchFBlockHead()
+	if err != nil {
+		return 0, err
+	}
+	if block == nil {
+		return 0, nil
+	}
+	return block.GetDBHeight() + 1, nil
+}
 
-	batch := []interfaces.Record{}
-	batch = append(batch, interfaces.Record{fblockDBPrefix, fblockmr, fblock})
-
-	return db.dbo.PutInBatch(batch)
+func (db *TXDatabaseOverlay) InsertFBlockHead(fblock interfaces.IFBlock) error {
+	return db.dbo.SaveFactoidBlockHead(fblock)
 }
 
 // update gets all fblocks written since the database was last updated, and
 // returns the most recent fblock keymr.
 func (db *TXDatabaseOverlay) update() (string, error) {
-	fblock, err := fblockHead()
+	newestFBlock, err := fblockHead()
 	if err != nil {
 		return "", err
 	}
-	newest := fblock.GetKeyMR().String()
-	// add the fblock to the db
-	if err := db.InsertFBlock(fblock); err != nil {
+
+	newestHeight := newestFBlock.GetDatabaseHeight()
+	start, err := db.FetchNextFBlockHeight()
+	if err != nil {
 		return "", err
 	}
 
-	prevmr := fblock.GetPrevKeyMR().String()
-	for prevmr != factom.ZeroHash {
-		if f, _ := db.GetFBlock(prevmr); f != nil {
-			fblock = f
-		} else {
-			f, err := getfblock(prevmr)
-			if err != nil {
-				return "", err
-			}
-			fblock = f
-			if err := db.InsertFBlock(fblock); err != nil {
-				return "", err
-			}
+	if start >= newestHeight {
+		return newestFBlock.GetKeyMR().String(), nil
+	}
+
+	for i := start; i < newestHeight; i++ {
+		fblock, err := getfblockbyheight(i)
+		if err != nil {
+			return "", err
 		}
-
-		prevmr = fblock.GetPrevKeyMR().String()
+		db.InsertFBlockHead(fblock)
 	}
 
-	// write the last fblock into the db
-	if err := db.InsertFBlock(fblock); err != nil {
-		return "", err
-	}
-
-	return newest, nil
+	return newestFBlock.GetKeyMR().String(), nil
 }
 
 // fblockHead gets the most recent fblock.
@@ -298,4 +296,16 @@ func getfblock(keymr string) (interfaces.IFBlock, error) {
 		return nil, err
 	}
 	return factoid.UnmarshalFBlock(p)
+}
+
+func getfblockbyheight(height uint32) (interfaces.IFBlock, error) {
+	p, err := factom.GetFBlockByHeight(int64(height))
+	if err != nil {
+		return nil, err
+	}
+	h, err := hex.DecodeString(p.RawData)
+	if err != nil {
+		return nil, err
+	}
+	return factoid.UnmarshalFBlock(h)
 }
