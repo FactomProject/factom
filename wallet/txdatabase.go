@@ -253,7 +253,12 @@ func (db *TXDatabaseOverlay) update() (string, error) {
 		return newestFBlock.GetKeyMR().String(), nil
 	}
 
-	for i := start; i < newestHeight; i++ {
+	for i := start; i <= newestHeight; i++ {
+		if i%1000 == 0 {
+			if newestHeight-start > 1000 {
+				fmt.Printf("Fetching block %v / %v\n", i, newestHeight)
+			}
+		}
 		fblock, err := getfblockbyheight(i)
 		if err != nil {
 			return "", err
