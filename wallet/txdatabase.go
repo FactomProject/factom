@@ -82,11 +82,11 @@ func (db *TXDatabaseOverlay) Close() error {
 // local database is used to cache the factoid blocks.
 func (db *TXDatabaseOverlay) GetAllTXs() ([]interfaces.ITransaction, error) {
 	// update the database and get the newest fblock
-	newest, err := db.update()
+	_, err := db.update()
 	if err != nil {
 		return nil, err
 	}
-	fblock, err := db.GetFBlock(newest)
+	fblock, err := db.dbo.FetchFBlockHead()
 	if err != nil {
 		return nil, err
 	}
@@ -243,11 +243,27 @@ func (db *TXDatabaseOverlay) update() (string, error) {
 		return "", err
 	}
 
-	newestHeight := newestFBlock.GetDatabaseHeight()
 	start, err := db.FetchNextFBlockHeight()
 	if err != nil {
 		return "", err
 	}
+
+	//Making sure we didn't switch networks
+	genesis, err := db.dbo.FetchFBlockByHeight(0)
+	if err != nil {
+		return "", err
+	}
+	if genesis != nil {
+		genesis2, err := getfblockbyheight(0)
+		if err != nil {
+			return "", err
+		}
+		if !genesis2.GetKeyMR().IsSameAs(genesis.GetKeyMR()) {
+			start = 0
+		}
+	}
+
+	newestHeight := newestFBlock.GetDatabaseHeight()
 
 	if start >= newestHeight {
 		return newestFBlock.GetKeyMR().String(), nil
