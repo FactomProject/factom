@@ -775,6 +775,17 @@ func factoidTxToTransaction(t interfaces.ITransaction) (
 	} else {
 		r.FeesPaid = r.TotalInputs - (r.TotalOutputs + r.TotalECOutputs)
 	}
+	
+	// get the ec rate and calulate the fee
+	rate, err := factom.GetRate()
+	if err != nil {
+		rate = 0
+	}
+	if i, err := t.CalculateFee(rate); err != nil {
+		return nil, err
+	} else {
+		r.FeesRequired = i
+	}
 
 	return r, nil
 }
