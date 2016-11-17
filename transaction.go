@@ -14,14 +14,14 @@ import (
 
 type Transaction struct {
 	BlockHeight    uint32    `json:"blockheight,omitempty"`
-	FeesPaid       float64   `json:"feespaid,omitempty"`
-	FeesRequired   float64   `json:"feesrequired,omitempty"`
+	FeesPaid       uint64    `json:"feespaid,omitempty"`
+	FeesRequired   uint64    `json:"feesrequired,omitempty"`
 	IsSigned       bool      `json:"signed"`
 	Name           string    `json:"name,omitempty"`
 	Timestamp      time.Time `json:"timestamp"`
-	TotalECOutputs float64   `json:"totalecoutputs"`
-	TotalInputs    float64   `json:"totalinputs"`
-	TotalOutputs   float64   `json:"totaloutputs"`
+	TotalECOutputs uint64    `json:"totalecoutputs"`
+	TotalInputs    uint64    `json:"totalinputs"`
+	TotalOutputs   uint64    `json:"totaloutputs"`
 	TxID           string    `json:"txid,omitempty"`
 }
 
@@ -37,11 +37,11 @@ func (tx *Transaction) String() (s string) {
 	if tx.BlockHeight != 0 {
 		s += fmt.Sprintln("BlockHeight:", tx.BlockHeight)
 	}
-	s += fmt.Sprintln("TotalInputs:", tx.TotalInputs)
-	s += fmt.Sprintln("TotalOutputs:", tx.TotalOutputs)
-	s += fmt.Sprintln("ECOutputs:", tx.TotalECOutputs)
-	s += fmt.Sprintln("FeesPaid:", tx.FeesPaid)
-	s += fmt.Sprintln("FeesRequired:", tx.FeesRequired)
+	s += fmt.Sprintln("TotalInputs:", factoshiToFactoid(tx.TotalInputs))
+	s += fmt.Sprintln("TotalOutputs:", factoshiToFactoid(tx.TotalOutputs))
+	s += fmt.Sprintln("ECOutputs:", factoshiToFactoid(tx.TotalECOutputs))
+	s += fmt.Sprintln("FeesPaid:", factoshiToFactoid(tx.FeesPaid))
+	s += fmt.Sprintln("FeesRequired:", factoshiToFactoid(tx.FeesRequired))
 	s += fmt.Sprintln("Signed:", tx.IsSigned)
 
 	return s
@@ -50,16 +50,16 @@ func (tx *Transaction) String() (s string) {
 // MarshalJSON converts the Transaction into a JSON object
 func (tx *Transaction) MarshalJSON() ([]byte, error) {
 	tmp := &struct {
-		BlockHeight    uint32  `json:"blockheight,omitempty"`
-		FeesPaid       float64 `json:"feespaid,omitempty"`
-		FeesRequired   float64 `json:"feesrequired,omitempty"`
-		IsSigned       bool    `json:"signed"`
-		Name           string  `json:"name,omitempty"`
-		Timestamp      int64   `json:"timestamp"`
-		TotalECOutputs float64 `json:"totalecoutputs"`
-		TotalInputs    float64 `json:"totalinputs"`
-		TotalOutputs   float64 `json:"totaloutputs"`
-		TxID           string  `json:"txid,omitempty"`
+		BlockHeight    uint32 `json:"blockheight,omitempty"`
+		FeesPaid       uint64 `json:"feespaid,omitempty"`
+		FeesRequired   uint64 `json:"feesrequired,omitempty"`
+		IsSigned       bool   `json:"signed"`
+		Name           string `json:"name,omitempty"`
+		Timestamp      int64  `json:"timestamp"`
+		TotalECOutputs uint64 `json:"totalecoutputs"`
+		TotalInputs    uint64 `json:"totalinputs"`
+		TotalOutputs   uint64 `json:"totaloutputs"`
+		TxID           string `json:"txid,omitempty"`
 	}{
 		BlockHeight:    tx.BlockHeight,
 		FeesPaid:       tx.FeesPaid,
@@ -79,16 +79,16 @@ func (tx *Transaction) MarshalJSON() ([]byte, error) {
 // UnmarshalJSON converts the JSON Transaction back into a Transaction
 func (tx *Transaction) UnmarshalJSON(data []byte) error {
 	type jsontx struct {
-		BlockHeight    uint32  `json:"blockheight,omitempty"`
-		FeesPaid       float64 `json:"feespaid,omitempty"`
-		FeesRequired   float64 `json:"feesrequired,omitempty"`
-		IsSigned       bool    `json:"signed"`
-		Name           string  `json:"name,omitempty"`
-		Timestamp      int64   `json:"timestamp"`
-		TotalECOutputs float64 `json:"totalecoutputs"`
-		TotalInputs    float64 `json:"totalinputs"`
-		TotalOutputs   float64 `json:"totaloutputs"`
-		TxID           string  `json:"txid,omitempty"`
+		BlockHeight    uint32 `json:"blockheight,omitempty"`
+		FeesPaid       uint64 `json:"feespaid,omitempty"`
+		FeesRequired   uint64 `json:"feesrequired,omitempty"`
+		IsSigned       bool   `json:"signed"`
+		Name           string `json:"name,omitempty"`
+		Timestamp      int64  `json:"timestamp"`
+		TotalECOutputs uint64 `json:"totalecoutputs"`
+		TotalInputs    uint64 `json:"totalinputs"`
+		TotalOutputs   uint64 `json:"totaloutputs"`
+		TxID           string `json:"txid,omitempty"`
 	}
 	tmp := new(jsontx)
 

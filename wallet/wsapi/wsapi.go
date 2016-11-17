@@ -535,22 +535,22 @@ func handleTmpTransactions(params []byte) (interface{}, *factom.JSONError) {
 		if i, err := tx.TotalInputs(); err != nil {
 			return nil, newCustomInternalError(err.Error())
 		} else {
-			r.TotalInputs = factoshiToFactoid(i)
+			r.TotalInputs = i
 		}
 		if i, err := tx.TotalOutputs(); err != nil {
 			return nil, newCustomInternalError(err.Error())
 		} else {
-			r.TotalOutputs = factoshiToFactoid(i)
+			r.TotalOutputs = i
 		}
 		if i, err := tx.TotalECs(); err != nil {
 			return nil, newCustomInternalError(err.Error())
 		} else {
-			r.TotalECOutputs = factoshiToFactoid(i)
+			r.TotalECOutputs = i
 		}
 		if i, err := tx.CalculateFee(rate); err != nil {
 			return nil, newCustomInternalError(err.Error())
 		} else {
-			r.FeesRequired = factoshiToFactoid(i)
+			r.FeesRequired = i
 		}
 
 		resp.Transactions = append(resp.Transactions, r)
@@ -754,19 +754,19 @@ func factoidTxToTransaction(t interfaces.ITransaction) (
 	if i, err := t.TotalInputs(); err != nil {
 		return nil, err
 	} else {
-		r.TotalInputs = factoshiToFactoid(i)
+		r.TotalInputs = i
 	}
 
 	if i, err := t.TotalOutputs(); err != nil {
 		return nil, err
 	} else {
-		r.TotalOutputs = factoshiToFactoid(i)
+		r.TotalOutputs = i
 	}
 
 	if i, err := t.TotalECs(); err != nil {
 		return nil, err
 	} else {
-		r.TotalECOutputs = factoshiToFactoid(i)
+		r.TotalECOutputs = i
 	}
 
 	if r.TotalInputs <= r.TotalOutputs+r.TotalECOutputs {
@@ -777,8 +777,4 @@ func factoidTxToTransaction(t interfaces.ITransaction) (
 	}
 
 	return r, nil
-}
-
-func factoshiToFactoid(v uint64) float64 {
-	return float64(v) / 1e8
 }
