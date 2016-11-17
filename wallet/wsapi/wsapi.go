@@ -524,35 +524,12 @@ func handleTmpTransactions(params []byte) (interface{}, *factom.JSONError) {
 	resp := new(multiTransactionResponse)
 	txs := fctWallet.GetTransactions()
 
-	rate, err := factom.GetRate()
-	if err != nil {
-		return nil, newCustomInternalError(err.Error())
-	}
-
 	for name, tx := range txs {
-		r := &factom.Transaction{Name: name}
-		r.TxID = hex.EncodeToString(tx.GetSigHash().Bytes())
-		if i, err := tx.TotalInputs(); err != nil {
+		r, err := factoidTxToTransaction(tx)
+		if err != nil {
 			return nil, newCustomInternalError(err.Error())
-		} else {
-			r.TotalInputs = i
 		}
-		if i, err := tx.TotalOutputs(); err != nil {
-			return nil, newCustomInternalError(err.Error())
-		} else {
-			r.TotalOutputs = i
-		}
-		if i, err := tx.TotalECs(); err != nil {
-			return nil, newCustomInternalError(err.Error())
-		} else {
-			r.TotalECOutputs = i
-		}
-		if i, err := tx.CalculateFee(rate); err != nil {
-			return nil, newCustomInternalError(err.Error())
-		} else {
-			r.FeesRequired = i
-		}
-
+		r.Name = name
 		resp.Transactions = append(resp.Transactions, r)
 	}
 
