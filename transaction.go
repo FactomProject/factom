@@ -12,17 +12,25 @@ import (
 	"time"
 )
 
+type TransAddress struct {
+	Address string
+	Ammount uint64
+}
+
 type Transaction struct {
-	BlockHeight    uint32    `json:"blockheight,omitempty"`
-	FeesPaid       uint64    `json:"feespaid,omitempty"`
-	FeesRequired   uint64    `json:"feesrequired,omitempty"`
-	IsSigned       bool      `json:"signed"`
-	Name           string    `json:"name,omitempty"`
-	Timestamp      time.Time `json:"timestamp"`
-	TotalECOutputs uint64    `json:"totalecoutputs"`
-	TotalInputs    uint64    `json:"totalinputs"`
-	TotalOutputs   uint64    `json:"totaloutputs"`
-	TxID           string    `json:"txid,omitempty"`
+	BlockHeight    uint32          `json:"blockheight,omitempty"`
+	FeesPaid       uint64          `json:"feespaid,omitempty"`
+	FeesRequired   uint64          `json:"feesrequired,omitempty"`
+	IsSigned       bool            `json:"signed"`
+	Name           string          `json:"name,omitempty"`
+	Timestamp      time.Time       `json:"timestamp"`
+	TotalECOutputs uint64          `json:"totalecoutputs"`
+	TotalInputs    uint64          `json:"totalinputs"`
+	TotalOutputs   uint64          `json:"totaloutputs"`
+	Inputs         []*TransAddress `json:"inputs"`
+	Outputs        []*TransAddress `json:"outputs"`
+	ECOutputs      []*TransAddress `json:"ecoutputs"`
+	TxID           string          `json:"txid,omitempty"`
 }
 
 // String prints the formatted data of a transaction.
@@ -40,6 +48,27 @@ func (tx *Transaction) String() (s string) {
 	s += fmt.Sprintln("TotalInputs:", factoshiToFactoid(tx.TotalInputs))
 	s += fmt.Sprintln("TotalOutputs:", factoshiToFactoid(tx.TotalOutputs))
 	s += fmt.Sprintln("ECOutputs:", factoshiToFactoid(tx.TotalECOutputs))
+	for _, in := range tx.Inputs {
+		s += fmt.Sprintln(
+			"Input:",
+			in.Address,
+			factoshiToFactoid(in.Ammount),
+		)
+	}
+	for _, out := range tx.Outputs {
+		s += fmt.Sprintln(
+			"Output:",
+			out.Address,
+			factoshiToFactoid(out.Ammount),
+		)
+	}
+	for _, ec := range tx.ECOutputs {
+		s += fmt.Sprintln(
+			"ECOutput:",
+			ec.Address,
+			factoshiToFactoid(ec.Ammount),
+		)
+	}
 	s += fmt.Sprintln("FeesPaid:", factoshiToFactoid(tx.FeesPaid))
 	s += fmt.Sprintln("FeesRequired:", factoshiToFactoid(tx.FeesRequired))
 	s += fmt.Sprintln("Signed:", tx.IsSigned)
@@ -50,16 +79,19 @@ func (tx *Transaction) String() (s string) {
 // MarshalJSON converts the Transaction into a JSON object
 func (tx *Transaction) MarshalJSON() ([]byte, error) {
 	tmp := &struct {
-		BlockHeight    uint32 `json:"blockheight,omitempty"`
-		FeesPaid       uint64 `json:"feespaid,omitempty"`
-		FeesRequired   uint64 `json:"feesrequired,omitempty"`
-		IsSigned       bool   `json:"signed"`
-		Name           string `json:"name,omitempty"`
-		Timestamp      int64  `json:"timestamp"`
-		TotalECOutputs uint64 `json:"totalecoutputs"`
-		TotalInputs    uint64 `json:"totalinputs"`
-		TotalOutputs   uint64 `json:"totaloutputs"`
-		TxID           string `json:"txid,omitempty"`
+		BlockHeight    uint32          `json:"blockheight,omitempty"`
+		FeesPaid       uint64          `json:"feespaid,omitempty"`
+		FeesRequired   uint64          `json:"feesrequired,omitempty"`
+		IsSigned       bool            `json:"signed"`
+		Name           string          `json:"name,omitempty"`
+		Timestamp      int64           `json:"timestamp"`
+		TotalECOutputs uint64          `json:"totalecoutputs"`
+		TotalInputs    uint64          `json:"totalinputs"`
+		TotalOutputs   uint64          `json:"totaloutputs"`
+		Inputs         []*TransAddress `json:"inputs"`
+		Outputs        []*TransAddress `json:"outputs"`
+		ECOutputs      []*TransAddress `json:"ecoutputs"`
+		TxID           string          `json:"txid,omitempty"`
 	}{
 		BlockHeight:    tx.BlockHeight,
 		FeesPaid:       tx.FeesPaid,
@@ -70,6 +102,9 @@ func (tx *Transaction) MarshalJSON() ([]byte, error) {
 		TotalECOutputs: tx.TotalECOutputs,
 		TotalInputs:    tx.TotalInputs,
 		TotalOutputs:   tx.TotalOutputs,
+		Inputs:         tx.Inputs,
+		Outputs:        tx.Outputs,
+		ECOutputs:      tx.ECOutputs,
 		TxID:           tx.TxID,
 	}
 
@@ -79,16 +114,19 @@ func (tx *Transaction) MarshalJSON() ([]byte, error) {
 // UnmarshalJSON converts the JSON Transaction back into a Transaction
 func (tx *Transaction) UnmarshalJSON(data []byte) error {
 	type jsontx struct {
-		BlockHeight    uint32 `json:"blockheight,omitempty"`
-		FeesPaid       uint64 `json:"feespaid,omitempty"`
-		FeesRequired   uint64 `json:"feesrequired,omitempty"`
-		IsSigned       bool   `json:"signed"`
-		Name           string `json:"name,omitempty"`
-		Timestamp      int64  `json:"timestamp"`
-		TotalECOutputs uint64 `json:"totalecoutputs"`
-		TotalInputs    uint64 `json:"totalinputs"`
-		TotalOutputs   uint64 `json:"totaloutputs"`
-		TxID           string `json:"txid,omitempty"`
+		BlockHeight    uint32          `json:"blockheight,omitempty"`
+		FeesPaid       uint64          `json:"feespaid,omitempty"`
+		FeesRequired   uint64          `json:"feesrequired,omitempty"`
+		IsSigned       bool            `json:"signed"`
+		Name           string          `json:"name,omitempty"`
+		Timestamp      int64           `json:"timestamp"`
+		TotalECOutputs uint64          `json:"totalecoutputs"`
+		TotalInputs    uint64          `json:"totalinputs"`
+		TotalOutputs   uint64          `json:"totaloutputs"`
+		Inputs         []*TransAddress `json:"inputs"`
+		Outputs        []*TransAddress `json:"outputs"`
+		ECOutputs      []*TransAddress `json:"ecoutputs"`
+		TxID           string          `json:"txid,omitempty"`
 	}
 	tmp := new(jsontx)
 
@@ -105,6 +143,9 @@ func (tx *Transaction) UnmarshalJSON(data []byte) error {
 	tx.TotalECOutputs = tmp.TotalECOutputs
 	tx.TotalInputs = tmp.TotalInputs
 	tx.TotalOutputs = tmp.TotalOutputs
+	tx.Inputs = tmp.Inputs
+	tx.Outputs = tmp.Outputs
+	tx.ECOutputs = tmp.ECOutputs
 	tx.TxID = tmp.TxID
 
 	return nil

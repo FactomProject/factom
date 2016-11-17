@@ -745,6 +745,27 @@ func factoidTxToTransaction(t interfaces.ITransaction) (
 	} else {
 		r.TotalECOutputs = i
 	}
+	
+	for _, v := range t.GetInputs() {
+		tmp := new(factom.TransAddress)
+		tmp.Address = v.GetUserAddress()
+		tmp.Ammount = v.GetAmount()
+		r.Inputs = append(r.Inputs, tmp)
+	}
+	
+	for _, v := range t.GetOutputs() {
+		tmp := new(factom.TransAddress)
+		tmp.Address = v.GetUserAddress()
+		tmp.Ammount = v.GetAmount()
+		r.Inputs = append(r.Outputs, tmp)
+	}
+
+	for _, v := range t.GetECOutputs() {
+		tmp := new(factom.TransAddress)
+		tmp.Address = v.GetUserAddress()
+		tmp.Ammount = v.GetAmount()
+		r.Inputs = append(r.ECOutputs, tmp)
+	}
 
 	if r.TotalInputs <= r.TotalOutputs+r.TotalECOutputs {
 		r.FeesPaid = 0
