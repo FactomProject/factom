@@ -13,8 +13,8 @@ import (
 )
 
 type TransAddress struct {
-	Address string
-	Ammount uint64
+	Address string `json:"address"`
+	Ammount uint64 `json:"ammount"`
 }
 
 type Transaction struct {

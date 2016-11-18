@@ -71,6 +71,6 @@ func sha52(data []byte) []byte {
 	return h2[:]
 }
 
-func factoshiToFactoid(v uint64) float64 {
-	return float64(v) / 1e8
+func factoshiToFactoid(i uint64) float64 {
+	return float64(i) / 1e8
 }
