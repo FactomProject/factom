@@ -24,11 +24,11 @@ type JStruct struct {
 	data []byte
 }
 
-func (e JStruct) MarshalJSON() ([]byte, error) {
+func (e *JStruct) MarshalJSON() ([]byte, error) {
 	return e.data, nil
 }
 
-func (e JStruct) UnmarshalJSON(b []byte) error {
+func (e *JStruct) UnmarshalJSON(b []byte) error {
 	e.data = b
 	return nil
 }
@@ -44,7 +44,7 @@ type BlockByHeightRawResponse struct {
 	RawData string `json:"rawdata,omitempty"`
 }
 
-func GetBlockByHeightRaw(blockType string, height int64) (*BlockByHeightResponse, error) {
+func GetBlockByHeightRaw(blockType string, height int64) (*BlockByHeightRawResponse, error) {
 	params := heightRequest{Height: height}
 	req := NewJSON2Request(fmt.Sprintf("%vblock-by-height", blockType), APICounter(), params)
 	resp, err := factomdRequest(req)
@@ -55,7 +55,7 @@ func GetBlockByHeightRaw(blockType string, height int64) (*BlockByHeightResponse
 		return nil, resp.Error
 	}
 
-	block := new(BlockByHeightResponse)
+	block := new(BlockByHeightRawResponse)
 	if err := json.Unmarshal(resp.JSONResult(), block); err != nil {
 		return nil, err
 	}
@@ -63,7 +63,7 @@ func GetBlockByHeightRaw(blockType string, height int64) (*BlockByHeightResponse
 	return block, nil
 }
 
-func GetDBlockByHeight(height int64) (*BlockByHeightRawResponse, error) {
+func GetDBlockByHeight(height int64) (*BlockByHeightResponse, error) {
 	params := heightRequest{Height: height}
 	req := NewJSON2Request("dblock-by-height", APICounter(), params)
 	resp, err := factomdRequest(req)
@@ -74,7 +74,7 @@ func GetDBlockByHeight(height int64) (*BlockByHeightRawResponse, error) {
 		return nil, resp.Error
 	}
 
-	block := new(BlockByHeightRawResponse)
+	block := new(BlockByHeightResponse)
 	if err := json.Unmarshal(resp.JSONResult(), block); err != nil {
 		return nil, err
 	}
