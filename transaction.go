@@ -14,7 +14,7 @@ import (
 
 type TransAddress struct {
 	Address string `json:"address"`
-	Ammount uint64 `json:"ammount"`
+	Amount uint64 `json:"amount"`
 }
 
 type Transaction struct {
@@ -52,21 +52,21 @@ func (tx *Transaction) String() (s string) {
 		s += fmt.Sprintln(
 			"Input:",
 			in.Address,
-			factoshiToFactoid(in.Ammount),
+			factoshiToFactoid(in.Amount),
 		)
 	}
 	for _, out := range tx.Outputs {
 		s += fmt.Sprintln(
 			"Output:",
 			out.Address,
-			factoshiToFactoid(out.Ammount),
+			factoshiToFactoid(out.Amount),
 		)
 	}
 	for _, ec := range tx.ECOutputs {
 		s += fmt.Sprintln(
 			"ECOutput:",
 			ec.Address,
-			factoshiToFactoid(ec.Ammount),
+			factoshiToFactoid(ec.Amount),
 		)
 	}
 	s += fmt.Sprintln("FeesPaid:", factoshiToFactoid(tx.FeesPaid))

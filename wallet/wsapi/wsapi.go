@@ -749,21 +749,21 @@ func factoidTxToTransaction(t interfaces.ITransaction) (
 	for _, v := range t.GetInputs() {
 		tmp := new(factom.TransAddress)
 		tmp.Address = v.GetUserAddress()
-		tmp.Ammount = v.GetAmount()
+		tmp.Amount = v.GetAmount()
 		r.Inputs = append(r.Inputs, tmp)
 	}
 
 	for _, v := range t.GetOutputs() {
 		tmp := new(factom.TransAddress)
 		tmp.Address = v.GetUserAddress()
-		tmp.Ammount = v.GetAmount()
+		tmp.Amount = v.GetAmount()
 		r.Outputs = append(r.Outputs, tmp)
 	}
 
 	for _, v := range t.GetECOutputs() {
 		tmp := new(factom.TransAddress)
 		tmp.Address = v.GetUserAddress()
-		tmp.Ammount = v.GetAmount()
+		tmp.Amount = v.GetAmount()
 		r.ECOutputs = append(r.ECOutputs, tmp)
 	}
 
