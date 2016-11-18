@@ -745,14 +745,14 @@ func factoidTxToTransaction(t interfaces.ITransaction) (
 	} else {
 		r.TotalECOutputs = i
 	}
-	
+
 	for _, v := range t.GetInputs() {
 		tmp := new(factom.TransAddress)
 		tmp.Address = v.GetUserAddress()
 		tmp.Ammount = v.GetAmount()
 		r.Inputs = append(r.Inputs, tmp)
 	}
-	
+
 	for _, v := range t.GetOutputs() {
 		tmp := new(factom.TransAddress)
 		tmp.Address = v.GetUserAddress()
@@ -773,7 +773,7 @@ func factoidTxToTransaction(t interfaces.ITransaction) (
 	} else {
 		r.FeesPaid = r.TotalInputs - (r.TotalOutputs + r.TotalECOutputs)
 	}
-	
+
 	// get the ec rate and calulate the fee
 	rate, err := factom.GetRate()
 	if err != nil {
