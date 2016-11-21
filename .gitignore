@@ -1,19 +1,32 @@
+# Executable from build
+factom-walletd
+
 # Compiled Object files, Static and Dynamic libs (Shared Objects)
 *.o
 *.a
 *.so
+*.db
 
 # Temp files
 *~
 *.kate-swp
 *.orig
+debug
+*.txt
+*.log
+.vscode/
+.idea/
+peers.json
+*.csv
+*.gz
 
 # Folders
 _obj
 _test
 bin
 pkg
-tmp
+.vagrant
+vendor/
 
 # Architecture specific extensions/prefixes
 *.[568vq]
@@ -29,5 +42,11 @@ _testmain.go
 
 *.exe
 *.test
+*.block
+*.entry
 
 .DS_Store
+
+*.out
+.idea/
+----*
