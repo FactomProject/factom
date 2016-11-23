@@ -156,6 +156,22 @@ func ImportKoinify(mnemonic string) (*FactoidAddress, error) {
 	return f, nil
 }
 
+func RemoveAddress(address string) error {
+	params := new(addressRequest)
+	params.Address = address
+
+	req := NewJSON2Request("remove-address", APICounter(), params)
+	resp, err := walletRequest(req)
+	if err != nil {
+		return err
+	}
+	if resp.Error != nil {
+		return resp.Error
+	}
+
+	return nil
+}
+
 func FetchAddresses() ([]*FactoidAddress, []*ECAddress, error) {
 	req := NewJSON2Request("all-addresses", APICounter(), nil)
 	resp, err := walletRequest(req)

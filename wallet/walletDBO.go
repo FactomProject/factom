@@ -370,6 +370,21 @@ func toFList(source []interfaces.BinaryMarshallableAndCopyable) []*factom.Factoi
 	return answer
 }
 
+func (db *WalletDatabaseOverlay) RemoveAddress(pubString string) error {
+	if len(pubString) == 0 {
+		return nil
+	}
+	if pubString[:1] == "F" {
+		return db.dbo.Delete(fcDBPrefix, []byte(pubString))
+	} else if pubString[:1] == "E" {
+		return db.dbo.Delete(ecDBPrefix, []byte(pubString))
+	} else {
+		return fmt.Errorf("Unknown address type")
+	}
+
+	return nil
+}
+
 type byFName []*factom.FactoidAddress
 
 func (f byFName) Len() int {
