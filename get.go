@@ -341,10 +341,7 @@ func GetPendingEntries() (string, error) {
 		return "", err
 	}
 
-	rBytes, err := json.Marshal(resp)
-	if err != nil {
-		return "", err
-	}
+	rBytes := resp.JSONResult()
 
 	return string(rBytes), nil
 }
