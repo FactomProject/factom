@@ -329,7 +329,6 @@ func GetProperties() (string, string, string, string, string, string, string, st
 
 }
 
-
 func GetPendingEntries() (string, error) {
 
 	req := NewJSON2Request("pending-entries", APICounter(), nil)
@@ -366,4 +365,3 @@ func GetPendingTransactions() (string, error) {
 
 	return string(transList), nil
 }
-
