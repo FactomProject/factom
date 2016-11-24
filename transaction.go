@@ -47,7 +47,7 @@ func (tx *Transaction) String() (s string) {
 	}
 	s += fmt.Sprintln("TotalInputs:", factoshiToFactoid(tx.TotalInputs))
 	s += fmt.Sprintln("TotalOutputs:", factoshiToFactoid(tx.TotalOutputs))
-	s += fmt.Sprintln("ECOutputs:", factoshiToFactoid(tx.TotalECOutputs))
+	s += fmt.Sprintln("TotalECOutputs:", factoshiToFactoid(tx.TotalECOutputs))
 	for _, in := range tx.Inputs {
 		s += fmt.Sprintln(
 			"Input:",
