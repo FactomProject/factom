@@ -296,7 +296,7 @@ func (db *WalletDatabaseOverlay) GetECAddress(pubString string) (*factom.ECAddre
 		return nil, err
 	}
 	if data == nil {
-		return nil, nil
+		return nil, ErrNoSuchAddress
 	}
 	return data.(*factom.ECAddress), nil
 }
@@ -368,6 +368,43 @@ func toFList(source []interfaces.BinaryMarshallableAndCopyable) []*factom.Factoi
 	}
 	sort.Sort(byFName(answer))
 	return answer
+}
+
+func (db *WalletDatabaseOverlay) RemoveAddress(pubString string) error {
+	if len(pubString) == 0 {
+		return nil
+	}
+	if pubString[:1] == "F" {
+		data, err := db.dbo.Get(fcDBPrefix, []byte(pubString), new(factom.FactoidAddress))
+		if err != nil {
+			return err
+		}
+		if data == nil {
+			return ErrNoSuchAddress
+		}
+		err = db.dbo.Delete(fcDBPrefix, []byte(pubString))
+		if err == nil {
+			err := db.dbo.Delete(fcDBPrefix, []byte(pubString)) //delete twice to flush the db file
+			return err
+		} else { return err }
+	} else if pubString[:1] == "E" {
+		data, err := db.dbo.Get(ecDBPrefix, []byte(pubString), new(factom.ECAddress))
+		if err != nil {
+			return err
+		}
+		if data == nil {
+			return ErrNoSuchAddress
+		}
+		err = db.dbo.Delete(ecDBPrefix, []byte(pubString))
+		if err == nil {
+			err := db.dbo.Delete(ecDBPrefix, []byte(pubString)) //delete twice to flush the db file
+			return err
+		} else { return err }
+	} else {
+		return fmt.Errorf("Unknown address type")
+	}
+
+	return nil
 }
 
 type byFName []*factom.FactoidAddress

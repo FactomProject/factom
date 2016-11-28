@@ -237,6 +237,8 @@ func handleV2Request(j *factom.JSON2Request) (*factom.JSON2Response, *factom.JSO
 		resp, jsonError = handleSignTransaction(params)
 	case "compose-transaction":
 		resp, jsonError = handleComposeTransaction(params)
+	case "remove-address":
+		resp, jsonError = handleRemoveAddress(params)
 	case "properties":
 		resp, jsonError = handleProperties(params)
 	default:
@@ -255,6 +257,23 @@ func handleV2Request(j *factom.JSON2Request) (*factom.JSON2Response, *factom.JSO
 	}
 
 	return jsonResp, nil
+}
+
+func handleRemoveAddress(params []byte) (interface{}, *factom.JSONError) {
+	req := new(addressRequest)
+	if err := json.Unmarshal(params, req); err != nil {
+		return nil, newInvalidParamsError()
+	}
+
+	err := fctWallet.WalletDatabaseOverlay.RemoveAddress(req.Address)
+	if err != nil {
+		return nil, newCustomInternalError(err.Error())
+	}
+
+	resp := new(simpleResponse)
+	resp.Success = true
+
+	return resp, nil
 }
 
 func handleAddress(params []byte) (interface{}, *factom.JSONError) {
