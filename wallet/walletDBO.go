@@ -296,7 +296,7 @@ func (db *WalletDatabaseOverlay) GetECAddress(pubString string) (*factom.ECAddre
 		return nil, err
 	}
 	if data == nil {
-		return nil, nil
+		return nil, ErrNoSuchAddress
 	}
 	return data.(*factom.ECAddress), nil
 }
@@ -375,13 +375,27 @@ func (db *WalletDatabaseOverlay) RemoveAddress(pubString string) error {
 		return nil
 	}
 	if pubString[:1] == "F" {
-		err := db.dbo.Delete(fcDBPrefix, []byte(pubString))
+		data, err := db.dbo.Get(fcDBPrefix, []byte(pubString), new(factom.FactoidAddress))
+		if err != nil {
+			return err
+		}
+		if data == nil {
+			return ErrNoSuchAddress
+		}
+		err = db.dbo.Delete(fcDBPrefix, []byte(pubString))
 		if err == nil {
 			err := db.dbo.Delete(fcDBPrefix, []byte(pubString)) //delete twice to flush the db file
 			return err
 		} else { return err }
 	} else if pubString[:1] == "E" {
-		err := db.dbo.Delete(ecDBPrefix, []byte(pubString))
+		data, err := db.dbo.Get(ecDBPrefix, []byte(pubString), new(factom.ECAddress))
+		if err != nil {
+			return err
+		}
+		if data == nil {
+			return ErrNoSuchAddress
+		}
+		err = db.dbo.Delete(ecDBPrefix, []byte(pubString))
 		if err == nil {
 			err := db.dbo.Delete(ecDBPrefix, []byte(pubString)) //delete twice to flush the db file
 			return err
