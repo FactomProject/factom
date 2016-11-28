@@ -386,7 +386,9 @@ func (db *WalletDatabaseOverlay) RemoveAddress(pubString string) error {
 		if err == nil {
 			err := db.dbo.Delete(fcDBPrefix, []byte(pubString)) //delete twice to flush the db file
 			return err
-		} else { return err }
+		} else {
+			return err
+		}
 	} else if pubString[:1] == "E" {
 		data, err := db.dbo.Get(ecDBPrefix, []byte(pubString), new(factom.ECAddress))
 		if err != nil {
@@ -399,7 +401,9 @@ func (db *WalletDatabaseOverlay) RemoveAddress(pubString string) error {
 		if err == nil {
 			err := db.dbo.Delete(ecDBPrefix, []byte(pubString)) //delete twice to flush the db file
 			return err
-		} else { return err }
+		} else {
+			return err
+		}
 	} else {
 		return fmt.Errorf("Unknown address type")
 	}
