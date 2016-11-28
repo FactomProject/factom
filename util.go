@@ -71,6 +71,8 @@ func sha52(data []byte) []byte {
 	return h2[:]
 }
 
-func factoshiToFactoid(i uint64) float64 {
-	return float64(i) / 1e8
+func factoshiToFactoid(i uint64) string {
+	d := i / 1e8
+	r := i % 1e8
+	return fmt.Sprintf("%d.%.8d", d, r)
 }
