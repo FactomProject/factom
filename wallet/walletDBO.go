@@ -375,9 +375,17 @@ func (db *WalletDatabaseOverlay) RemoveAddress(pubString string) error {
 		return nil
 	}
 	if pubString[:1] == "F" {
-		return db.dbo.Delete(fcDBPrefix, []byte(pubString))
+		err := db.dbo.Delete(fcDBPrefix, []byte(pubString))
+		if err == nil {
+			err := db.dbo.Delete(fcDBPrefix, []byte(pubString)) //delete twice to flush the db file
+			return err
+		} else { return err }
 	} else if pubString[:1] == "E" {
-		return db.dbo.Delete(ecDBPrefix, []byte(pubString))
+		err := db.dbo.Delete(ecDBPrefix, []byte(pubString))
+		if err == nil {
+			err := db.dbo.Delete(ecDBPrefix, []byte(pubString)) //delete twice to flush the db file
+			return err
+		} else { return err }
 	} else {
 		return fmt.Errorf("Unknown address type")
 	}
