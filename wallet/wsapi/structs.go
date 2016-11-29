@@ -82,3 +82,7 @@ type propertiesResponse struct {
 type simpleResponse struct {
 	Success bool `json:"success"`
 }
+
+type heightResponse struct {
+	Height int64 `json:"height"`
+}
