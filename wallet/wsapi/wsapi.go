@@ -524,35 +524,12 @@ func handleTmpTransactions(params []byte) (interface{}, *factom.JSONError) {
 	resp := new(multiTransactionResponse)
 	txs := fctWallet.GetTransactions()
 
-	rate, err := factom.GetRate()
-	if err != nil {
-		return nil, newCustomInternalError(err.Error())
-	}
-
 	for name, tx := range txs {
-		r := &factom.Transaction{Name: name}
-		r.TxID = hex.EncodeToString(tx.GetSigHash().Bytes())
-		if i, err := tx.TotalInputs(); err != nil {
+		r, err := factoidTxToTransaction(tx)
+		if err != nil {
 			return nil, newCustomInternalError(err.Error())
-		} else {
-			r.TotalInputs = factoshiToFactoid(i)
 		}
-		if i, err := tx.TotalOutputs(); err != nil {
-			return nil, newCustomInternalError(err.Error())
-		} else {
-			r.TotalOutputs = factoshiToFactoid(i)
-		}
-		if i, err := tx.TotalECs(); err != nil {
-			return nil, newCustomInternalError(err.Error())
-		} else {
-			r.TotalECOutputs = factoshiToFactoid(i)
-		}
-		if i, err := tx.CalculateFee(rate); err != nil {
-			return nil, newCustomInternalError(err.Error())
-		} else {
-			r.FeesRequired = factoshiToFactoid(i)
-		}
-
+		r.Name = name
 		resp.Transactions = append(resp.Transactions, r)
 	}
 
@@ -745,26 +722,49 @@ func factoidTxToTransaction(t interfaces.ITransaction) (
 	r.BlockHeight = t.GetBlockHeight()
 	r.Timestamp = t.GetTimestamp().GetTime()
 
-	if err := t.ValidateSignatures(); err == nil {
-		r.IsSigned = true
+	if len(t.GetSignatureBlocks()) > 0 {
+		if err := t.ValidateSignatures(); err == nil {
+			r.IsSigned = true
+		}
 	}
 
 	if i, err := t.TotalInputs(); err != nil {
 		return nil, err
 	} else {
-		r.TotalInputs = factoshiToFactoid(i)
+		r.TotalInputs = i
 	}
 
 	if i, err := t.TotalOutputs(); err != nil {
 		return nil, err
 	} else {
-		r.TotalOutputs = factoshiToFactoid(i)
+		r.TotalOutputs = i
 	}
 
 	if i, err := t.TotalECs(); err != nil {
 		return nil, err
 	} else {
-		r.TotalECOutputs = factoshiToFactoid(i)
+		r.TotalECOutputs = i
+	}
+
+	for _, v := range t.GetInputs() {
+		tmp := new(factom.TransAddress)
+		tmp.Address = v.GetUserAddress()
+		tmp.Amount = v.GetAmount()
+		r.Inputs = append(r.Inputs, tmp)
+	}
+
+	for _, v := range t.GetOutputs() {
+		tmp := new(factom.TransAddress)
+		tmp.Address = v.GetUserAddress()
+		tmp.Amount = v.GetAmount()
+		r.Outputs = append(r.Outputs, tmp)
+	}
+
+	for _, v := range t.GetECOutputs() {
+		tmp := new(factom.TransAddress)
+		tmp.Address = v.GetUserAddress()
+		tmp.Amount = v.GetAmount()
+		r.ECOutputs = append(r.ECOutputs, tmp)
 	}
 
 	if r.TotalInputs <= r.TotalOutputs+r.TotalECOutputs {
@@ -774,9 +774,18 @@ func factoidTxToTransaction(t interfaces.ITransaction) (
 		r.FeesPaid = r.TotalInputs - (r.TotalOutputs + r.TotalECOutputs)
 	}
 
-	return r, nil
-}
+	// get the ec rate and calulate the fee if it is a new transaction
+	if !r.IsSigned {
+		rate, err := factom.GetRate()
+		if err != nil {
+			rate = 0
+		}
+		if i, err := t.CalculateFee(rate); err != nil {
+			return nil, err
+		} else {
+			r.FeesRequired = i
+		}
+	}
 
-func factoshiToFactoid(v uint64) float64 {
-	return float64(v) / 1e8
+	return r, nil
 }

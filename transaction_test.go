@@ -7,7 +7,7 @@ package factom_test
 import (
 	. "github.com/FactomProject/factom"
 	"testing"
-	
+
 	"encoding/json"
 	"time"
 )
@@ -33,7 +33,7 @@ func TestJSONTransactions(t *testing.T) {
 		t.Error(err)
 	}
 	t.Log("JSON transaction:", string(p))
-	
+
 	tx2 := new(Transaction)
 	if err := json.Unmarshal(p, tx2); err != nil {
 		t.Error(err)

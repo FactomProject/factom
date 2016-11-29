@@ -70,3 +70,9 @@ func sha52(data []byte) []byte {
 	h2 := sha256.Sum256(append(h1[:], data...))
 	return h2[:]
 }
+
+func factoshiToFactoid(i uint64) string {
+	d := i / 1e8
+	r := i % 1e8
+	return fmt.Sprintf("%d.%.8d", d, r)
+}

@@ -96,6 +96,7 @@ func (e *Entry) MarshalJSON() ([]byte, error) {
 
 func (e *Entry) String() string {
 	var s string
+	s += fmt.Sprintf("EntryHash: %x\n", e.Hash())
 	s += fmt.Sprintln("ChainID:", e.ChainID)
 	for _, id := range e.ExtIDs {
 		s += fmt.Sprintln("ExtID:", string(id))
