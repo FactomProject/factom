@@ -11,6 +11,7 @@ import (
 	"encoding/binary"
 	"fmt"
 	"time"
+	"strings"
 )
 
 const (
@@ -74,5 +75,11 @@ func sha52(data []byte) []byte {
 func factoshiToFactoid(i uint64) string {
 	d := i / 1e8
 	r := i % 1e8
-	return fmt.Sprintf("%d.%.8d", d, r)
+	ds := fmt.Sprintf("%d", d)
+	rs := fmt.Sprintf("%08d", r)
+	rs = strings.TrimRight(rs, "0")
+	if len(rs) > 0 {
+		ds = ds + "."
+	}
+	return fmt.Sprintf("%s%s", ds, rs)
 }
