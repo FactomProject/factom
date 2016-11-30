@@ -728,7 +728,8 @@ func handleGetHeight(params []byte) (interface{}, *factom.JSONError) {
 		return nil, newCustomInternalError(err.Error())
 	}
 	if block == nil {
-		return nil, newCustomInternalError("No blocks synched")
+		resp.Height = 0
+		return resp, nil
 	}
 
 	resp.Height = int64(block.GetDBHeight())
