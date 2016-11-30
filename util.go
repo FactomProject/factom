@@ -10,8 +10,8 @@ import (
 	"crypto/sha512"
 	"encoding/binary"
 	"fmt"
-	"time"
 	"strings"
+	"time"
 )
 
 const (
