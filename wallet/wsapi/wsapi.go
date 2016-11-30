@@ -241,6 +241,8 @@ func handleV2Request(j *factom.JSON2Request) (*factom.JSON2Response, *factom.JSO
 		resp, jsonError = handleRemoveAddress(params)
 	case "properties":
 		resp, jsonError = handleProperties(params)
+	case "get-height":
+		resp, jsonError = handleGetHeight(params)
 	default:
 		jsonError = newMethodNotFoundError()
 	}
@@ -715,6 +717,23 @@ func handleProperties(params []byte) (interface{}, *factom.JSONError) {
 	props.WalletVersion = fctWallet.GetVersion()
 	props.WalletApiVersion = fctWallet.GetApiVersion()
 	return props, nil
+}
+
+func handleGetHeight(params []byte) (interface{}, *factom.JSONError) {
+	resp := new(heightResponse)
+
+	block, err := fctWallet.TXDB().DBO.FetchFBlockHead()
+
+	if err != nil {
+		return nil, newCustomInternalError(err.Error())
+	}
+	if block == nil {
+		resp.Height = 0
+		return resp, nil
+	}
+
+	resp.Height = int64(block.GetDBHeight())
+	return resp, nil
 }
 
 // utility functions
