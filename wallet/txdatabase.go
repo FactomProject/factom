@@ -23,12 +23,12 @@ var (
 )
 
 type TXDatabaseOverlay struct {
-	dbo databaseOverlay.Overlay
+	DBO databaseOverlay.Overlay
 }
 
 func NewTXOverlay(db interfaces.IDatabase) *TXDatabaseOverlay {
 	answer := new(TXDatabaseOverlay)
-	answer.dbo.DB = db
+	answer.DBO.DB = db
 	return answer
 }
 
@@ -75,7 +75,7 @@ func NewTXBoltDB(boltPath string) (*TXDatabaseOverlay, error) {
 }
 
 func (db *TXDatabaseOverlay) Close() error {
-	return db.dbo.Close()
+	return db.DBO.Close()
 }
 
 // GetAllTXs returns a list of all transactions in the history of Factom. A
@@ -86,7 +86,7 @@ func (db *TXDatabaseOverlay) GetAllTXs() ([]interfaces.ITransaction, error) {
 	if err != nil {
 		return nil, err
 	}
-	fblock, err := db.dbo.FetchFBlockHead()
+	fblock, err := db.DBO.FetchFBlockHead()
 	if err != nil {
 		return nil, err
 	}
@@ -213,7 +213,7 @@ func (db *TXDatabaseOverlay) GetFBlock(keymr string) (interfaces.IFBlock, error)
 		return nil, err
 	}
 
-	fBlock, err := db.dbo.FetchFBlock(h)
+	fBlock, err := db.DBO.FetchFBlock(h)
 	if err != nil {
 		return nil, err
 	}
@@ -221,7 +221,7 @@ func (db *TXDatabaseOverlay) GetFBlock(keymr string) (interfaces.IFBlock, error)
 }
 
 func (db *TXDatabaseOverlay) FetchNextFBlockHeight() (uint32, error) {
-	block, err := db.dbo.FetchFBlockHead()
+	block, err := db.DBO.FetchFBlockHead()
 	if err != nil {
 		return 0, err
 	}
@@ -232,7 +232,7 @@ func (db *TXDatabaseOverlay) FetchNextFBlockHeight() (uint32, error) {
 }
 
 func (db *TXDatabaseOverlay) InsertFBlockHead(fblock interfaces.IFBlock) error {
-	return db.dbo.SaveFactoidBlockHead(fblock)
+	return db.DBO.SaveFactoidBlockHead(fblock)
 }
 
 // update gets all fblocks written since the database was last updated, and
@@ -249,7 +249,7 @@ func (db *TXDatabaseOverlay) update() (string, error) {
 	}
 
 	//Making sure we didn't switch networks
-	genesis, err := db.dbo.FetchFBlockByHeight(0)
+	genesis, err := db.DBO.FetchFBlockByHeight(0)
 	if err != nil {
 		return "", err
 	}
@@ -281,6 +281,7 @@ func (db *TXDatabaseOverlay) update() (string, error) {
 		}
 		db.InsertFBlockHead(fblock)
 	}
+	fmt.Printf("Fetching block %v / %v\n", newestHeight, newestHeight)
 
 	return newestFBlock.GetKeyMR().String(), nil
 }

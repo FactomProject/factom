@@ -722,7 +722,7 @@ func handleProperties(params []byte) (interface{}, *factom.JSONError) {
 func handleGetHeight(params []byte) (interface{}, *factom.JSONError) {
 	resp := new(heightResponse)
 
-	block, err := fctWallet.WalletDatabaseOverlay.DBO.FetchFBlockHead()
+	block, err := fctWallet.TXDB().DBO.FetchFBlockHead()
 
 	if err != nil {
 		return nil, newCustomInternalError(err.Error())
