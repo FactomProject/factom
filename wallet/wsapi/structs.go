@@ -78,3 +78,11 @@ type propertiesResponse struct {
 	WalletVersion    string `json:"walletversion"`
 	WalletApiVersion string `json:"walletapiversion"`
 }
+
+type simpleResponse struct {
+	Success bool `json:"success"`
+}
+
+type heightResponse struct {
+	Height int64 `json:"height"`
+}

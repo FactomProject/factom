@@ -28,12 +28,12 @@ var (
 )
 
 type WalletDatabaseOverlay struct {
-	dbo databaseOverlay.Overlay
+	DBO databaseOverlay.Overlay
 }
 
 func NewWalletOverlay(db interfaces.IDatabase) *WalletDatabaseOverlay {
 	answer := new(WalletDatabaseOverlay)
-	answer.dbo.DB = db
+	answer.DBO.DB = db
 	return answer
 }
 
@@ -206,11 +206,11 @@ func (db *WalletDatabaseOverlay) InsertDBSeed(seed *DBSeed) error {
 	batch := []interfaces.Record{}
 	batch = append(batch, interfaces.Record{seedDBKey, seedDBKey, seed})
 
-	return db.dbo.PutInBatch(batch)
+	return db.DBO.PutInBatch(batch)
 }
 
 func (db *WalletDatabaseOverlay) GetDBSeed() (*DBSeed, error) {
-	data, err := db.dbo.Get(seedDBKey, seedDBKey, new(DBSeed))
+	data, err := db.DBO.Get(seedDBKey, seedDBKey, new(DBSeed))
 	if err != nil {
 		return nil, err
 	}
@@ -221,7 +221,7 @@ func (db *WalletDatabaseOverlay) GetDBSeed() (*DBSeed, error) {
 }
 
 func (db *WalletDatabaseOverlay) GetOrCreateDBSeed() (*DBSeed, error) {
-	data, err := db.dbo.Get(seedDBKey, seedDBKey, new(DBSeed))
+	data, err := db.DBO.Get(seedDBKey, seedDBKey, new(DBSeed))
 	if err != nil {
 		return nil, err
 	}
@@ -287,22 +287,22 @@ func (db *WalletDatabaseOverlay) InsertECAddress(e *factom.ECAddress) error {
 	batch := []interfaces.Record{}
 	batch = append(batch, interfaces.Record{ecDBPrefix, []byte(e.PubString()), e})
 
-	return db.dbo.PutInBatch(batch)
+	return db.DBO.PutInBatch(batch)
 }
 
 func (db *WalletDatabaseOverlay) GetECAddress(pubString string) (*factom.ECAddress, error) {
-	data, err := db.dbo.Get(ecDBPrefix, []byte(pubString), new(factom.ECAddress))
+	data, err := db.DBO.Get(ecDBPrefix, []byte(pubString), new(factom.ECAddress))
 	if err != nil {
 		return nil, err
 	}
 	if data == nil {
-		return nil, nil
+		return nil, ErrNoSuchAddress
 	}
 	return data.(*factom.ECAddress), nil
 }
 
 func (db *WalletDatabaseOverlay) GetAllECAddresses() ([]*factom.ECAddress, error) {
-	list, err := db.dbo.FetchAllBlocksFromBucket(ecDBPrefix, new(ECA))
+	list, err := db.DBO.FetchAllBlocksFromBucket(ecDBPrefix, new(ECA))
 	if err != nil {
 		return nil, err
 	}
@@ -339,11 +339,11 @@ func (db *WalletDatabaseOverlay) InsertFCTAddress(e *factom.FactoidAddress) erro
 	batch := []interfaces.Record{}
 	batch = append(batch, interfaces.Record{fcDBPrefix, []byte(e.String()), e})
 
-	return db.dbo.PutInBatch(batch)
+	return db.DBO.PutInBatch(batch)
 }
 
 func (db *WalletDatabaseOverlay) GetFCTAddress(str string) (*factom.FactoidAddress, error) {
-	data, err := db.dbo.Get(fcDBPrefix, []byte(str), new(factom.FactoidAddress))
+	data, err := db.DBO.Get(fcDBPrefix, []byte(str), new(factom.FactoidAddress))
 	if err != nil {
 		return nil, err
 	}
@@ -354,7 +354,7 @@ func (db *WalletDatabaseOverlay) GetFCTAddress(str string) (*factom.FactoidAddre
 }
 
 func (db *WalletDatabaseOverlay) GetAllFCTAddresses() ([]*factom.FactoidAddress, error) {
-	list, err := db.dbo.FetchAllBlocksFromBucket(fcDBPrefix, new(FA))
+	list, err := db.DBO.FetchAllBlocksFromBucket(fcDBPrefix, new(FA))
 	if err != nil {
 		return nil, err
 	}
@@ -368,6 +368,47 @@ func toFList(source []interfaces.BinaryMarshallableAndCopyable) []*factom.Factoi
 	}
 	sort.Sort(byFName(answer))
 	return answer
+}
+
+func (db *WalletDatabaseOverlay) RemoveAddress(pubString string) error {
+	if len(pubString) == 0 {
+		return nil
+	}
+	if pubString[:1] == "F" {
+		data, err := db.DBO.Get(fcDBPrefix, []byte(pubString), new(factom.FactoidAddress))
+		if err != nil {
+			return err
+		}
+		if data == nil {
+			return ErrNoSuchAddress
+		}
+		err = db.DBO.Delete(fcDBPrefix, []byte(pubString))
+		if err == nil {
+			err := db.DBO.Delete(fcDBPrefix, []byte(pubString)) //delete twice to flush the db file
+			return err
+		} else {
+			return err
+		}
+	} else if pubString[:1] == "E" {
+		data, err := db.DBO.Get(ecDBPrefix, []byte(pubString), new(factom.ECAddress))
+		if err != nil {
+			return err
+		}
+		if data == nil {
+			return ErrNoSuchAddress
+		}
+		err = db.DBO.Delete(ecDBPrefix, []byte(pubString))
+		if err == nil {
+			err := db.DBO.Delete(ecDBPrefix, []byte(pubString)) //delete twice to flush the db file
+			return err
+		} else {
+			return err
+		}
+	} else {
+		return fmt.Errorf("Unknown address type")
+	}
+
+	return nil
 }
 
 type byFName []*factom.FactoidAddress

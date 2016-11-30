@@ -156,6 +156,22 @@ func ImportKoinify(mnemonic string) (*FactoidAddress, error) {
 	return f, nil
 }
 
+func RemoveAddress(address string) error {
+	params := new(addressRequest)
+	params.Address = address
+
+	req := NewJSON2Request("remove-address", APICounter(), params)
+	resp, err := walletRequest(req)
+	if err != nil {
+		return err
+	}
+	if resp.Error != nil {
+		return resp.Error
+	}
+
+	return nil
+}
+
 func FetchAddresses() ([]*FactoidAddress, []*ECAddress, error) {
 	req := NewJSON2Request("all-addresses", APICounter(), nil)
 	resp, err := walletRequest(req)
@@ -245,6 +261,24 @@ func FetchFactoidAddress(fctpub string) (*FactoidAddress, error) {
 	return GetFactoidAddress(r.Secret)
 }
 
+func GetWalletHeight() (uint32, error) {
+	req := NewJSON2Request("get-height", APICounter(), nil)
+	resp, err := walletRequest(req)
+	if err != nil {
+		return 0, err
+	}
+	if resp.Error != nil {
+		return 0, resp.Error
+	}
+
+	r := new(heightResponse)
+	if err := json.Unmarshal(resp.JSONResult(), r); err != nil {
+		return 0, err
+	}
+
+	return uint32(r.Height), nil
+}
+
 type addressResponse struct {
 	Public string `json:"public"`
 	Secret string `json:"secret"`
@@ -252,4 +286,8 @@ type addressResponse struct {
 
 type multiAddressResponse struct {
 	Addresses []*addressResponse `json:"addresses"`
+}
+
+type heightResponse struct {
+	Height int64 `json:"height"`
 }
