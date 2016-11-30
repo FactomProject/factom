@@ -269,3 +269,35 @@ type addressResponse struct {
 type multiAddressResponse struct {
 	Addresses []*addressResponse `json:"addresses"`
 }
+
+type composeEntryRequest struct {
+	Entry Entry  `json:"entry"`
+	ECPub string `json:"ecpub"`
+}
+
+type composeEntryResponse struct {
+	Commit *JSON2Request `json:"commit"`
+	Reveal *JSON2Request `json:"reveal"`
+}
+
+func WalletComposeEntryCommitReveal(entry *Entry, ecPub string) (*JSON2Request, *JSON2Request, error) {
+	params := new(composeEntryRequest)
+	params.Entry = *entry
+	params.ECPub = ecPub
+
+	req := NewJSON2Request("composeentry", APICounter(), params)
+	resp, err := walletRequest(req)
+	if err != nil {
+		return nil, nil, err
+	}
+	if resp.Error != nil {
+		return nil, nil, resp.Error
+	}
+
+	r := new(composeEntryResponse)
+	if err := json.Unmarshal(resp.JSONResult(), r); err != nil {
+		return nil, nil, err
+	}
+
+	return r.Commit, r.Reveal, nil
+}

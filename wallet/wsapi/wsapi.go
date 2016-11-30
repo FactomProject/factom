@@ -241,6 +241,8 @@ func handleV2Request(j *factom.JSON2Request) (*factom.JSON2Response, *factom.JSO
 		resp, jsonError = handleRemoveAddress(params)
 	case "properties":
 		resp, jsonError = handleProperties(params)
+	case "composeentry":
+		resp, jsonError = handleComposeEntry(params)
 	default:
 		jsonError = newMethodNotFoundError()
 	}
@@ -708,6 +710,52 @@ func handleComposeTransaction(params []byte) (interface{}, *factom.JSONError) {
 		return nil, newCustomInternalError(err.Error())
 	}
 	return t, nil
+}
+
+func handleComposeEntry(params []byte) (interface{}, *factom.JSONError) {
+	req := new(entryRequest)
+	if err := json.Unmarshal(params, req); err != nil {
+		return nil, newInvalidParamsError()
+	}
+
+	e := req.Entry
+	ecpub := req.ECPub
+
+	if !factom.ChainExists(e.ChainID) {
+		return nil, newCustomInvalidParamsError("Chain " + e.ChainID + "was not found")
+	}
+
+	ec, err := fctWallet.GetECAddress(ecpub)
+	if err != nil {
+		return nil, newCustomInternalError(err.Error())
+	}
+	if ec == nil {
+		return nil, newCustomInternalError("Wallet: address not found")
+	}
+
+	// check ec address balance
+	balance, err := factom.GetECBalance(ecpub)
+	if err != nil {
+		return nil, newCustomInternalError(err.Error())
+	}
+	if balance == 0 {
+		return nil, newCustomInvalidParamsError("Entry Credit balance is zero")
+	}
+
+	commit, err := factom.ComposeEntryCommit(&e, ec)
+	if err != nil {
+		return nil, newCustomInternalError(err.Error())
+	}
+
+	reveal, err := factom.ComposeEntryReveal(&e)
+	if err != nil {
+		return nil, newCustomInternalError(err.Error())
+	}
+
+	resp := new(entryResponse)
+	resp.Commit = commit
+	resp.Reveal = reveal
+	return resp, nil
 }
 
 func handleProperties(params []byte) (interface{}, *factom.JSONError) {
