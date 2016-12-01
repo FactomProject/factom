@@ -316,12 +316,10 @@ func handleAllAddresses(params []byte) (interface{}, *factom.JSONError) {
 		return nil, newCustomInternalError(err.Error())
 	}
 	for _, f := range fs {
-		a := mkAddressResponse(f)
-		resp.Addresses = append(resp.Addresses, a)
+		resp.Addresses = append(resp.Addresses, mkAddressResponse(f))
 	}
 	for _, e := range es {
-		a := mkAddressResponse(e)
-		resp.Addresses = append(resp.Addresses, a)
+		resp.Addresses = append(resp.Addresses, mkAddressResponse(e))
 	}
 
 	return resp, nil
