@@ -293,9 +293,36 @@ type composeEntryRequest struct {
 	ECPub string `json:"ecpub"`
 }
 
+type composeChainRequest struct {
+	Chain Chain  `json:"chain"`
+	ECPub string `json:"ecpub"`
+}
+
 type composeEntryResponse struct {
 	Commit *JSON2Request `json:"commit"`
 	Reveal *JSON2Request `json:"reveal"`
+}
+
+func WalletComposeChainCommitReveal(chain *Chain, ecPub string) (*JSON2Request, *JSON2Request, error) {
+	params := new(composeChainRequest)
+	params.Chain = *chain
+	params.ECPub = ecPub
+
+	req := NewJSON2Request("compose-chain", APICounter(), params)
+	resp, err := walletRequest(req)
+	if err != nil {
+		return nil, nil, err
+	}
+	if resp.Error != nil {
+		return nil, nil, resp.Error
+	}
+
+	r := new(composeEntryResponse)
+	if err := json.Unmarshal(resp.JSONResult(), r); err != nil {
+		return nil, nil, err
+	}
+
+	return r.Commit, r.Reveal, nil
 }
 
 func WalletComposeEntryCommitReveal(entry *Entry, ecPub string) (*JSON2Request, *JSON2Request, error) {
@@ -303,7 +330,7 @@ func WalletComposeEntryCommitReveal(entry *Entry, ecPub string) (*JSON2Request, 
 	params.Entry = *entry
 	params.ECPub = ecPub
 
-	req := NewJSON2Request("composeentry", APICounter(), params)
+	req := NewJSON2Request("compose-entry", APICounter(), params)
 	resp, err := walletRequest(req)
 	if err != nil {
 		return nil, nil, err

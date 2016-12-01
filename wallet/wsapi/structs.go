@@ -59,6 +59,11 @@ type entryRequest struct {
 	ECPub string       `json:"ecpub"`
 }
 
+type chainRequest struct {
+	Chain factom.Chain `json:"chain"`
+	ECPub string       `json:"ecpub"`
+}
+
 // responses
 
 type addressResponse struct {
