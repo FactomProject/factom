@@ -524,6 +524,7 @@ func handleNewTransaction(params []byte) (interface{}, *factom.JSONError) {
 		return nil, newCustomInternalError(err.Error())
 	}
 	resp.Name = req.Name
+	resp.FeesRequired = feesRequired(tx)
 
 	return resp, nil
 }
@@ -551,6 +552,7 @@ func handleTmpTransactions(params []byte) (interface{}, *factom.JSONError) {
 			return nil, newCustomInternalError(err.Error())
 		}
 		r.Name = name
+		r.FeesRequired = feesRequired(tx)
 		resp.Transactions = append(resp.Transactions, r)
 	}
 
@@ -592,6 +594,7 @@ func handleAddInput(params []byte) (interface{}, *factom.JSONError) {
 		return nil, newCustomInternalError(err.Error())
 	}
 	resp.Name = req.Name
+	resp.FeesRequired = feesRequired(tx)
 
 	return resp, nil
 }
@@ -611,6 +614,7 @@ func handleAddOutput(params []byte) (interface{}, *factom.JSONError) {
 		return nil, newCustomInternalError(err.Error())
 	}
 	resp.Name = req.Name
+	resp.FeesRequired = feesRequired(tx)
 
 	return resp, nil
 }
@@ -630,6 +634,7 @@ func handleAddECOutput(params []byte) (interface{}, *factom.JSONError) {
 		return nil, newCustomInternalError(err.Error())
 	}
 	resp.Name = req.Name
+	resp.FeesRequired = feesRequired(tx)
 
 	return resp, nil
 }
@@ -653,6 +658,7 @@ func handleAddFee(params []byte) (interface{}, *factom.JSONError) {
 		return nil, newCustomInternalError(err.Error())
 	}
 	resp.Name = req.Name
+	resp.FeesRequired = feesRequired(tx)
 
 	return resp, nil
 }
@@ -676,6 +682,7 @@ func handleSubFee(params []byte) (interface{}, *factom.JSONError) {
 		return nil, newCustomInternalError(err.Error())
 	}
 	resp.Name = req.Name
+	resp.FeesRequired = feesRequired(tx)
 
 	return resp, nil
 }
@@ -695,6 +702,7 @@ func handleSignTransaction(params []byte) (interface{}, *factom.JSONError) {
 		return nil, newCustomInternalError(err.Error())
 	}
 	resp.Name = req.Name
+	resp.FeesRequired = feesRequired(tx)
 
 	return resp, nil
 }
@@ -812,18 +820,17 @@ func factoidTxToTransaction(t interfaces.ITransaction) (
 		r.FeesPaid = r.TotalInputs - (r.TotalOutputs + r.TotalECOutputs)
 	}
 
-	// get the ec rate and calulate the fee if it is a new transaction
-	if !r.IsSigned {
-		rate, err := factom.GetRate()
-		if err != nil {
-			rate = 0
-		}
-		if i, err := t.CalculateFee(rate); err != nil {
-			return nil, err
-		} else {
-			r.FeesRequired = i
-		}
-	}
-
 	return r, nil
+}
+
+func feesRequired(t interfaces.ITransaction) uint64 {
+	rate, err := factom.GetRate()
+	if err != nil {
+		rate = 0
+	}
+	if i, err := t.CalculateFee(rate); err != nil {
+		return 0
+	} else {
+		return i
+	}
 }
