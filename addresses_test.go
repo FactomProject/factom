@@ -167,7 +167,7 @@ func TestMakeFactoidAddressFromMnemonic(t *testing.T) {
 	m := "yellow yellow yellow yellow yellow yellow yellow yellow yellow yellow yellow yellow"
 	cannonAdr := "FA3cih2o2tjEUsnnFR4jX1tQXPpSXFwsp3rhVp6odL5PNCHWvZV1"
 
-	fct, err := MakeFactoidAddressFromMnemonic(m)
+	fct, err := MakeFactoidAddressFromKoinify(m)
 	if err != nil {
 		t.Error(err)
 	}

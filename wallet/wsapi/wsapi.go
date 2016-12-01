@@ -243,6 +243,8 @@ func handleV2Request(j *factom.JSON2Request) (*factom.JSON2Response, *factom.JSO
 		resp, jsonError = handleProperties(params)
 	case "composeentry":
 		resp, jsonError = handleComposeEntry(params)
+	case "get-height":
+		resp, jsonError = handleGetHeight(params)
 	default:
 		jsonError = newMethodNotFoundError()
 	}
@@ -765,6 +767,23 @@ func handleProperties(params []byte) (interface{}, *factom.JSONError) {
 	return props, nil
 }
 
+func handleGetHeight(params []byte) (interface{}, *factom.JSONError) {
+	resp := new(heightResponse)
+
+	block, err := fctWallet.TXDB().DBO.FetchFBlockHead()
+
+	if err != nil {
+		return nil, newCustomInternalError(err.Error())
+	}
+	if block == nil {
+		resp.Height = 0
+		return resp, nil
+	}
+
+	resp.Height = int64(block.GetDBHeight())
+	return resp, nil
+}
+
 // utility functions
 
 type addressResponder interface {
@@ -841,15 +860,17 @@ func factoidTxToTransaction(t interfaces.ITransaction) (
 		r.FeesPaid = r.TotalInputs - (r.TotalOutputs + r.TotalECOutputs)
 	}
 
-	// get the ec rate and calulate the fee
-	rate, err := factom.GetRate()
-	if err != nil {
-		rate = 0
-	}
-	if i, err := t.CalculateFee(rate); err != nil {
-		return nil, err
-	} else {
-		r.FeesRequired = i
+	// get the ec rate and calulate the fee if it is a new transaction
+	if !r.IsSigned {
+		rate, err := factom.GetRate()
+		if err != nil {
+			rate = 0
+		}
+		if i, err := t.CalculateFee(rate); err != nil {
+			return nil, err
+		} else {
+			r.FeesRequired = i
+		}
 	}
 
 	return r, nil

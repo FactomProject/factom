@@ -92,3 +92,7 @@ type entryResponse struct {
 	Commit *factom.JSON2Request `json:"commit"`
 	Reveal *factom.JSON2Request `json:"reveal"`
 }
+
+type heightResponse struct {
+	Height int64 `json:"height"`
+}

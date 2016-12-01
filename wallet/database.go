@@ -73,7 +73,7 @@ func NewMapDBWallet() (*Wallet, error) {
 
 // Close closes a Factom Wallet Database
 func (w *Wallet) Close() error {
-	return w.dbo.Close()
+	return w.DBO.Close()
 }
 
 // AddTXDB allows the wallet api to read from a local transaction cashe.

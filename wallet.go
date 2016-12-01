@@ -261,6 +261,24 @@ func FetchFactoidAddress(fctpub string) (*FactoidAddress, error) {
 	return GetFactoidAddress(r.Secret)
 }
 
+func GetWalletHeight() (uint32, error) {
+	req := NewJSON2Request("get-height", APICounter(), nil)
+	resp, err := walletRequest(req)
+	if err != nil {
+		return 0, err
+	}
+	if resp.Error != nil {
+		return 0, resp.Error
+	}
+
+	r := new(heightResponse)
+	if err := json.Unmarshal(resp.JSONResult(), r); err != nil {
+		return 0, err
+	}
+
+	return uint32(r.Height), nil
+}
+
 type addressResponse struct {
 	Public string `json:"public"`
 	Secret string `json:"secret"`
@@ -300,4 +318,8 @@ func WalletComposeEntryCommitReveal(entry *Entry, ecPub string) (*JSON2Request, 
 	}
 
 	return r.Commit, r.Reveal, nil
+}
+
+type heightResponse struct {
+	Height int64 `json:"height"`
 }
