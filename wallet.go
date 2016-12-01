@@ -5,8 +5,11 @@
 package factom
 
 import (
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
+
+	ed "github.com/FactomProject/ed25519"
 )
 
 // BackupWallet returns a formatted string with the wallet seed and the secret
@@ -243,6 +246,53 @@ func FetchFactoidAddress(fctpub string) (*FactoidAddress, error) {
 	}
 
 	return GetFactoidAddress(r.Secret)
+}
+
+func SignMessage(p string, m string) (string, error) {
+	if AddressStringType(p) != FactoidPub && AddressStringType(p) != ECPub {
+		return "", fmt.Errorf("%s is neither a Factoid Address nor an EntryCredit Address", p)
+	}
+	params := new(addressRequest)
+	params.Address = p
+
+	req := NewJSON2Request("address", APICounter(), params)
+	resp, err := walletRequest(req)
+	if err != nil {
+		return "", err
+	}
+	if resp.Error != nil {
+		return "", resp.Error
+	}
+
+	r := new(addressResponse)
+	if err := json.Unmarshal(resp.JSONResult(), r); err != nil {
+		return "", err
+	}
+
+	sec := new([ed.PrivateKeySize]byte)
+	copy(sec[:], p)
+	sig := ed.Sign(sec, []byte(m))
+
+	return base64.StdEncoding.EncodeToString(sig[:]), nil
+}
+
+func VerifyMessage(p string, s string, m string) (bool, error) {
+	if AddressStringType(p) != FactoidPub && AddressStringType(p) != ECPub {
+		return false, fmt.Errorf("%s is neither a Factoid Address nor an EntryCredit Address", p)
+	}
+
+	sigDecoded, err := base64.StdEncoding.DecodeString(s)
+	if err != nil {
+		return false, err
+	}
+
+	sig := new([ed.SignatureSize]byte)
+	pub := new([ed.PublicKeySize]byte)
+	copy(sig[:], sigDecoded)
+	copy(pub[:], p)
+	res := ed.Verify(pub, []byte(m), sig)
+
+	return res, nil
 }
 
 type addressResponse struct {
