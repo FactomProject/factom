@@ -722,7 +722,7 @@ func handleComposeEntry(params []byte) (interface{}, *factom.JSONError) {
 	ecpub := req.ECPub
 
 	if !factom.ChainExists(e.ChainID) {
-		return nil, newCustomInvalidParamsError("Chain " + e.ChainID + "was not found")
+		return nil, newCustomInvalidParamsError("Chain " + e.ChainID + " was not found")
 	}
 
 	ec, err := fctWallet.GetECAddress(ecpub)
