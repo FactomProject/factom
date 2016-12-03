@@ -5,10 +5,12 @@
 package factom
 
 import (
+	"bytes"
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
 
+	"github.com/FactomProject/btcutil/base58"
 	ed "github.com/FactomProject/ed25519"
 )
 
@@ -248,51 +250,92 @@ func FetchFactoidAddress(fctpub string) (*FactoidAddress, error) {
 	return GetFactoidAddress(r.Secret)
 }
 
-func SignMessage(p string, m string) (string, error) {
+func SignMessage(p string, m string) (string, string, error) {
 	if AddressStringType(p) != FactoidPub && AddressStringType(p) != ECPub {
-		return "", fmt.Errorf("%s is neither a Factoid Address nor an EntryCredit Address", p)
-	}
-	params := new(addressRequest)
-	params.Address = p
-
-	req := NewJSON2Request("address", APICounter(), params)
-	resp, err := walletRequest(req)
-	if err != nil {
-		return "", err
-	}
-	if resp.Error != nil {
-		return "", resp.Error
+		return "", "", fmt.Errorf("%s is neither a Factoid Address nor an EntryCredit Address", p)
 	}
 
-	r := new(addressResponse)
-	if err := json.Unmarshal(resp.JSONResult(), r); err != nil {
-		return "", err
+	var (
+		sig            *[ed.SignatureSize]byte
+		pubKeyPrefixed string
+	)
+
+	pubKey := new(bytes.Buffer)
+
+	switch AddressStringType(p) {
+	case FactoidPub:
+		addr, err := FetchFactoidAddress(p)
+		if err != nil {
+			return "", "", err
+		}
+
+		sig = ed.Sign(addr.Sec, []byte(m))
+
+		pubKey.Write(fcPubPrefix)
+		pubKey.Write(addr.PubBytes())
+		pubKeyPrefixed = base64.StdEncoding.EncodeToString(pubKey.Bytes())
+	case ECPub:
+		addr, err := FetchECAddress(p)
+		if err != nil {
+			return "", "", err
+		}
+
+		sig = ed.Sign(addr.Sec, []byte(m))
+
+		pubKey.Write(ecPubPrefix)
+		pubKey.Write(addr.PubBytes())
+		pubKeyPrefixed = base64.StdEncoding.EncodeToString(pubKey.Bytes())
 	}
 
-	sec := new([ed.PrivateKeySize]byte)
-	copy(sec[:], p)
-	sig := ed.Sign(sec, []byte(m))
-
-	return base64.StdEncoding.EncodeToString(sig[:]), nil
+	return pubKeyPrefixed, base64.StdEncoding.EncodeToString(sig[:]), nil
 }
 
-func VerifyMessage(p string, s string, m string) (bool, error) {
-	if AddressStringType(p) != FactoidPub && AddressStringType(p) != ECPub {
-		return false, fmt.Errorf("%s is neither a Factoid Address nor an EntryCredit Address", p)
+func VerifyMessage(p string, s string, m string) (bool, string, error) {
+	var addr string
+
+	pubBytesPrefixed, err := base64.StdEncoding.DecodeString(p)
+	if err != nil {
+		fmt.Println("Error reading public key")
+		return false, "", err
+	}
+
+	prefix := pubBytesPrefixed[:PrefixLength]
+	pubBytes := pubBytesPrefixed[PrefixLength:]
+
+	if bytes.Equal(prefix, ecPubPrefix) {
+		buf := new(bytes.Buffer)
+		buf.Write(pubBytesPrefixed)
+
+		check := shad(buf.Bytes())[:ChecksumLength]
+		buf.Write(check)
+
+		addr = base58.Encode(buf.Bytes())
+
+	} else if bytes.Equal(prefix, fcPubPrefix) {
+		a := new(FactoidAddress)
+		r := NewRCD1()
+		copy(r.Pub[:], pubBytesPrefixed[PrefixLength:])
+		a.RCD = r
+
+		addr = a.String()
+
+	} else {
+		fmt.Println("Public key is not valid")
+		return false, "", nil
 	}
 
 	sigDecoded, err := base64.StdEncoding.DecodeString(s)
 	if err != nil {
-		return false, err
+		return false, "", err
 	}
 
 	sig := new([ed.SignatureSize]byte)
 	pub := new([ed.PublicKeySize]byte)
 	copy(sig[:], sigDecoded)
-	copy(pub[:], p)
+	copy(pub[:], pubBytes)
 	res := ed.Verify(pub, []byte(m), sig)
 
-	return res, nil
+	return res, addr, nil
 }
 
 type addressResponse struct {
