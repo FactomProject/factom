@@ -1,5 +1,5 @@
 hash: 0cad182356c089586558290f9843c55565a1e8833f28939514e76355477064b3
-updated: 2016-12-05T00:01:38.680720983-06:00
+updated: 2016-12-05T03:55:10.437196262-06:00
 imports:
 - name: github.com/btcsuitereleases/btcutil
   version: f2b1058a82554c0c7c3b8809c5956c38374604d8
@@ -35,7 +35,7 @@ imports:
 - name: github.com/FactomProject/go-bip32
   version: 58394f75c1d04ee30972d810015f491b9c7bee02
 - name: github.com/FactomProject/go-bip39
-  version: 013ef263dadc6f772e2fff99ca19530f1db33a78
+  version: b26bf5b8a88111792f0c215417dac76dd5d79e7c
 - name: github.com/FactomProject/go-bip44
   version: 16882256c7583834d58c3996e63142a7af1bfac5
 - name: github.com/FactomProject/go-simplejson
