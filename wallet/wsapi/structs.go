@@ -54,6 +54,16 @@ type txdbRequest struct {
 	} `json:"range,omitempty"`
 }
 
+type entryRequest struct {
+	Entry factom.Entry `json:"entry"`
+	ECPub string       `json:"ecpub"`
+}
+
+type chainRequest struct {
+	Chain factom.Chain `json:"chain"`
+	ECPub string       `json:"ecpub"`
+}
+
 // responses
 
 type addressResponse struct {
@@ -81,6 +91,11 @@ type propertiesResponse struct {
 
 type simpleResponse struct {
 	Success bool `json:"success"`
+}
+
+type entryResponse struct {
+	Commit *factom.JSON2Request `json:"commit"`
+	Reveal *factom.JSON2Request `json:"reveal"`
 }
 
 type heightResponse struct {
