@@ -291,11 +291,13 @@ type multiAddressResponse struct {
 type composeEntryRequest struct {
 	Entry Entry  `json:"entry"`
 	ECPub string `json:"ecpub"`
+	Force bool   `json:"force"`
 }
 
 type composeChainRequest struct {
 	Chain Chain  `json:"chain"`
 	ECPub string `json:"ecpub"`
+	Force bool   `json:"force"`
 }
 
 type composeEntryResponse struct {
@@ -303,10 +305,11 @@ type composeEntryResponse struct {
 	Reveal *JSON2Request `json:"reveal"`
 }
 
-func WalletComposeChainCommitReveal(chain *Chain, ecPub string) (*JSON2Request, *JSON2Request, error) {
+func WalletComposeChainCommitReveal(chain *Chain, ecPub string, force bool) (*JSON2Request, *JSON2Request, error) {
 	params := new(composeChainRequest)
 	params.Chain = *chain
 	params.ECPub = ecPub
+	params.Force = force
 
 	req := NewJSON2Request("compose-chain", APICounter(), params)
 	resp, err := walletRequest(req)
@@ -325,10 +328,11 @@ func WalletComposeChainCommitReveal(chain *Chain, ecPub string) (*JSON2Request, 
 	return r.Commit, r.Reveal, nil
 }
 
-func WalletComposeEntryCommitReveal(entry *Entry, ecPub string) (*JSON2Request, *JSON2Request, error) {
+func WalletComposeEntryCommitReveal(entry *Entry, ecPub string, force bool) (*JSON2Request, *JSON2Request, error) {
 	params := new(composeEntryRequest)
 	params.Entry = *entry
 	params.ECPub = ecPub
+	params.Force = force
 
 	req := NewJSON2Request("compose-entry", APICounter(), params)
 	resp, err := walletRequest(req)

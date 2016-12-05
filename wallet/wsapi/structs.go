@@ -57,11 +57,13 @@ type txdbRequest struct {
 type entryRequest struct {
 	Entry factom.Entry `json:"entry"`
 	ECPub string       `json:"ecpub"`
+	Force bool         `json:"force"`
 }
 
 type chainRequest struct {
 	Chain factom.Chain `json:"chain"`
 	ECPub string       `json:"ecpub"`
+	Force bool         `json:"force"`
 }
 
 // responses

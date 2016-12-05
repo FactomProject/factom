@@ -730,10 +730,7 @@ func handleComposeChain(params []byte) (interface{}, *factom.JSONError) {
 
 	c := req.Chain
 	ecpub := req.ECPub
-
-	if factom.ChainExists(c.ChainID) {
-		return nil, newCustomInvalidParamsError("Chain " + c.ChainID + " already exists")
-	}
+	force := req.Force
 
 	ec, err := fctWallet.GetECAddress(ecpub)
 	if err != nil {
@@ -743,13 +740,18 @@ func handleComposeChain(params []byte) (interface{}, *factom.JSONError) {
 		return nil, newCustomInternalError("Wallet: address not found")
 	}
 
-	// check ec address balance
-	balance, err := factom.GetECBalance(ecpub)
-	if err != nil {
-		return nil, newCustomInternalError(err.Error())
-	}
-	if balance == 0 {
-		return nil, newCustomInvalidParamsError("Entry Credit balance is zero")
+	if !force {
+		// check ec address balance
+		balance, err := factom.GetECBalance(ecpub)
+		if err != nil {
+			return nil, newCustomInternalError(err.Error())
+		}
+		if balance == 0 {
+			return nil, newCustomInvalidParamsError("Entry Credit balance is zero")
+		}
+		if factom.ChainExists(c.ChainID) {
+			return nil, newCustomInvalidParamsError("Chain " + c.ChainID + " already exists")
+		}
 	}
 
 	commit, err := factom.ComposeChainCommit(&c, ec)
@@ -776,10 +778,7 @@ func handleComposeEntry(params []byte) (interface{}, *factom.JSONError) {
 
 	e := req.Entry
 	ecpub := req.ECPub
-
-	if !factom.ChainExists(e.ChainID) {
-		return nil, newCustomInvalidParamsError("Chain " + e.ChainID + " was not found")
-	}
+	force := req.Force
 
 	ec, err := fctWallet.GetECAddress(ecpub)
 	if err != nil {
@@ -788,14 +787,18 @@ func handleComposeEntry(params []byte) (interface{}, *factom.JSONError) {
 	if ec == nil {
 		return nil, newCustomInternalError("Wallet: address not found")
 	}
-
-	// check ec address balance
-	balance, err := factom.GetECBalance(ecpub)
-	if err != nil {
-		return nil, newCustomInternalError(err.Error())
-	}
-	if balance == 0 {
-		return nil, newCustomInvalidParamsError("Entry Credit balance is zero")
+	if !force {
+		// check ec address balance
+		balance, err := factom.GetECBalance(ecpub)
+		if err != nil {
+			return nil, newCustomInternalError(err.Error())
+		}
+		if balance == 0 {
+			return nil, newCustomInvalidParamsError("Entry Credit balance is zero")
+		}
+		if !factom.ChainExists(e.ChainID) {
+			return nil, newCustomInvalidParamsError("Chain " + e.ChainID + " was not found")
+		}
 	}
 
 	commit, err := factom.ComposeEntryCommit(&e, ec)
