@@ -70,7 +70,9 @@ func (tx *Transaction) String() (s string) {
 		)
 	}
 	s += fmt.Sprintln("FeesPaid:", factoshiToFactoid(tx.FeesPaid))
-	s += fmt.Sprintln("FeesRequired:", factoshiToFactoid(tx.FeesRequired))
+	if tx.FeesRequired != 0 {
+		s += fmt.Sprintln("FeesRequired:", factoshiToFactoid(tx.FeesRequired))
+	}
 	s += fmt.Sprintln("Signed:", tx.IsSigned)
 
 	return s
