@@ -45,33 +45,33 @@ func (tx *Transaction) String() (s string) {
 	if tx.BlockHeight != 0 {
 		s += fmt.Sprintln("BlockHeight:", tx.BlockHeight)
 	}
-	s += fmt.Sprintln("TotalInputs:", factoshiToFactoid(tx.TotalInputs))
-	s += fmt.Sprintln("TotalOutputs:", factoshiToFactoid(tx.TotalOutputs))
-	s += fmt.Sprintln("TotalECOutputs:", factoshiToFactoid(tx.TotalECOutputs))
+	s += fmt.Sprintln("TotalInputs:", FactoshiToFactoid(tx.TotalInputs))
+	s += fmt.Sprintln("TotalOutputs:", FactoshiToFactoid(tx.TotalOutputs))
+	s += fmt.Sprintln("TotalECOutputs:", FactoshiToFactoid(tx.TotalECOutputs))
 	for _, in := range tx.Inputs {
 		s += fmt.Sprintln(
 			"Input:",
 			in.Address,
-			factoshiToFactoid(in.Amount),
+			FactoshiToFactoid(in.Amount),
 		)
 	}
 	for _, out := range tx.Outputs {
 		s += fmt.Sprintln(
 			"Output:",
 			out.Address,
-			factoshiToFactoid(out.Amount),
+			FactoshiToFactoid(out.Amount),
 		)
 	}
 	for _, ec := range tx.ECOutputs {
 		s += fmt.Sprintln(
 			"ECOutput:",
 			ec.Address,
-			factoshiToFactoid(ec.Amount),
+			FactoshiToFactoid(ec.Amount),
 		)
 	}
-	s += fmt.Sprintln("FeesPaid:", factoshiToFactoid(tx.FeesPaid))
+	s += fmt.Sprintln("FeesPaid:", FactoshiToFactoid(tx.FeesPaid))
 	if tx.FeesRequired != 0 {
-		s += fmt.Sprintln("FeesRequired:", factoshiToFactoid(tx.FeesRequired))
+		s += fmt.Sprintln("FeesRequired:", FactoshiToFactoid(tx.FeesRequired))
 	}
 	s += fmt.Sprintln("Signed:", tx.IsSigned)
 
