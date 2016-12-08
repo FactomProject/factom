@@ -1,5 +1,5 @@
-hash: 0cad182356c089586558290f9843c55565a1e8833f28939514e76355477064b3
-updated: 2016-12-05T03:55:10.437196262-06:00
+hash: 667e443b7fdaaa7f4aa150d9f5b15c37093e4c3042f6cd7d6728e2ca9eb73275
+updated: 2016-12-08T02:47:12.417576834-06:00
 imports:
 - name: github.com/btcsuitereleases/btcutil
   version: f2b1058a82554c0c7c3b8809c5956c38374604d8
@@ -33,11 +33,11 @@ imports:
   subpackages:
   - controlpanel
 - name: github.com/FactomProject/go-bip32
-  version: 58394f75c1d04ee30972d810015f491b9c7bee02
+  version: 3b593af1c415abc1017648e4eb24a88c32fee0f3
 - name: github.com/FactomProject/go-bip39
   version: b26bf5b8a88111792f0c215417dac76dd5d79e7c
 - name: github.com/FactomProject/go-bip44
-  version: 16882256c7583834d58c3996e63142a7af1bfac5
+  version: fd672f46ddc35bb381f497f7b64c9cf34f9e0703
 - name: github.com/FactomProject/go-simplejson
   version: aabad6e819789e569bd6aabf444c935aa9ba1e44
 - name: github.com/FactomProject/go-spew
@@ -68,16 +68,16 @@ imports:
 - name: github.com/FactomProject/web
   version: 7daee1bf727fc2cd9142b9a73a797f98b3180756
 - name: golang.org/x/crypto
-  version: 8a549a1948fc5271eb24f36dcb0d3b47dec75a16
+  version: 95cb608f365d51e0e69abc646ec90c0e26fb427f
   subpackages:
   - pbkdf2
   - ripemd160
 - name: golang.org/x/net
-  version: 6cdc0daab091c43fc46193327e0047b4f883c613
+  version: 944c58e9d57bcecf171fd4bea155269aa8a96805
   subpackages:
   - websocket
 - name: golang.org/x/sys
-  version: f5a6bd43051d3f1f5dd3e0dbd531721aa5e75d28
+  version: 478fcf54317e52ab69f40bb4c7a1520288d7f7ea
   subpackages:
   - unix
 testImports: []

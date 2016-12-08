@@ -255,7 +255,7 @@ func handleV2Request(j *factom.JSON2Request) (*factom.JSON2Response, *factom.JSO
 	}
 
 	fmt.Printf("API V2 method: <%v>  paramaters: %s\n", j.Method, params)
-	
+
 	jsonResp := factom.NewJSON2Response()
 	jsonResp.ID = j.ID
 	if b, err := json.Marshal(resp); err != nil {
