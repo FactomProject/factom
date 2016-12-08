@@ -81,7 +81,7 @@ func GetRate() (uint64, error) {
 	return rate.Rate, nil
 }
 
-// GetDBlock requests a Directory Block from factomd by its Key Merkel Root
+// GetDBlock requests a Directory Block from factomd by its Key Merkle Root
 func GetDBlock(keymr string) (*DBlock, error) {
 	params := keyMRRequest{KeyMR: keymr}
 	req := NewJSON2Request("directory-block", APICounter(), params)
@@ -201,7 +201,7 @@ func GetAllEBlockEntries(keymr string) ([]*Entry, error) {
 	return es, nil
 }
 
-// GetEBlock requests an Entry Block from factomd by its Key Merkel Root
+// GetEBlock requests an Entry Block from factomd by its Key Merkle Root
 func GetEBlock(keymr string) (*EBlock, error) {
 	params := keyMRRequest{KeyMR: keymr}
 	req := NewJSON2Request("entry-block", APICounter(), params)
