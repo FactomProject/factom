@@ -90,6 +90,9 @@ func (db *TXDatabaseOverlay) GetAllTXs() ([]interfaces.ITransaction, error) {
 	if err != nil {
 		return nil, err
 	}
+	if fblock == nil {
+		return nil, fmt.Errorf("FBlock Chain has not finished syncing")
+	}
 	txs := make([]interfaces.ITransaction, 0)
 
 	for {
