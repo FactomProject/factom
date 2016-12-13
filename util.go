@@ -69,7 +69,7 @@ func FactoshiToFactoid(i uint64) string {
 // FactoidToFactoshi takes a Factoid amount as a string and returns the value in
 // factoids
 func FactoidToFactoshi(amt string) uint64 {
-	valid := regexp.MustCompile(`^[0-9]+(\.[0-9]+)?$`)
+	valid := regexp.MustCompile(`^([0-9]+)?(\.[0-9]+)?`)
 	if !valid.MatchString(amt) {
 		return 0
 	}
