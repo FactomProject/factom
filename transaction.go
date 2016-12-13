@@ -493,6 +493,14 @@ func ComposeTransaction(name string) ([]byte, error) {
 func SendTransaction(name string) (*Transaction, error) {
 	params := transactionRequest{Name: name}
 
+	tx, err := GetTmpTransaction(name)
+	if err != nil {
+		return nil, err
+	}
+	if !tx.IsSigned {
+		return nil, fmt.Errorf("Cannot send unsigned transaction")
+	}
+	
 	wreq := NewJSON2Request("compose-transaction", APICounter(), params)
 	wresp, err := walletRequest(wreq)
 	if err != nil {
@@ -510,10 +518,6 @@ func SendTransaction(name string) (*Transaction, error) {
 	}
 	if fresp.Error != nil {
 		return nil, fresp.Error
-	}
-	tx, err := GetTmpTransaction(name)
-	if err != nil {
-		return nil, err
 	}
 	if err := DeleteTransaction(name); err != nil {
 		return nil, err
