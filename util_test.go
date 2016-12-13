@@ -14,7 +14,19 @@ func TestFactoidToFactoshi(t *testing.T) {
 	v2 := "100000000.00000001"
 	v3 := ".01"
 	
-	t.Log(FactoidToFactoshi(v1))
-	t.Log(FactoidToFactoshi(v2))
-	t.Log(FactoidToFactoshi(v3))
+	e1 := uint64(100010000)
+	e2 := uint64(10000000000000001)
+	e3 := uint64(1000000)
+	
+	if r1 := FactoidToFactoshi(v1); r1 != e1 {
+		t.Errorf("r1=%d expecting %d", r1, e1)
+	}
+	
+	if r2 := FactoidToFactoshi(v2); r2 != e2 {
+		t.Errorf("r2=%d expecting %d", r2, e2)
+	}
+
+	if r3 := FactoidToFactoshi(v3); r3 != e3 {
+		t.Errorf("r3=%d expecting %d", r3, e3)
+	}
 }
