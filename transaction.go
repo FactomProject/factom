@@ -500,7 +500,7 @@ func SendTransaction(name string) (*Transaction, error) {
 	if !tx.IsSigned {
 		return nil, fmt.Errorf("Cannot send unsigned transaction")
 	}
-	
+
 	wreq := NewJSON2Request("compose-transaction", APICounter(), params)
 	wresp, err := walletRequest(wreq)
 	if err != nil {
@@ -664,20 +664,16 @@ func GetTransaction(txID string) (*TransactionResponse, error) {
 
 // GetTmpTransaction gets a temporary transaction from the wallet
 func GetTmpTransaction(name string) (*Transaction, error) {
-	params := transactionRequest{Name: name}
-	req := NewJSON2Request("transaction-hash", APICounter(), params)
-
-	resp, err := walletRequest(req)
+	txs, err := ListTransactionsTmp()
 	if err != nil {
 		return nil, err
 	}
-	if resp.Error != nil {
-		return nil, resp.Error
-	}
-	tx := new(Transaction)
-	if err := json.Unmarshal(resp.JSONResult(), tx); err != nil {
-		return nil, err
+
+	for _, tx := range txs {
+		if tx.Name == name {
+			return tx, nil
+		}
 	}
 
-	return tx, nil
+	return nil, fmt.Errorf("Transaction not found")
 }
