@@ -456,28 +456,9 @@ func SubTransactionFee(name, address string) (*Transaction, error) {
 	return tx, nil
 }
 
-func SignTransaction(name string) (*Transaction, error) {
+func SignTransaction(name string, force bool) (*Transaction, error) {
 	params := transactionRequest{Name: name}
-	req := NewJSON2Request("sign-transaction", APICounter(), params)
-
-	resp, err := walletRequest(req)
-	if err != nil {
-		return nil, err
-	}
-	if resp.Error != nil {
-		return nil, resp.Error
-	}
-
-	tx := new(Transaction)
-	if err := json.Unmarshal(resp.JSONResult(), tx); err != nil {
-		return nil, err
-	}
-	return tx, nil
-}
-
-func ForceSignTransaction(name string) (*Transaction, error) {
-	params := transactionRequest{Name: name}
-	params.Force = true
+	params.Force = force
 	req := NewJSON2Request("sign-transaction", APICounter(), params)
 
 	resp, err := walletRequest(req)
@@ -546,7 +527,7 @@ func SendTransaction(name string) (*Transaction, error) {
 	return tx, nil
 }
 
-func SendFactoid(from, to string, amount uint64) (*Transaction, error) {
+func SendFactoid(from, to string, amount uint64, force bool) (*Transaction, error) {
 	n := make([]byte, 16)
 	if _, err := rand.Read(n); err != nil {
 		return nil, err
@@ -574,7 +555,7 @@ func SendFactoid(from, to string, amount uint64) (*Transaction, error) {
 			return nil, err
 		}
 	}
-	if _, err := SignTransaction(name); err != nil {
+	if _, err := SignTransaction(name, force); err != nil {
 		return nil, err
 	}
 	r, err := SendTransaction(name)
@@ -585,7 +566,7 @@ func SendFactoid(from, to string, amount uint64) (*Transaction, error) {
 	return r, nil
 }
 
-func BuyEC(from, to string, amount uint64) (*Transaction, error) {
+func BuyEC(from, to string, amount uint64, force bool) (*Transaction, error) {
 	n := make([]byte, 16)
 	if _, err := rand.Read(n); err != nil {
 		return nil, err
@@ -603,7 +584,7 @@ func BuyEC(from, to string, amount uint64) (*Transaction, error) {
 	if _, err := AddTransactionFee(name, from); err != nil {
 		return nil, err
 	}
-	if _, err := SignTransaction(name); err != nil {
+	if _, err := SignTransaction(name, force); err != nil {
 		return nil, err
 	}
 	r, err := SendTransaction(name)
@@ -615,7 +596,7 @@ func BuyEC(from, to string, amount uint64) (*Transaction, error) {
 }
 
 //Purchases the exact amount of ECs
-func BuyExactEC(from, to string, amount uint64) (*Transaction, error) {
+func BuyExactEC(from, to string, amount uint64, force bool) (*Transaction, error) {
 	rate, err := GetRate()
 	if err != nil {
 		return nil, err
@@ -639,7 +620,7 @@ func BuyExactEC(from, to string, amount uint64) (*Transaction, error) {
 	if _, err := AddTransactionFee(name, from); err != nil {
 		return nil, err
 	}
-	if _, err := SignTransaction(name); err != nil {
+	if _, err := SignTransaction(name, force); err != nil {
 		return nil, err
 	}
 	r, err := SendTransaction(name)

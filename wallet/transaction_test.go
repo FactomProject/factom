@@ -149,7 +149,7 @@ func TestComposeTrasnaction(t *testing.T) {
 	if err := w1.AddFee("tx-01", f1.String(), 10000); err != nil {
 		t.Error(err)
 	}
-	if err := w1.SignTransaction("tx-01"); err != nil {
+	if err := w1.SignTransaction("tx-01", true); err != nil {
 		t.Error(err)
 	}
 
