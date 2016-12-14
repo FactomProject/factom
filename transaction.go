@@ -477,7 +477,8 @@ func SignTransaction(name string) (*Transaction, error) {
 
 func ForceSignTransaction(name string) (*Transaction, error) {
 	params := transactionRequest{Name: name}
-	req := NewJSON2Request("force-sign-transaction", APICounter(), params)
+	params.Force = true
+	req := NewJSON2Request("sign-transaction", APICounter(), params)
 
 	resp, err := walletRequest(req)
 	if err != nil {

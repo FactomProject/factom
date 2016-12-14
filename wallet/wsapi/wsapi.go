@@ -235,8 +235,6 @@ func handleV2Request(j *factom.JSON2Request) (*factom.JSON2Response, *factom.JSO
 		resp, jsonError = handleSubFee(params)
 	case "sign-transaction":
 		resp, jsonError = handleSignTransaction(params)
-	case "force-sign-transaction":
-		resp, jsonError = handleForceSignTransaction(params)
 	case "compose-transaction":
 		resp, jsonError = handleComposeTransaction(params)
 	case "remove-address":
@@ -698,29 +696,17 @@ func handleSignTransaction(params []byte) (interface{}, *factom.JSONError) {
 	if err := json.Unmarshal(params, req); err != nil {
 		return nil, newInvalidParamsError()
 	}
+	
+	force := req.Force
 
-	if err := fctWallet.SignTransaction(req.Name); err != nil {
-		return nil, newCustomInternalError(err.Error())
-	}
-	tx := fctWallet.GetTransactions()[req.Name]
-	resp, err := factoidTxToTransaction(tx)
-	if err != nil {
-		return nil, newCustomInternalError(err.Error())
-	}
-	resp.Name = req.Name
-	resp.FeesRequired = feesRequired(tx)
-
-	return resp, nil
-}
-
-func handleFoceSignTransaction(params []byte) (interface{}, *factom.JSONError) {
-	req := new(transactionRequest)
-	if err := json.Unmarshal(params, req); err != nil {
-		return nil, newInvalidParamsError()
-	}
-
-	if err := fctWallet.ForceSignTransaction(req.Name); err != nil {
-		return nil, newCustomInternalError(err.Error())
+	if force {
+		if err := fctWallet.ForceSignTransaction(req.Name); err != nil {
+			return nil, newCustomInternalError(err.Error())
+		}
+	} else {
+		if err := fctWallet.SignTransaction(req.Name); err != nil {
+			return nil, newCustomInternalError(err.Error())
+		}
 	}
 	tx := fctWallet.GetTransactions()[req.Name]
 	resp, err := factoidTxToTransaction(tx)
