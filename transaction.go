@@ -475,6 +475,25 @@ func SignTransaction(name string) (*Transaction, error) {
 	return tx, nil
 }
 
+func ForceSignTransaction(name string) (*Transaction, error) {
+	params := transactionRequest{Name: name}
+	req := NewJSON2Request("force-sign-transaction", APICounter(), params)
+
+	resp, err := walletRequest(req)
+	if err != nil {
+		return nil, err
+	}
+	if resp.Error != nil {
+		return nil, resp.Error
+	}
+
+	tx := new(Transaction)
+	if err := json.Unmarshal(resp.JSONResult(), tx); err != nil {
+		return nil, err
+	}
+	return tx, nil
+}
+
 func ComposeTransaction(name string) ([]byte, error) {
 	params := transactionRequest{Name: name}
 	req := NewJSON2Request("compose-transaction", APICounter(), params)
