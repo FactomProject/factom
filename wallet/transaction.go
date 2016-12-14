@@ -294,6 +294,23 @@ func (w *Wallet) ComposeTransaction(name string) (*factom.JSON2Request, error) {
 	return req, nil
 }
 
+// Hexencoded transaction
+func (w *Wallet) ImportComposedTransaction(name string, hexEncoded string) error {
+	trans := new(factoid.Transaction)
+	data, err := hex.DecodeString(hexEncoded)
+	if err != nil {
+		return err
+	}
+
+	err = trans.UnmarshalBinary(data)
+	if err != nil {
+		return err
+	}
+
+	w.transactions[name] = trans
+	return nil
+}
+
 func checkFee(t *factoid.Transaction) error {
 	ins, err := t.TotalInputs()
 	if err != nil {
