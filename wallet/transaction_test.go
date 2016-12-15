@@ -9,6 +9,7 @@ import (
 
 	"github.com/FactomProject/factom"
 	. "github.com/FactomProject/factom/wallet"
+	"github.com/FactomProject/factomd/common/primitives"
 )
 
 func TestNewTransaction(t *testing.T) {
@@ -161,6 +162,84 @@ func TestComposeTrasnaction(t *testing.T) {
 
 	// close and remove the testing db
 	if err := w1.Close(); err != nil {
+		t.Error(err)
+	}
+}
+
+func TestImportComposedTransaction(t *testing.T) {
+	transSig := "020158fe8efb78010100afd89f60646f3e8750c550e4582eca5047546ffef89c13a175985e320232" +
+		"bacac81cc428afd7c20001ed0da7057f80dfeb596e6c72c4550c7c7694661dfee2c4a6ba1b903b6ec3e201718b" +
+		"5edd2914acc2e4677f336c1a32736e5e9bde13663e6413894f57ec272e28015183427204adbc50623d09ea5a76" +
+		"947b4c742e5b56d1483483d5d4336ac12872891be0afae50ce916639dd6db6200e3816d8bd73025b79b7af4de11fcd2105"
+
+	transNoSig := "020158feae8aff010100afd89f60646f3e8750c550e4582eca5047546ffef89c13a175985e320232ba" +
+		"cac81cc428afd7c20001ed0da7057f80dfeb596e6c72c4550c7c7694661dfee2c4a6ba1b903b6ec3e201718b5e" +
+		"dd2914acc2e4677f336c1a32736e5e9bde13663e6413894f57ec272e2800000000000000000000000000000000" +
+		"000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+
+	_ = transSig
+	w1, err := NewMapDBWallet()
+	if err != nil {
+		t.Error(err)
+	}
+
+	err = w1.ImportComposedTransaction("txImported", transNoSig)
+	if err != nil {
+		t.Error(err)
+	}
+
+	trans := w1.GetTransactions()["txImported"]
+	if trans == nil {
+		t.Error("Transaction not found")
+	}
+
+	ins := trans.GetInputs()
+	if len(ins) != 1 {
+		t.Error("Transaction only has 1 input")
+	}
+
+	inAddr := primitives.ConvertFctAddressToUserStr(ins[0].GetAddress())
+	if inAddr != "FA2jK2HcLnRdS94dEcU27rF3meoJfpUcZPSinpb7AwQvPRY6RL1Q" {
+		t.Error("Input does not match address")
+	}
+
+	outs := trans.GetOutputs()
+	if len(outs) != 1 {
+		t.Error("Transaction only has 1 input")
+	}
+
+	outAddr := primitives.ConvertFctAddressToUserStr(outs[0].GetAddress())
+	if outAddr != "FA1yvkgzxMigVDU1WRnpHXhAE3e5zQpE6KKyf5EF76Y34TSg6m8X" {
+		t.Error("Ouput does not match address")
+	}
+
+	sum, err := trans.TotalOutputs()
+	if err != nil {
+		t.Error(err)
+	}
+
+	if sum != 1e8 {
+		t.Error("Output amount is incorrect")
+	}
+
+	err = trans.ValidateSignatures()
+	if err == nil {
+		t.Error("Should be an error")
+	}
+
+	// With sig
+	err = w1.ImportComposedTransaction("txImportedSig", transSig)
+	if err != nil {
+		t.Error(err)
+	}
+
+	transStructSig := w1.GetTransactions()["txImportedSig"]
+	if transStructSig == nil {
+		t.Error("Transaction not found")
+	}
+
+	err = transStructSig.ValidateSignatures()
+	if err != nil {
 		t.Error(err)
 	}
 }

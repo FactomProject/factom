@@ -337,21 +337,25 @@ func (w *Wallet) ComposeTransaction(name string) (*factom.JSON2Request, error) {
 	return req, nil
 }
 
-func checkCovered(tx *factoid.Transaction) error {
-	for _, in := range tx.GetInputs() {
-		balance := factom.GetFctBalance(in.GetUserAddress())
-		if balance < in.GetAmount() {
-			return fmt.Errorf(
-				"Address %s balance is too low balance: %d cost: %d",
-				in.GetUserAddress(),
-				balance,
-				in.GetAmount(),
-			)
-	}	
+// Hexencoded transaction
+func (w *Wallet) ImportComposedTransaction(name string, hexEncoded string) error {
+	trans := new(factoid.Transaction)
+	data, err := hex.DecodeString(hexEncoded)
+	if err != nil {
+		return err
+	}
+
+	err = trans.UnmarshalBinary(data)
+	if err != nil {
+		return err
+	}
+
+	w.transactions[name] = trans
+	return nil
 }
 
-func checkFee(tx *factoid.Transaction) error {
-	ins, err := tx.TotalInputs()
+func checkFee(t *factoid.Transaction) error {
+	ins, err := t.TotalInputs()
 	if err != nil {
 		return err
 	}
