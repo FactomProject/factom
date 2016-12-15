@@ -18,7 +18,6 @@ import (
 )
 
 var (
-	ErrFeeTooHigh    = errors.New("wallet: Overpaying Fee")
 	ErrFeeTooLow     = errors.New("wallet: Insufficient Fee")
 	ErrNoSuchAddress = errors.New("wallet: No such address")
 	ErrTXExists      = errors.New("wallet: Transaction name already exists")
@@ -313,10 +312,10 @@ func checkCovered(tx *factoid.Transaction) error {
 		}
 		if uint64(balance) < in.GetAmount() {
 			return fmt.Errorf(
-				"Address %s balance is too low balance: %d cost: %d",
+				"Address %s balance is too low. Available: %v Expecting at least: %v",
 				in.GetUserAddress(),
-				balance,
-				in.GetAmount(),
+				factom.FactoshiToFactoid(uint64(balance)),
+				factom.FactoshiToFactoid(in.GetAmount()),
 			)
 		}
 	}
@@ -366,7 +365,11 @@ func checkFee(tx *factoid.Transaction) error {
 
 	// fee is too high (over 10x cfee)
 	if fee >= cfee*10 {
-		return ErrFeeTooHigh
+		return fmt.Errorf(
+			"wallet: Overpaying fee by >10x. Paying: %v Requires: %v",
+			factom.FactoshiToFactoid(uint64(fee)),
+			factom.FactoshiToFactoid(uint64(cfee)),
+		)
 	}
 
 	return nil
