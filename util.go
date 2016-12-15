@@ -82,11 +82,11 @@ func FactoidToFactoshi(amt string) uint64 {
 	total += uint64(whole) * 1e8
 
 	if len(pieces) > 1 {
-		a := regexp.MustCompile(`(0*)[0-9]+$`)
+		a := regexp.MustCompile(`(0*)([0-9]+)$`)
 
 		as := a.FindStringSubmatch(pieces[1])
 		part, _ := strconv.Atoi(as[0])
-		power := len(as[1]) + 1
+		power := len(as[1]) + len(as[2])
 		total += uint64(part * 1e8 / int(math.Pow10(power)))
 	}
 
