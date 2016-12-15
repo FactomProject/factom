@@ -460,9 +460,24 @@ func handleAllTransactions(params []byte) (interface{}, *factom.JSONError) {
 			resp.Transactions = append(resp.Transactions, r)
 		}
 	case req.TxID != "":
-		tx, err := fctWallet.TXDB().GetTX(req.TxID)
+		var tx interfaces.ITransaction
+		txResp, err := factom.GetTransaction(req.TxID)
 		if err != nil {
 			return nil, newCustomInternalError(err.Error())
+		}
+		if txResp.FactoidTransaction != nil {
+			p, err := json.Marshal(txResp.FactoidTransaction)
+			if err != nil {
+				return nil, newCustomInternalError(err.Error())
+			}
+			json.Unmarshal(p, tx)
+		}
+		if txResp.ECTranasction != nil {
+			p, err := json.Marshal(txResp.ECTranasction)
+			if err != nil {
+				return nil, newCustomInternalError(err.Error())
+			}
+			json.Unmarshal(p, tx)
 		}
 		r, err := factoidTxToTransaction(tx)
 		if err != nil {
