@@ -18,7 +18,6 @@ import (
 )
 
 var (
-	ErrFeeTooHigh    = errors.New("wallet: Overpaying Fee")
 	ErrFeeTooLow     = errors.New("wallet: Insufficient Fee")
 	ErrNoSuchAddress = errors.New("wallet: No such address")
 	ErrTXExists      = errors.New("wallet: Transaction name already exists")
@@ -232,22 +231,33 @@ func (w *Wallet) SubFee(name, address string, rate uint64) error {
 	return fmt.Errorf("%s is not an output to the transaction.", address)
 }
 
-func (w *Wallet) SignTransaction(name string) error {
-	if _, exists := w.transactions[name]; !exists {
+// SignTransaction signs a tmp transaction in the wallet with the appropriate
+// keys from the wallet db
+// force=true ignores the existing balance and fee overpayment checks.
+func (w *Wallet) SignTransaction(name string, force bool) error {
+	tx, exists := w.transactions[name]
+	if !exists {
 		return ErrTXNotExists
 	}
-	trans := w.transactions[name]
 
-	if err := checkFee(trans); err != nil {
-		return err
+	if force == false {
+		// check that the address balances are sufficient for the transaction
+		if err := checkCovered(tx); err != nil {
+			return err
+		}
+
+		// check that the fee is being paid (and not overpaid)
+		if err := checkFee(tx); err != nil {
+			return err
+		}
 	}
 
-	data, err := trans.MarshalBinarySig()
+	data, err := tx.MarshalBinarySig()
 	if err != nil {
 		return err
 	}
 
-	rcds := trans.GetRCDs()
+	rcds := tx.GetRCDs()
 	if len(rcds) == 0 {
 		return ErrTXNoInputs
 	}
@@ -262,7 +272,7 @@ func (w *Wallet) SignTransaction(name string) error {
 			return err
 		}
 		sig := factoid.NewSingleSignatureBlock(f.SecBytes(), data)
-		trans.SetSignatureBlock(i, sig)
+		tx.SetSignatureBlock(i, sig)
 	}
 
 	return nil
@@ -311,16 +321,34 @@ func (w *Wallet) ImportComposedTransaction(name string, hexEncoded string) error
 	return nil
 }
 
-func checkFee(t *factoid.Transaction) error {
-	ins, err := t.TotalInputs()
+func checkCovered(tx *factoid.Transaction) error {
+	for _, in := range tx.GetInputs() {
+		balance, err := factom.GetFactoidBalance(in.GetUserAddress())
+		if err != nil {
+			return err
+		}
+		if uint64(balance) < in.GetAmount() {
+			return fmt.Errorf(
+				"Address %s balance is too low. Available: %v Expecting at least: %v",
+				in.GetUserAddress(),
+				factom.FactoshiToFactoid(uint64(balance)),
+				factom.FactoshiToFactoid(in.GetAmount()),
+			)
+		}
+	}
+	return nil
+}
+
+func checkFee(tx *factoid.Transaction) error {
+	ins, err := tx.TotalInputs()
 	if err != nil {
 		return err
 	}
-	outs, err := t.TotalOutputs()
+	outs, err := tx.TotalOutputs()
 	if err != nil {
 		return err
 	}
-	ecs, err := t.TotalECs()
+	ecs, err := tx.TotalECs()
 	if err != nil {
 		return err
 	}
@@ -339,7 +367,7 @@ func checkFee(t *factoid.Transaction) error {
 
 	// cfee is the fee calculated for the transaction
 	var cfee int64
-	if c, err := t.CalculateFee(rate); err != nil {
+	if c, err := tx.CalculateFee(rate); err != nil {
 		return err
 	} else if c == 0 {
 		return errors.New("wallet: Could not calculate fee")
@@ -354,7 +382,11 @@ func checkFee(t *factoid.Transaction) error {
 
 	// fee is too high (over 10x cfee)
 	if fee >= cfee*10 {
-		return ErrFeeTooHigh
+		return fmt.Errorf(
+			"wallet: Overpaying fee by >10x. Paying: %v Requires: %v",
+			factom.FactoshiToFactoid(uint64(fee)),
+			factom.FactoshiToFactoid(uint64(cfee)),
+		)
 	}
 
 	return nil

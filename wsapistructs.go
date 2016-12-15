@@ -72,7 +72,8 @@ type secretRequest struct {
 }
 
 type transactionRequest struct {
-	Name string `json:"tx-name"`
+	Name  string `json:"tx-name"`
+	Force bool   `json:"force"`
 }
 
 type transactionValueRequest struct {
