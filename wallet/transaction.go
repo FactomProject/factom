@@ -18,10 +18,8 @@ import (
 )
 
 var (
-	ErrFeeTooHigh    = errors.New("wallet: Overpaying Fee")
 	ErrFeeTooLow     = errors.New("wallet: Insufficient Fee")
 	ErrNoSuchAddress = errors.New("wallet: No such address")
-	ErrTXNotCovered  = errors.New("wallet: Transaction Ouputs are not covered")
 	ErrTXExists      = errors.New("wallet: Transaction name already exists")
 	ErrTXNotExists   = errors.New("wallet: Transaction name was not found")
 	ErrTXNoInputs    = errors.New("wallet: Transaction has no inputs")
@@ -235,54 +233,23 @@ func (w *Wallet) SubFee(name, address string, rate uint64) error {
 
 // SignTransaction signs a tmp transaction in the wallet with the appropriate
 // keys from the wallet db
-func (w *Wallet) SignTransaction(name string) error {
+// force=true ignores the existing balance and fee overpayment checks.
+func (w *Wallet) SignTransaction(name string, force bool) error {
 	tx, exists := w.transactions[name]
 	if !exists {
 		return ErrTXNotExists
 	}
 
-	// check that the address balances are sufficient for the transaction
-	if err := checkCovered(tx); err != nil {
-		return err
-	}
-	
-	// check that the fee is being paid (and not overpaid)
-	if err := checkFee(tx); err != nil {
-		return err
-	}
-
-	data, err := tx.MarshalBinarySig()
-	if err != nil {
-		return err
-	}
-
-	rcds := tx.GetRCDs()
-	if len(rcds) == 0 {
-		return ErrTXNoInputs
-	}
-	for i, rcd := range rcds {
-		a, err := rcd.GetAddress()
-		if err != nil {
+	if force == false {
+		// check that the address balances are sufficient for the transaction
+		if err := checkCovered(tx); err != nil {
 			return err
 		}
 
-		f, err := w.GetFCTAddress(primitives.ConvertFctAddressToUserStr(a))
-		if err != nil {
+		// check that the fee is being paid (and not overpaid)
+		if err := checkFee(tx); err != nil {
 			return err
 		}
-		sig := factoid.NewSingleSignatureBlock(f.SecBytes(), data)
-		tx.SetSignatureBlock(i, sig)
-	}
-
-	return nil
-}
-
-// ForceSignTransaction same as SignTransaction but does no balance or fee
-// checks before signing.
-func (w *Wallet) ForceSignTransaction(name string) error {
-	tx, exists := w.transactions[name]
-	if !exists {
-		return ErrTXNotExists
 	}
 
 	data, err := tx.MarshalBinarySig()
@@ -354,8 +321,26 @@ func (w *Wallet) ImportComposedTransaction(name string, hexEncoded string) error
 	return nil
 }
 
-func checkFee(t *factoid.Transaction) error {
-	ins, err := t.TotalInputs()
+func checkCovered(tx *factoid.Transaction) error {
+	for _, in := range tx.GetInputs() {
+		balance, err := factom.GetFactoidBalance(in.GetUserAddress())
+		if err != nil {
+			return err
+		}
+		if uint64(balance) < in.GetAmount() {
+			return fmt.Errorf(
+				"Address %s balance is too low. Available: %v Expecting at least: %v",
+				in.GetUserAddress(),
+				factom.FactoshiToFactoid(uint64(balance)),
+				factom.FactoshiToFactoid(in.GetAmount()),
+			)
+		}
+	}
+	return nil
+}
+
+func checkFee(tx *factoid.Transaction) error {
+	ins, err := tx.TotalInputs()
 	if err != nil {
 		return err
 	}
@@ -397,7 +382,11 @@ func checkFee(t *factoid.Transaction) error {
 
 	// fee is too high (over 10x cfee)
 	if fee >= cfee*10 {
-		return ErrFeeTooHigh
+		return fmt.Errorf(
+			"wallet: Overpaying fee by >10x. Paying: %v Requires: %v",
+			factom.FactoshiToFactoid(uint64(fee)),
+			factom.FactoshiToFactoid(uint64(cfee)),
+		)
 	}
 
 	return nil

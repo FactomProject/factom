@@ -696,17 +696,11 @@ func handleSignTransaction(params []byte) (interface{}, *factom.JSONError) {
 	if err := json.Unmarshal(params, req); err != nil {
 		return nil, newInvalidParamsError()
 	}
-	
+
 	force := req.Force
 
-	if force {
-		if err := fctWallet.ForceSignTransaction(req.Name); err != nil {
-			return nil, newCustomInternalError(err.Error())
-		}
-	} else {
-		if err := fctWallet.SignTransaction(req.Name); err != nil {
-			return nil, newCustomInternalError(err.Error())
-		}
+	if err := fctWallet.SignTransaction(req.Name, force); err != nil {
+		return nil, newCustomInternalError(err.Error())
 	}
 	tx := fctWallet.GetTransactions()[req.Name]
 	resp, err := factoidTxToTransaction(tx)
