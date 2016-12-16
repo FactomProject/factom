@@ -25,7 +25,7 @@ type RPCConfig struct {
 	FactomdTLSCertFile string
 	FactomdRPCUser     string
 	FactomdRPCPassword string
-	factomdServer      string
+	FactomdServer      string
 	WalletServer       string
 }
 
@@ -170,7 +170,7 @@ func GetWalletEncryption() (bool, string) {
 
 // SetFactomdServer sets where to find the factomd server, and tells the server its public ip
 func SetFactomdServer(s string) {
-	RpcConfig.factomdServer = s
+	RpcConfig.FactomdServer = s
 }
 
 // SetWalletServer sets where to find the fctwallet server, and tells the server its public ip
@@ -180,7 +180,7 @@ func SetWalletServer(s string) {
 
 // FactomdServer returns where to find the factomd server, and tells the server its public ip
 func FactomdServer() string {
-	return RpcConfig.factomdServer
+	return RpcConfig.FactomdServer
 }
 
 // FactomdServer returns where to find the fctwallet server, and tells the server its public ip
@@ -216,7 +216,7 @@ func factomdRequest(req *JSON2Request) (*JSON2Response, error) {
 		httpx = "http"
 	}
 	re, err := http.NewRequest("POST",
-		fmt.Sprintf("%s://%s/v2", httpx, RpcConfig.factomdServer),
+		fmt.Sprintf("%s://%s/v2", httpx, RpcConfig.FactomdServer),
 		bytes.NewBuffer(j))
 	if err != nil {
 		return nil, err
