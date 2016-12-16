@@ -24,6 +24,7 @@ import (
 	"github.com/FactomProject/factom"
 	"github.com/FactomProject/factom/wallet"
 	"github.com/FactomProject/factomd/common/interfaces"
+	"github.com/FactomProject/factomd/common/factoid"
 	"github.com/FactomProject/web"
 )
 
@@ -460,8 +461,9 @@ func handleAllTransactions(params []byte) (interface{}, *factom.JSONError) {
 			resp.Transactions = append(resp.Transactions, r)
 		}
 	case req.TxID != "":
-		var tx interfaces.ITransaction
+		tx := new(factoid.Transaction)
 		txResp, err := factom.GetTransaction(req.TxID)
+		fmt.Println("DEBUG: txresp:", txResp)
 		if err != nil {
 			return nil, newCustomInternalError(err.Error())
 		}
@@ -470,14 +472,18 @@ func handleAllTransactions(params []byte) (interface{}, *factom.JSONError) {
 			if err != nil {
 				return nil, newCustomInternalError(err.Error())
 			}
+			fmt.Println("DEBUG: json:", string(p))
 			json.Unmarshal(p, tx)
+			fmt.Println("DEBUG: tx:", tx)
 		}
 		if txResp.ECTranasction != nil {
 			p, err := json.Marshal(txResp.ECTranasction)
 			if err != nil {
 				return nil, newCustomInternalError(err.Error())
 			}
-			json.Unmarshal(p, tx)
+			if err := json.Unmarshal(p, tx); err != nil {
+				return nil, newCustomInternalError(err.Error())
+			}
 		}
 		r, err := factoidTxToTransaction(tx)
 		if err != nil {
@@ -566,6 +572,19 @@ func handleTmpTransactions(params []byte) (interface{}, *factom.JSONError) {
 	txs := fctWallet.GetTransactions()
 
 	for name, tx := range txs {
+		// DEBUG
+		p, err := json.Marshal(tx)
+		if err != nil {
+			fmt.Println("DEBUG: error:", err)
+		}
+		fmt.Println("DEBUG: json:", string(p))
+		t := new(factoid.Transaction)
+		if err := json.Unmarshal(p, t); err != nil {
+			fmt.Println("DEBUG: error:", err)
+		}
+		fmt.Println("DEBUG: transaction:", t)
+		// DEBUG
+		
 		r, err := factoidTxToTransaction(tx)
 		if err != nil {
 			return nil, newCustomInternalError(err.Error())
@@ -712,7 +731,9 @@ func handleSignTransaction(params []byte) (interface{}, *factom.JSONError) {
 		return nil, newInvalidParamsError()
 	}
 
-	if err := fctWallet.SignTransaction(req.Name); err != nil {
+	force := req.Force
+
+	if err := fctWallet.SignTransaction(req.Name, force); err != nil {
 		return nil, newCustomInternalError(err.Error())
 	}
 	tx := fctWallet.GetTransactions()[req.Name]
