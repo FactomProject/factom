@@ -24,6 +24,7 @@ import (
 	"github.com/FactomProject/factom"
 	"github.com/FactomProject/factom/wallet"
 	"github.com/FactomProject/factomd/common/interfaces"
+	"github.com/FactomProject/factomd/common/primitives"
 	"github.com/FactomProject/web"
 )
 
@@ -895,21 +896,21 @@ func factoidTxToTransaction(t interfaces.ITransaction) (
 
 	for _, v := range t.GetInputs() {
 		tmp := new(factom.TransAddress)
-		tmp.Address = v.GetUserAddress()
+		tmp.Address = primitives.ConvertFctAddressToUserStr(v.GetAddress())
 		tmp.Amount = v.GetAmount()
 		r.Inputs = append(r.Inputs, tmp)
 	}
 
 	for _, v := range t.GetOutputs() {
 		tmp := new(factom.TransAddress)
-		tmp.Address = v.GetUserAddress()
+		tmp.Address = primitives.ConvertFctAddressToUserStr(v.GetAddress())
 		tmp.Amount = v.GetAmount()
 		r.Outputs = append(r.Outputs, tmp)
 	}
 
 	for _, v := range t.GetECOutputs() {
 		tmp := new(factom.TransAddress)
-		tmp.Address = v.GetUserAddress()
+		tmp.Address = primitives.ConvertECAddressToUserStr(v.GetAddress())
 		tmp.Amount = v.GetAmount()
 		r.ECOutputs = append(r.ECOutputs, tmp)
 	}
