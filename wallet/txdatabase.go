@@ -14,6 +14,7 @@ import (
 	"github.com/FactomProject/factomd/common/primitives"
 	"github.com/FactomProject/factomd/database/databaseOverlay"
 	"github.com/FactomProject/factomd/database/hybridDB"
+	"github.com/FactomProject/factomd/database/mapdb"
 	"os"
 )
 
@@ -30,6 +31,10 @@ func NewTXOverlay(db interfaces.IDatabase) *TXDatabaseOverlay {
 	answer := new(TXDatabaseOverlay)
 	answer.DBO.DB = db
 	return answer
+}
+
+func NewTXMapDB() *TXDatabaseOverlay {
+	return NewTXOverlay(new(mapdb.MapDB))
 }
 
 func NewTXLevelDB(ldbpath string) (*TXDatabaseOverlay, error) {

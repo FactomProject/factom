@@ -5,31 +5,19 @@
 package wallet_test
 
 import (
-	. "github.com/FactomProject/factom/wallet"
-
-	"os"
+	//"fmt" // DEBUG
 	"testing"
 
-	"github.com/FactomProject/factom"
-	"github.com/FactomProject/factomd/common/factoid"
+	. "github.com/FactomProject/factom/wallet"
 	"github.com/FactomProject/factomd/common/interfaces"
-
-	"fmt" // DEBUG
+	"github.com/FactomProject/factomd/testHelper"
 )
 
 func TestTXDatabaseOverlay(t *testing.T) {
-	dbpath := os.TempDir() + "/test_txdb-01"
-	db1, err := NewTXLevelDB(dbpath)
-	if err != nil {
-		t.Error(err)
-	}
-	defer db1.Close()
+	db1 := NewTXMapDB()
 
-	fblock, err := fblockHead()
-	if err != nil {
-		t.Error(err)
-	}
-	if err := db1.InsertFBlock(fblock); err != nil {
+	fblock := fblockHead()
+	if err := db1.InsertFBlockHead(fblock); err != nil {
 		t.Error(err)
 	}
 	if f, err := db1.GetFBlock(fblock.GetKeyMR().String()); err != nil {
@@ -39,13 +27,9 @@ func TestTXDatabaseOverlay(t *testing.T) {
 	}
 }
 
+/*
 func TestGetAllTXs(t *testing.T) {
-	dbpath := os.TempDir() + "/test_txdb-01"
-	db1, err := NewTXLevelDB(dbpath)
-	if err != nil {
-		t.Error(err)
-	}
-	defer db1.Close()
+	db1 := NewTXMapDB()
 
 	txs, err := db1.GetAllTXs()
 	if err != nil {
@@ -56,12 +40,7 @@ func TestGetAllTXs(t *testing.T) {
 }
 
 func TestGetTXAddress(t *testing.T) {
-	dbpath := os.TempDir() + "/test_txdb-01"
-	db1, err := NewTXLevelDB(dbpath)
-	if err != nil {
-		t.Error(err)
-	}
-	defer db1.Close()
+	db1 := NewTXMapDB()
 
 	adr := "FA2jK2HcLnRdS94dEcU27rF3meoJfpUcZPSinpb7AwQvPRY6RL1Q"
 	txs, err := db1.GetTXAddress(adr)
@@ -70,7 +49,7 @@ func TestGetTXAddress(t *testing.T) {
 	}
 	t.Logf("got %d txs", len(txs))
 }
-
+*/
 //func TestGetAllTXs(t *testing.T) {
 //	dbpath := os.TempDir() + "/test_txdb-01"
 //	db1, err := NewTXLevelDB(dbpath)
@@ -125,32 +104,6 @@ func TestGetTXAddress(t *testing.T) {
 //}
 
 // fblockHead gets the most recent fblock.
-func fblockHead() (interfaces.IFBlock, error) {
-	fblockID := "000000000000000000000000000000000000000000000000000000000000000f"
-
-	dbhead, err := factom.GetDBlockHead()
-	if err != nil {
-		return nil, err
-	}
-	dblock, err := factom.GetDBlock(dbhead)
-	if err != nil {
-		return nil, err
-	}
-
-	var fblockmr string
-	for _, eblock := range dblock.EntryBlockList {
-		if eblock.ChainID == fblockID {
-			fblockmr = eblock.KeyMR
-		}
-	}
-	if fblockmr == "" {
-		return nil, err
-	}
-
-	// get the most recent block
-	p, err := factom.GetRaw(fblockmr)
-	if err != nil {
-		return nil, err
-	}
-	return factoid.UnmarshalFBlock(p)
+func fblockHead() interfaces.IFBlock {
+	return testHelper.CreateTestFactoidBlock(nil)
 }
