@@ -361,11 +361,10 @@ func MakeBIP44FactoidAddress(mnemonic string, account, chain, address uint32) (*
 }
 
 func MakeBIP44ECAddress(mnemonic string, account, chain, address uint32) (*ECAddress, error) {
-	if l := len(strings.Fields(mnemonic)); l != 12 {
-		return nil, fmt.Errorf("Incorrect mnemonic length. Expecitng 12 words, found %d", l)
+	mnemonic, err := ParseAndValidateMnemonic(mnemonic)
+	if err != nil {
+		return nil, err
 	}
-
-	mnemonic = strings.ToLower(strings.TrimSpace(mnemonic))
 
 	child, err := bip44.NewKeyFromMnemonic(mnemonic, bip44.TypeFactomEntryCredits, account, chain, address)
 	if err != nil {
