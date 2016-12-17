@@ -7,7 +7,6 @@ package wallet
 import (
 	"fmt"
 	"os"
-	"strings"
 
 	"github.com/FactomProject/factom"
 	"github.com/FactomProject/factomd/common/factoid"
@@ -16,13 +15,13 @@ import (
 // ImportWalletFromMnemonic creates a new wallet with a provided Mnemonic seed
 // defined in bip-0039.
 func ImportWalletFromMnemonic(mnemonic, path string) (*Wallet, error) {
-	// check the mnemonic length
-	if l := len(strings.Fields(mnemonic)); l != 12 {
-		return nil, fmt.Errorf("Incorrect mnemonic length. Expecitng 12 words, found %d", l)
+	mnemonic, err := factom.ParseAndValidateMnemonic(mnemonic)
+	if err != nil {
+		return nil, err
 	}
 
 	// check if the file exists
-	_, err := os.Stat(path)
+	_, err = os.Stat(path)
 	if err == nil {
 		return nil, fmt.Errorf("%s: file already exists", path)
 	}

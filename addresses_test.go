@@ -194,3 +194,18 @@ func TestMakeBIP44FactoidAddress(t *testing.T) {
 			fct.String(), cannonAdr)
 	}
 }
+
+func TestParseAndValidateMnemonic(t *testing.T) {
+	ms := []string{
+		"yellow yellow yellow yellow yellow yellow yellow yellow yellow yellow yellow yellow",   //valid
+		"yellow  yellow yellow yellow yellow yellow yellow yellow yellow yellow yellow yellow",  //extra space
+		"YELLOW yellow yellow yellow yellow yellow yellow yellow yellow yellow yellow yellow",   //capitalization
+		" yellow yellow yellow yellow yellow yellow yellow yellow yellow yellow yellow yellow ", //spaces on sides
+	}
+	for i, m := range ms {
+		_, err := ParseAndValidateMnemonic(m)
+		if err != nil {
+			t.Errorf("Error for mnemonic %v - `%v` - err", i, m)
+		}
+	}
+}

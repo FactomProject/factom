@@ -299,14 +299,36 @@ func MakeFactoidAddress(sec []byte) (*FactoidAddress, error) {
 	return a, nil
 }
 
-// MakeFactoidAddressFromKoinify takes the 12 word string used in the Koinify
-// sale and returns a Factoid Address.
-func MakeFactoidAddressFromKoinify(mnemonic string) (*FactoidAddress, error) {
+func ParseAndValidateMnemonic(mnemonic string) (string, error) {
 	if l := len(strings.Fields(mnemonic)); l != 12 {
-		return nil, fmt.Errorf("Incorrect mnemonic length. Expecitng 12 words, found %d", l)
+		return "", fmt.Errorf("Incorrect mnemonic length. Expecitng 12 words, found %d", l)
 	}
 
 	mnemonic = strings.ToLower(strings.TrimSpace(mnemonic))
+
+	split := strings.Split(mnemonic, " ")
+	for i := len(split) - 1; i >= 0; i-- {
+		if split[i] == "" {
+			split = append(split[:i], split[i+1:]...)
+		}
+	}
+	mnemonic = strings.Join(split, " ")
+
+	_, err := bip39.MnemonicToByteArray(mnemonic)
+	if err != nil {
+		return "", err
+	}
+
+	return mnemonic, nil
+}
+
+// MakeFactoidAddressFromKoinify takes the 12 word string used in the Koinify
+// sale and returns a Factoid Address.
+func MakeFactoidAddressFromKoinify(mnemonic string) (*FactoidAddress, error) {
+	mnemonic, err := ParseAndValidateMnemonic(mnemonic)
+	if err != nil {
+		return nil, err
+	}
 
 	seed, err := bip39.NewSeedWithErrorChecking(mnemonic, "")
 	if err != nil {
@@ -325,11 +347,10 @@ func MakeFactoidAddressFromKoinify(mnemonic string) (*FactoidAddress, error) {
 }
 
 func MakeBIP44FactoidAddress(mnemonic string, account, chain, address uint32) (*FactoidAddress, error) {
-	if l := len(strings.Fields(mnemonic)); l != 12 {
-		return nil, fmt.Errorf("Incorrect mnemonic length. Expecitng 12 words, found %d", l)
+	mnemonic, err := ParseAndValidateMnemonic(mnemonic)
+	if err != nil {
+		return nil, err
 	}
-
-	mnemonic = strings.ToLower(strings.TrimSpace(mnemonic))
 
 	child, err := bip44.NewKeyFromMnemonic(mnemonic, bip44.TypeFactomFactoids, account, chain, address)
 	if err != nil {
