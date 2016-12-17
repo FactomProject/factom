@@ -25,14 +25,14 @@ func TestWalletDBO(t *testing.T) {
 	if err != nil {
 		t.Errorf("%v", err)
 	}
-	if ec.String() != "EC2HAuRUAeK9aBAafkWwmPPbfHFBF67pa71j7sZ8PdFTvZtuzqfF" {
+	if ec.String() != "EC2KnJQN86MYq4pQyeSGTHSiVdkhRCPXS3udzD4im6BXRBjZFMmR" {
 		t.Errorf("%v", ec.String())
 	}
 	ec, err = db.GetNextECAddress()
 	if err != nil {
 		t.Errorf("%v", err)
 	}
-	if ec.String() != "EC3aCUr3PgrzSXZ2dczD4raXmxcqCxvk1EvwVVKwbB9fx71yA9pp" {
+	if ec.String() != "EC2UNG5LztGN3BNiVMEgkBP8ra8ud3HjjWWXKjrQozJ98rTvXKYy" {
 		t.Errorf("%v", ec.String())
 	}
 
@@ -74,14 +74,14 @@ func TestDBSeed(t *testing.T) {
 	if err != nil {
 		t.Errorf("%v", err)
 	}
-	if ec.String() != "EC2HAuRUAeK9aBAafkWwmPPbfHFBF67pa71j7sZ8PdFTvZtuzqfF" {
+	if ec.String() != "EC2KnJQN86MYq4pQyeSGTHSiVdkhRCPXS3udzD4im6BXRBjZFMmR" {
 		t.Errorf("%v", ec.String())
 	}
 	ec, err = seed.NextECAddress()
 	if err != nil {
 		t.Errorf("%v", err)
 	}
-	if ec.String() != "EC3aCUr3PgrzSXZ2dczD4raXmxcqCxvk1EvwVVKwbB9fx71yA9pp" {
+	if ec.String() != "EC2UNG5LztGN3BNiVMEgkBP8ra8ud3HjjWWXKjrQozJ98rTvXKYy" {
 		t.Errorf("%v", ec.String())
 	}
 
