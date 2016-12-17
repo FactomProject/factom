@@ -461,30 +461,15 @@ func handleAllTransactions(params []byte) (interface{}, *factom.JSONError) {
 			resp.Transactions = append(resp.Transactions, r)
 		}
 	case req.TxID != "":
-		tx := new(factoid.Transaction)
-		txResp, err := factom.GetTransaction(req.TxID)
-		fmt.Println("DEBUG: txresp:", txResp)
+		p, err := factom.GetRaw(req.TxID)
 		if err != nil {
 			return nil, newCustomInternalError(err.Error())
 		}
-		if txResp.FactoidTransaction != nil {
-			p, err := json.Marshal(txResp.FactoidTransaction)
-			if err != nil {
-				return nil, newCustomInternalError(err.Error())
-			}
-			fmt.Println("DEBUG: json:", string(p))
-			json.Unmarshal(p, tx)
-			fmt.Println("DEBUG: tx:", tx)
+		tx := new(factoid.Transaction)
+		if err := tx.UnmarshalBinary(p); err != nil {
+			return nil, newCustomInternalError(err.Error())
 		}
-		if txResp.ECTranasction != nil {
-			p, err := json.Marshal(txResp.ECTranasction)
-			if err != nil {
-				return nil, newCustomInternalError(err.Error())
-			}
-			if err := json.Unmarshal(p, tx); err != nil {
-				return nil, newCustomInternalError(err.Error())
-			}
-		}
+		
 		r, err := factoidTxToTransaction(tx)
 		if err != nil {
 			return nil, newCustomInternalError(err.Error())
@@ -572,19 +557,6 @@ func handleTmpTransactions(params []byte) (interface{}, *factom.JSONError) {
 	txs := fctWallet.GetTransactions()
 
 	for name, tx := range txs {
-		// DEBUG
-		p, err := json.Marshal(tx)
-		if err != nil {
-			fmt.Println("DEBUG: error:", err)
-		}
-		fmt.Println("DEBUG: json:", string(p))
-		t := new(factoid.Transaction)
-		if err := json.Unmarshal(p, t); err != nil {
-			fmt.Println("DEBUG: error:", err)
-		}
-		fmt.Println("DEBUG: transaction:", t)
-		// DEBUG
-		
 		r, err := factoidTxToTransaction(tx)
 		if err != nil {
 			return nil, newCustomInternalError(err.Error())
