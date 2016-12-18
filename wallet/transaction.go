@@ -329,7 +329,7 @@ func checkCovered(tx *factoid.Transaction) error {
 		}
 		if uint64(balance) < in.GetAmount() {
 			return fmt.Errorf(
-				"Address %s balance is too low. Available: %d Needed: %d",
+				"Address %s balance is too low. Available: %s Needed: %s",
 				in.GetUserAddress(),
 				factom.FactoshiToFactoid(uint64(balance)),
 				factom.FactoshiToFactoid(in.GetAmount()),
