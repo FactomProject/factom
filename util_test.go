@@ -33,7 +33,7 @@ func TestFactoidToFactoshi(t *testing.T) {
 	if r3 := FactoidToFactoshi(v3); r3 != e3 {
 		t.Errorf("r3=%d expecting %d", r3, e3)
 	}
-	
+
 	if r4 := FactoidToFactoshi(v4); r4 != e4 {
 		t.Errorf("r4=%d expecting %d", r4, e4)
 	}
