@@ -23,6 +23,7 @@ import (
 	"github.com/FactomProject/btcutil/certs"
 	"github.com/FactomProject/factom"
 	"github.com/FactomProject/factom/wallet"
+	"github.com/FactomProject/factomd/common/factoid"
 	"github.com/FactomProject/factomd/common/interfaces"
 	"github.com/FactomProject/factomd/common/primitives"
 	"github.com/FactomProject/web"
@@ -461,10 +462,15 @@ func handleAllTransactions(params []byte) (interface{}, *factom.JSONError) {
 			resp.Transactions = append(resp.Transactions, r)
 		}
 	case req.TxID != "":
-		tx, err := fctWallet.TXDB().GetTX(req.TxID)
+		p, err := factom.GetRaw(req.TxID)
 		if err != nil {
 			return nil, newCustomInternalError(err.Error())
 		}
+		tx := new(factoid.Transaction)
+		if err := tx.UnmarshalBinary(p); err != nil {
+			return nil, newCustomInternalError(err.Error())
+		}
+		
 		r, err := factoidTxToTransaction(tx)
 		if err != nil {
 			return nil, newCustomInternalError(err.Error())

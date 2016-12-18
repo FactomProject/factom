@@ -646,7 +646,7 @@ type TransactionResponse struct {
 
 func GetTransaction(txID string) (*TransactionResponse, error) {
 	params := hashRequest{Hash: txID}
-	req := NewJSON2Request("get-transaction", APICounter(), params)
+	req := NewJSON2Request("transaction", APICounter(), params)
 	resp, err := factomdRequest(req)
 	if err != nil {
 		return nil, err
