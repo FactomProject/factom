@@ -1,5 +1,5 @@
 hash: 667e443b7fdaaa7f4aa150d9f5b15c37093e4c3042f6cd7d6728e2ca9eb73275
-updated: 2016-12-16T11:44:13.345976319-06:00
+updated: 2016-12-22T16:54:58.394850152-06:00
 imports:
 - name: github.com/btcsuitereleases/btcutil
   version: f2b1058a82554c0c7c3b8809c5956c38374604d8
@@ -35,7 +35,7 @@ imports:
 - name: github.com/FactomProject/go-bip32
   version: 3b593af1c415abc1017648e4eb24a88c32fee0f3
 - name: github.com/FactomProject/go-bip39
-  version: b26bf5b8a88111792f0c215417dac76dd5d79e7c
+  version: d1007fb78d9a7ec65314dad412973e63caf4c527
 - name: github.com/FactomProject/go-bip44
   version: fd672f46ddc35bb381f497f7b64c9cf34f9e0703
 - name: github.com/FactomProject/go-simplejson
@@ -68,7 +68,7 @@ imports:
 - name: github.com/FactomProject/web
   version: 7daee1bf727fc2cd9142b9a73a797f98b3180756
 - name: golang.org/x/crypto
-  version: 9b1a210a06ea1176ec1f0a1ddf83ad7463b8ea3e
+  version: f6b343c37ca80bfa8ea539da67a0b621f84fab1d
   subpackages:
   - pbkdf2
   - ripemd160
