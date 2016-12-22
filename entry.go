@@ -178,7 +178,7 @@ func ComposeEntryCommit(e *Entry, ec *ECAddress) (*JSON2Request, error) {
 	buf.Write(ec.PubBytes())
 	buf.Write(sig[:])
 
-	params := entryRequest{Entry: hex.EncodeToString(buf.Bytes())}
+	params := messageRequest{Message: hex.EncodeToString(buf.Bytes())}
 	req := NewJSON2Request("commit-entry", APICounter(), params)
 
 	return req, nil
