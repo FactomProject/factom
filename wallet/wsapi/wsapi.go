@@ -560,7 +560,7 @@ func handleTmpTransactions(params []byte) (interface{}, *factom.JSONError) {
 	for name, tx := range txs {
 		r, err := factoidTxToTransaction(tx)
 		if err != nil {
-			return nil, newCustomInternalError(err.Error())
+			continue
 		}
 		r.Name = name
 		r.FeesRequired = feesRequired(tx)
