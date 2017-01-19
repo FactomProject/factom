@@ -491,12 +491,6 @@ func ComposeTransaction(name string) ([]byte, error) {
 	return resp.JSONResult(), nil
 }
 
-// SendComposedTrasnaction sends the finished json transaction to factomd
-// without the need for an api call to a running wallet daemon.
-func SendComposedTrasnaction(req *JSON2Request) (*JSON2Response, error) {
-	return factomdRequest(req)
-}
-
 func SendTransaction(name string) (*Transaction, error) {
 	params := transactionRequest{Name: name}
 
