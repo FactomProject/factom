@@ -5,6 +5,7 @@
 package factom_test
 
 import (
+	"crypto/rand"
 	"testing"
 
 	ed "github.com/FactomProject/ed25519"
@@ -13,6 +14,64 @@ import (
 )
 
 var ()
+
+func TestMarshalAddresses(t *testing.T) {
+	for i := 0; i < 100; i++ {
+		sec := make([]byte, 32)
+		_, err := rand.Read(sec)
+		if err != nil {
+			t.Error(err)
+		}
+
+		ec, err := MakeECAddress(sec)
+		if err != nil {
+			t.Error(err)
+		}
+
+		data, err := ec.MarshalBinary()
+		if err != nil {
+			t.Error(err)
+		}
+
+		ec2 := new(ECAddress)
+		newdata, err := ec2.UnmarshalBinaryData(data)
+		if err != nil {
+			t.Error(err)
+		}
+
+		if len(newdata) != 0 {
+			t.Errorf("UnmarshalBinary left %d bytes remaining", len(newdata))
+		}
+	}
+
+	for i := 0; i < 100; i++ {
+		sec := make([]byte, 32)
+		_, err := rand.Read(sec)
+		if err != nil {
+			t.Error(err)
+		}
+
+		fa, err := MakeFactoidAddress(sec)
+		if err != nil {
+			t.Error(err)
+		}
+
+		data, err := fa.MarshalBinary()
+		if err != nil {
+			t.Error(err)
+		}
+
+		fa2 := new(FactoidAddress)
+		newdata, err := fa2.UnmarshalBinaryData(data)
+		if err != nil {
+			t.Error(err)
+		}
+
+		if len(newdata) != 0 {
+			t.Errorf("UnmarshalBinary left %d bytes remaining", len(newdata))
+		}
+	}
+}
 
 func TestAddressStringType(t *testing.T) {
 	var (
