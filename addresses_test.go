@@ -49,7 +49,7 @@ func TestMarshalAddresses(t *testing.T) {
 		}
 
 		if bytes.Compare(ec.PubBytes(), ec2.PubBytes()) != 0 {
-			t.Errorf("Unmarshaled object has different secret.")
+			t.Errorf("Unmarshaled object has different public.")
 		}
 	}
 
@@ -85,7 +85,7 @@ func TestMarshalAddresses(t *testing.T) {
 		}
 
 		if bytes.Compare(fa.PubBytes(), fa2.PubBytes()) != 0 {
-			t.Errorf("Unmarshaled object has different secret.")
+			t.Errorf("Unmarshaled object has different public.")
 		}
 	}
 }
