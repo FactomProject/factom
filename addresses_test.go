@@ -5,6 +5,7 @@
 package factom_test
 
 import (
+	"bytes"
 	"crypto/rand"
 	"testing"
 
@@ -42,6 +43,14 @@ func TestMarshalAddresses(t *testing.T) {
 		if len(newdata) != 0 {
 			t.Errorf("UnmarshalBinary left %d bytes remaining", len(newdata))
 		}
+
+		if bytes.Compare(ec.SecBytes(), ec2.SecBytes()) != 0 {
+			t.Errorf("Unmarshaled object has different secret.")
+		}
+
+		if bytes.Compare(ec.PubBytes(), ec2.PubBytes()) != 0 {
+			t.Errorf("Unmarshaled object has different secret.")
+		}
 	}
 
 	for i := 0; i < 100; i++ {
@@ -69,6 +78,14 @@ func TestMarshalAddresses(t *testing.T) {
 
 		if len(newdata) != 0 {
 			t.Errorf("UnmarshalBinary left %d bytes remaining", len(newdata))
+		}
+
+		if bytes.Compare(fa.SecBytes(), fa2.SecBytes()) != 0 {
+			t.Errorf("Unmarshaled object has different secret.")
+		}
+
+		if bytes.Compare(fa.PubBytes(), fa2.PubBytes()) != 0 {
+			t.Errorf("Unmarshaled object has different secret.")
 		}
 	}
 }
