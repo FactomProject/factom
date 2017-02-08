@@ -277,8 +277,8 @@ func (db *TXDatabaseOverlay) update() (string, error) {
 		return newestFBlock.GetKeyMR().String(), nil
 	}
 
-	db.DBO.StartMultiBatch()
 	for i := start; i <= newestHeight; i++ {
+		db.DBO.StartMultiBatch()
 		if i%1000 == 0 {
 			if newestHeight-start > 1000 {
 				fmt.Printf("Fetching block %v / %v\n", i, newestHeight)
@@ -290,6 +290,7 @@ func (db *TXDatabaseOverlay) update() (string, error) {
 			return "", err
 		}
 		db.DBO.ProcessFBlockMultiBatch(fblock)
+		db.DBO.ExecuteMultiBatch()
 	}
 	fmt.Printf("Fetching block %v / %v\n", newestHeight, newestHeight)
 	err = db.DBO.ExecuteMultiBatch()
