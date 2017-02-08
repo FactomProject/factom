@@ -470,7 +470,7 @@ func handleAllTransactions(params []byte) (interface{}, *factom.JSONError) {
 		if err := tx.UnmarshalBinary(p); err != nil {
 			return nil, newCustomInternalError(err.Error())
 		}
-		
+
 		r, err := factoidTxToTransaction(tx)
 		if err != nil {
 			return nil, newCustomInternalError(err.Error())

@@ -188,6 +188,11 @@ func WalletServer() string {
 	return RpcConfig.WalletServer
 }
 
+// SendFactomdRequest sends a json object to factomd
+func SendFactomdRequest(req *JSON2Request) (*JSON2Response, error) {
+	return factomdRequest(req)
+}
+
 func factomdRequest(req *JSON2Request) (*JSON2Response, error) {
 	j, err := json.Marshal(req)
 	if err != nil {
