@@ -20,6 +20,25 @@ type BlockByHeightResponse struct {
 	RawData string `json:"rawdata,omitempty"`
 }
 
+func (f *BlockByHeightResponse) String() string {
+	var s string
+	if f.DBlock != nil {
+		j, _ := json.Marshal(f.DBlock)
+		s += fmt.Sprintln("DBlock:", string(j))
+	} else if f.ABlock != nil {
+		j, _ := json.Marshal(f.ABlock)
+		s += fmt.Sprintln("ABlock:", string(j))
+	} else if f.FBlock != nil {
+		j, _ := json.Marshal(f.FBlock)
+		s += fmt.Sprintln("FBlock:", string(j))
+	} else if f.ECBlock != nil {
+		j, _ := json.Marshal(f.ECBlock)
+		s += fmt.Sprintln("ECBlock:", string(j))
+	}
+
+	return s
+}
+
 type JStruct struct {
 	data []byte
 }
@@ -42,6 +61,25 @@ type BlockByHeightRawResponse struct {
 	ECBlock *JStruct `json:"ecblock,omitempty"`
 
 	RawData string `json:"rawdata,omitempty"`
+}
+
+func (f *BlockByHeightRawResponse) String() string {
+	var s string
+	if f.DBlock != nil {
+		j, _ := f.DBlock.MarshalJSON()
+		s += fmt.Sprintln("DBlock:", string(j))
+	} else if f.ABlock != nil {
+		j, _ := f.ABlock.MarshalJSON()
+		s += fmt.Sprintln("ABlock:", string(j))
+	} else if f.FBlock != nil {
+		j, _ := f.FBlock.MarshalJSON()
+		s += fmt.Sprintln("FBlock:", string(j))
+	} else if f.ECBlock != nil {
+		j, _ := f.ECBlock.MarshalJSON()
+		s += fmt.Sprintln("ECBlock:", string(j))
+	}
+
+	return s
 }
 
 func GetBlockByHeightRaw(blockType string, height int64) (*BlockByHeightRawResponse, error) {
