@@ -290,9 +290,15 @@ func (db *TXDatabaseOverlay) update() (string, error) {
 			return "", err
 		}
 		db.DBO.ProcessFBlockMultiBatch(fblock)
+
+		// Save to DB every 500 blocks
+		if i%500 == 0 {
+			db.DBO.ExecuteMultiBatch()
+			db.DBO.StartMultiBatch()
+		}
 	}
 	fmt.Printf("Fetching block %v / %v\n", newestHeight, newestHeight)
-	err = db.DBO.ExecuteMultiBatch()
+	err = db.DBO.ExecuteMultiBatch() // Save remaining blocks
 	if err != nil {
 		return "", err
 	}
