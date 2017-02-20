@@ -13,7 +13,7 @@ import (
 
 const (
 	SeedLength = 64
-	Version    = "0.2.0.1"
+	Version    = "0.2.0.2"
 	ApiVersion = "2.0"
 )
 
