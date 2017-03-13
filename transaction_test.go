@@ -10,6 +10,9 @@ import (
 
 	"encoding/json"
 	"time"
+	
+	"github.com/FactomProject/factom/wallet"
+	"github.com/FactomProject/factom/wallet/wsapi"
 )
 
 //func TestNewTransaction(t *testing.T) {
@@ -54,4 +57,50 @@ func mkdummytx() *Transaction {
 		TotalECOutputs: 1,
 	}
 	return tx
+}
+
+func TestTransactions(t *testing.T) {
+	fctWallet, err := wallet.NewOrOpenBoltDBWallet("/tmp/testingwallet.bolt")
+	if err != nil {
+		t.Error(err)
+	}
+	
+	txdb, err := wallet.NewTXBoltDB("/tmp/testingtxdb.bolt")
+	if err != nil {
+		t.Error(err)
+	} else {
+		fctWallet.AddTXDB(txdb)
+	}
+	
+	 RpcConfig = &RPCConfig{
+		WalletTLSEnable:   false,
+		WalletTLSKeyFile:  "",
+		WalletTLSCertFile: "",
+		WalletRPCUser:     "",
+		WalletRPCPassword: "",
+		WalletServer:      "localhost:8089",
+	}
+
+	go wsapi.Start(fctWallet, ":8089", *RpcConfig)
+	defer wsapi.Stop()
+	
+	if txs, err := ListTransactionsTmp(); err != nil {
+		t.Error(err)
+	} else if len(txs) > 0 {
+		t.Error("Unexpected transactions returned from the wallet:", txs)
+	}
+	
+	tx1, err := NewTransaction("tx1")
+	if err != nil {
+		t.Error(err)
+	}
+	if tx1 == nil {
+		t.Error("No transaction was returned")
+	}
+	
+	if txs, err := ListTransactionsTmp(); err != nil {
+		t.Error(err)
+	} else if len(txs) < 1 {
+		t.Error("Temporary transaction was not saved in the wallet")
+	}
 }
