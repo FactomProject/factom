@@ -92,16 +92,16 @@ func TestTransactions(t *testing.T) {
 func startTestWallet() (chan int, error) {
 	// make a chan to signal when the test is finished with the wallet
 	done := make(chan int, 1)
-	
+
 	// setup a testing wallet
 	fctWallet, err := wallet.NewOrOpenBoltDBWallet(
-		os.TempDir()+"/testingwallet.bolt",
+		os.TempDir() + "/testingwallet.bolt",
 	)
 	if err != nil {
 		return nil, err
 	}
 
-	txdb, err := wallet.NewTXBoltDB(os.TempDir()+"/testingtxdb.bolt")
+	txdb, err := wallet.NewTXBoltDB(os.TempDir() + "/testingtxdb.bolt")
 	if err != nil {
 		return nil, err
 	} else {
@@ -121,7 +121,8 @@ func startTestWallet() (chan int, error) {
 	go func() {
 		<-done
 		wsapi.Stop()
+		// TODO - delete the test wallet maybe?
 	}()
-	
+
 	return done, nil
 }
