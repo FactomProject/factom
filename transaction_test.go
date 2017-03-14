@@ -9,24 +9,12 @@ import (
 	"testing"
 
 	"encoding/json"
+	"os"
 	"time"
 
 	"github.com/FactomProject/factom/wallet"
 	"github.com/FactomProject/factom/wallet/wsapi"
 )
-
-//func TestNewTransaction(t *testing.T) {
-//	if err := NewTransaction("b"); err != nil {
-//		t.Error(err)
-//	}
-//	if txs, err := ListTransactions(); err != nil {
-//		t.Error(err)
-//	} else {
-//		for _, v := range txs {
-//			t.Log(v)
-//		}
-//	}
-//}
 
 func TestJSONTransactions(t *testing.T) {
 	tx1 := mkdummytx()
@@ -60,14 +48,62 @@ func mkdummytx() *Transaction {
 }
 
 func TestTransactions(t *testing.T) {
-	fctWallet, err := wallet.NewOrOpenBoltDBWallet("/tmp/testingwallet.bolt")
+	// start the test wallet
+	done, err := startTestWallet()
 	if err != nil {
 		t.Error(err)
 	}
+	defer func() { done <- 1 }()
 
-	txdb, err := wallet.NewTXBoltDB("/tmp/testingtxdb.bolt")
+	// make sure the wallet is empty
+	if txs, err := ListTransactionsTmp(); err != nil {
+		t.Error(err)
+	} else if len(txs) > 0 {
+		t.Error("Unexpected transactions returned from the wallet:", txs)
+	}
+
+	// create a new transaction
+	tx1, err := NewTransaction("tx1")
 	if err != nil {
 		t.Error(err)
+	}
+	if tx1 == nil {
+		t.Error("No transaction was returned")
+	}
+
+	if tx, err := GetTmpTransaction("tx1"); err != nil {
+		t.Error(err)
+	} else if tx == nil {
+		t.Error("Temporary transaction was not saved in the wallet")
+	}
+
+	// delete a transaction
+	if err := DeleteTransaction("tx1"); err != nil {
+		t.Error(err)
+	}
+
+	if txs, err := ListTransactionsTmp(); err != nil {
+		t.Error(err)
+	} else if len(txs) > 0 {
+		t.Error("Unexpected transactions returned from the wallet:", txs)
+	}
+}
+
+func startTestWallet() (chan int, error) {
+	// make a chan to signal when the test is finished with the wallet
+	done := make(chan int, 1)
+	
+	// setup a testing wallet
+	fctWallet, err := wallet.NewOrOpenBoltDBWallet(
+		os.TempDir()+"/testingwallet.bolt",
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	txdb, err := wallet.NewTXBoltDB(os.TempDir()+"/testingtxdb.bolt")
+	if err != nil {
+		return nil, err
 	} else {
 		fctWallet.AddTXDB(txdb)
 	}
@@ -82,35 +118,10 @@ func TestTransactions(t *testing.T) {
 	}
 
 	go wsapi.Start(fctWallet, ":8089", *RpcConfig)
-	defer wsapi.Stop()
-
-	if txs, err := ListTransactionsTmp(); err != nil {
-		t.Error(err)
-	} else if len(txs) > 0 {
-		t.Error("Unexpected transactions returned from the wallet:", txs)
-	}
-
-	tx1, err := NewTransaction("tx1")
-	if err != nil {
-		t.Error(err)
-	}
-	if tx1 == nil {
-		t.Error("No transaction was returned")
-	}
-
-	if txs, err := ListTransactionsTmp(); err != nil {
-		t.Error(err)
-	} else if len(txs) < 1 {
-		t.Error("Temporary transaction was not saved in the wallet")
-	}
-
-	if err := DeleteTransaction("tx1"); err != nil {
-		t.Error(err)
-	}
-
-	if txs, err := ListTransactionsTmp(); err != nil {
-		t.Error(err)
-	} else if len(txs) > 0 {
-		t.Error("Unexpected transactions returned from the wallet:", txs)
-	}
+	go func() {
+		<-done
+		wsapi.Stop()
+	}()
+	
+	return done, nil
 }
