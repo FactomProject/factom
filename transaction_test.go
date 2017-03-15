@@ -32,21 +32,6 @@ func TestJSONTransactions(t *testing.T) {
 	t.Log("Unmarshaled:", tx2)
 }
 
-func mkdummytx() *Transaction {
-	tx := &Transaction{
-		BlockHeight: 42,
-		Name:        "dummy",
-		Timestamp: func() time.Time {
-			t, _ := time.Parse("2006-Jan-02 15:04", "1988-Jan-02 10:00")
-			return t
-		}(),
-		TotalInputs:    13,
-		TotalOutputs:   12,
-		TotalECOutputs: 1,
-	}
-	return tx
-}
-
 func TestTransactions(t *testing.T) {
 	// start the test wallet
 	done, err := startTestWallet()
@@ -89,24 +74,31 @@ func TestTransactions(t *testing.T) {
 	}
 }
 
+// helper functions for testing
+
 func startTestWallet() (chan int, error) {
+	var (
+		walletdbfile = os.TempDir() + "/testingwallet.bolt"
+		txdbfile     = os.TempDir() + "/testingtxdb.bolt"
+	)
+
 	// make a chan to signal when the test is finished with the wallet
 	done := make(chan int, 1)
 
 	// setup a testing wallet
-	fctWallet, err := wallet.NewOrOpenBoltDBWallet(
-		os.TempDir() + "/testingwallet.bolt",
-	)
+	fctWallet, err := wallet.NewOrOpenBoltDBWallet(walletdbfile)
 	if err != nil {
 		return nil, err
 	}
+	defer os.Remove(walletdbfile)
 
-	txdb, err := wallet.NewTXBoltDB(os.TempDir() + "/testingtxdb.bolt")
+	txdb, err := wallet.NewTXBoltDB(txdbfile)
 	if err != nil {
 		return nil, err
 	} else {
 		fctWallet.AddTXDB(txdb)
 	}
+	defer os.Remove(txdbfile)
 
 	RpcConfig = &RPCConfig{
 		WalletTLSEnable:   false,
@@ -121,8 +113,24 @@ func startTestWallet() (chan int, error) {
 	go func() {
 		<-done
 		wsapi.Stop()
-		// TODO - delete the test wallet maybe?
+		fctWallet.Close()
+		txdb.Close()
 	}()
 
 	return done, nil
+}
+
+func mkdummytx() *Transaction {
+	tx := &Transaction{
+		BlockHeight: 42,
+		Name:        "dummy",
+		Timestamp: func() time.Time {
+			t, _ := time.Parse("2006-Jan-02 15:04", "1988-Jan-02 10:00")
+			return t
+		}(),
+		TotalInputs:    13,
+		TotalOutputs:   12,
+		TotalECOutputs: 1,
+	}
+	return tx
 }
