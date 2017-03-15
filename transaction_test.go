@@ -76,6 +76,9 @@ func TestTransactions(t *testing.T) {
 
 // helper functions for testing
 
+// startTestWallet runs a test wallet and serves the wallet api. The caller
+// must write an int to the chan when compleate to stop the wallet api and
+// remove the test db.
 func startTestWallet() (chan int, error) {
 	var (
 		walletdbfile = os.TempDir() + "/testingwallet.bolt"
