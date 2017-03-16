@@ -9,11 +9,7 @@ import (
 	"testing"
 
 	"encoding/json"
-	"os"
 	"time"
-
-	"github.com/FactomProject/factom/wallet"
-	"github.com/FactomProject/factom/wallet/wsapi"
 )
 
 func TestJSONTransactions(t *testing.T) {
@@ -34,7 +30,7 @@ func TestJSONTransactions(t *testing.T) {
 
 func TestTransactions(t *testing.T) {
 	// start the test wallet
-	done, err := startTestWallet()
+	done, err := StartTestWallet()
 	if err != nil {
 		t.Error(err)
 	}
@@ -75,53 +71,6 @@ func TestTransactions(t *testing.T) {
 }
 
 // helper functions for testing
-
-// startTestWallet runs a test wallet and serves the wallet api. The caller
-// must write an int to the chan when compleate to stop the wallet api and
-// remove the test db.
-func startTestWallet() (chan int, error) {
-	var (
-		walletdbfile = os.TempDir() + "/testingwallet.bolt"
-		txdbfile     = os.TempDir() + "/testingtxdb.bolt"
-	)
-
-	// make a chan to signal when the test is finished with the wallet
-	done := make(chan int, 1)
-
-	// setup a testing wallet
-	fctWallet, err := wallet.NewOrOpenBoltDBWallet(walletdbfile)
-	if err != nil {
-		return nil, err
-	}
-	defer os.Remove(walletdbfile)
-
-	txdb, err := wallet.NewTXBoltDB(txdbfile)
-	if err != nil {
-		return nil, err
-	} else {
-		fctWallet.AddTXDB(txdb)
-	}
-	defer os.Remove(txdbfile)
-
-	RpcConfig = &RPCConfig{
-		WalletTLSEnable:   false,
-		WalletTLSKeyFile:  "",
-		WalletTLSCertFile: "",
-		WalletRPCUser:     "",
-		WalletRPCPassword: "",
-		WalletServer:      "localhost:8089",
-	}
-
-	go wsapi.Start(fctWallet, ":8089", *RpcConfig)
-	go func() {
-		<-done
-		wsapi.Stop()
-		fctWallet.Close()
-		txdb.Close()
-	}()
-
-	return done, nil
-}
 
 func mkdummytx() *Transaction {
 	tx := &Transaction{

@@ -30,7 +30,7 @@ func TestImportKoinify(t *testing.T) {
 	)
 
 	// start the test wallet
-	done, err := startTestWallet()
+	done, err := StartTestWallet()
 	if err != nil {
 		t.Error(err)
 	}
@@ -80,10 +80,10 @@ func populateTestWallet() error {
 	return nil
 }
 
-// startTestWallet runs a test wallet and serves the wallet api. The caller
+// StartTestWallet runs a test wallet and serves the wallet api. The caller
 // must write an int to the chan when compleate to stop the wallet api and
 // remove the test db.
-func startTestWallet() (chan int, error) {
+func StartTestWallet() (chan int, error) {
 	var (
 		walletdbfile = os.TempDir() + "/testingwallet.bolt"
 		txdbfile     = os.TempDir() + "/testingtxdb.bolt"
