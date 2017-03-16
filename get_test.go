@@ -6,7 +6,7 @@ package factom_test
 
 import (
 	//"bytes"
-	//"encoding/hex"
+	"encoding/hex"
 	//"encoding/json"
 	"fmt"
 	"net/http"
@@ -272,6 +272,69 @@ hello world
 `
 
 	if expectedResponse != response.String() {
+		fmt.Println(response)
+		fmt.Println(expectedResponse)
+		t.Fail()
+	}
+}
+
+func TestGetEBlock(t *testing.T) {
+	simlatedFactomdResponse := `{"jsonrpc":"2.0","id":0,"result":{"header":{"blocksequencenumber":35990,"chainid":"df3ade9eec4b08d5379cc64270c30ea7315d8a8a1a69efe2b98a60ecdd69e604","prevkeymr":"7bd1725aa29c988f8f3486512a01976807a0884d4c71ac08d18d1982d905a27a","timestamp":1487042760,"dbheight":75893},"entrylist":[{"entryhash":"cefd9554e9d89132a327e292649031e7b6ccea1cebd80d8a4722e56d0147dd58","timestamp":1487043240},{"entryhash":"61a7f9256f330e50ddf92b296c00fa679588854affc13c380e9945b05fc8e708","timestamp":1487043240}]}}`
+
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		fmt.Fprintln(w, simlatedFactomdResponse)
+	}))
+	defer ts.Close()
+
+	url := ts.URL[7:]
+	SetFactomdServer(url)
+
+	response, _ := GetEBlock("5117490532e46037f8eb660c4fd49cae2a734fc9096b431b2a9a738d7d278398")
+	
+	expectedResponse := `BlockSequenceNumber: 35990
+ChainID: df3ade9eec4b08d5379cc64270c30ea7315d8a8a1a69efe2b98a60ecdd69e604
+PrevKeyMR: 7bd1725aa29c988f8f3486512a01976807a0884d4c71ac08d18d1982d905a27a
+Timestamp: 1487042760
+DBHeight: 75893
+EBEntry {
+	Timestamp 1487043240
+	EntryHash cefd9554e9d89132a327e292649031e7b6ccea1cebd80d8a4722e56d0147dd58
+}
+EBEntry {
+	Timestamp 1487043240
+	EntryHash 61a7f9256f330e50ddf92b296c00fa679588854affc13c380e9945b05fc8e708
+}
+`
+
+	if expectedResponse != response.String() {
+		fmt.Println(response)
+		fmt.Println(expectedResponse)
+		t.Fail()
+	}
+}
+
+func TestGetRaw(t *testing.T) {
+	simlatedFactomdResponse := `{"jsonrpc":"2.0","id":0,"result":{"data":"df3ade9eec4b08d5379cc64270c30ea7315d8a8a1a69efe2b98a60ecdd69e604181735e2bc1caa844d66bd8ffd4b67e879d22f5b92c1a823008a8266b6bf4954eacdbae3b324a32cd77849bf5ab95782e5d9d8dfcba7c2b627da0d927ae19f3bee16802b7455d628a68c12b3513b75ccf0e67c6e722345fcfa2466f320e5762800008c950001130600000003e47fe17ea16474444d3895d6048b2ade4c71114f9742d31a6e1d7d035019e2ee51d3a04c2e8e4d86b84a22ac3f3a6e90046c28373b34678831fa7c460b7c69570000000000000000000000000000000000000000000000000000000000000002"}}`
+
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		fmt.Fprintln(w, simlatedFactomdResponse)
+	}))
+	defer ts.Close()
+
+	url := ts.URL[7:]
+	SetFactomdServer(url)
+
+	p, err := GetRaw("7bd1725aa29c988f8f3486512a01976807a0884d4c71ac08d18d1982d905a27a")
+	if err != nil {
+		t.Error(err)
+	}
+	response := hex.EncodeToString(p)
+	
+	expectedResponse := `df3ade9eec4b08d5379cc64270c30ea7315d8a8a1a69efe2b98a60ecdd69e604181735e2bc1caa844d66bd8ffd4b67e879d22f5b92c1a823008a8266b6bf4954eacdbae3b324a32cd77849bf5ab95782e5d9d8dfcba7c2b627da0d927ae19f3bee16802b7455d628a68c12b3513b75ccf0e67c6e722345fcfa2466f320e5762800008c950001130600000003e47fe17ea16474444d3895d6048b2ade4c71114f9742d31a6e1d7d035019e2ee51d3a04c2e8e4d86b84a22ac3f3a6e90046c28373b34678831fa7c460b7c69570000000000000000000000000000000000000000000000000000000000000002`
+
+	if expectedResponse != response {
 		fmt.Println(response)
 		fmt.Println(expectedResponse)
 		t.Fail()
