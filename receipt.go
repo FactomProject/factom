@@ -33,9 +33,9 @@ func GetReceipt(hash string) (*Receipt, error) {
 
 type Receipt struct {
 	Entry struct {
-		Raw  string `json:"raw,omitempty"`
-		Key  string `json:"key,omitempty"`
-		Json string `json:"json,omitempty"`
+		Raw       string `json:"raw,omitempty"`
+		EntryHash string `json:"entryhash,omitempty"`
+		Json      string `json:"json,omitempty"`
 	} `json:"entry,omitempty"`
 	MerkleBranch []struct {
 		Left  string `json:"left,omitempty"`
