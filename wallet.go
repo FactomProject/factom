@@ -31,11 +31,12 @@ func BackupWallet() (string, error) {
 		return "", err
 	}
 
-	s := fmt.Sprintln("Seed:")
-	s += fmt.Sprintln(w.Seed)
-	s += fmt.Sprintln("Addresses:")
+	s := fmt.Sprintln(w.Seed)
+	s += fmt.Sprintln()
 	for _, adr := range w.Addresses {
+		s += fmt.Sprintln(adr.Public)
 		s += fmt.Sprintln(adr.Secret)
+		s += fmt.Sprintln()
 	}
 	return s, nil
 }
