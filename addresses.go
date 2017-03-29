@@ -133,7 +133,7 @@ func (a *ECAddress) UnmarshalBinaryData(data []byte) ([]byte, error) {
 }
 
 func (a *ECAddress) MarshalBinary() ([]byte, error) {
-	return a.SecBytes(), nil
+	return a.SecBytes()[:32], nil
 }
 
 // GetECAddress takes a private address string (Es...) and returns an ECAddress.
@@ -266,7 +266,7 @@ func (t *FactoidAddress) UnmarshalBinaryData(data []byte) ([]byte, error) {
 }
 
 func (t *FactoidAddress) MarshalBinary() ([]byte, error) {
-	return t.SecBytes(), nil
+	return t.SecBytes()[:32], nil
 }
 
 // GetFactoidAddress takes a private address string (Fs...) and returns a
