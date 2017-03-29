@@ -20,15 +20,15 @@ func TestImportAddress(t *testing.T) {
 		fa1 = "FA3T1gTkuKGG2MWpAkskSoTnfjxZDKVaAYwziNTC1pAYH5B9A1rh"
 		es1 = "Es4KmwK65t9HCsibYzVDFrijvkgTFZKdEaEAgfMtYTPSVtM3NDSx"
 		ec1 = "EC2CyGKaNddLFxrjkFgiaRZnk77b8iQia3Zj6h5fxFReAcDwCo3i"
-		
+
 		bads = []string{
 			"Fs2TCa7Mo4XGy9FQSoZS8JPnDfv7SjwUSGqrjMWvc1RJ9sKbJeX",  //short
 			"Fs2TCa7Mo4XGy9FQSoZS8JPnDfv7SjwUSGqrjMWvc1RJ9sKbJeeA", //check
-			"",                                                     //empty
+			"", //empty
 			"Fc2TCa7Mo4XGy9FQSoZS8JPnDfv7SjwUSGqrjMWvc1RJ9sKbJeXA", //prefix
 		}
 	)
-	
+
 	// start the test wallet
 	done, err := StartTestWallet()
 	if err != nil {
@@ -56,7 +56,7 @@ func TestImportAddress(t *testing.T) {
 	} else if e.SecString() != es1 {
 		t.Error("Wallet returned incorrect address", es1, e.SecString())
 	}
-	
+
 	// try to import the bad addresses
 	for _, bad := range bads {
 		if _, _, err := ImportAddresses(bad); err == nil {
@@ -67,16 +67,16 @@ func TestImportAddress(t *testing.T) {
 
 func TestImportKoinify(t *testing.T) {
 	var (
-		good_mnemonic = "yellow yellow yellow yellow yellow yellow yellow"+
-		" yellow yellow yellow yellow yellow"   // good
+		good_mnemonic = "yellow yellow yellow yellow yellow yellow yellow" +
+			" yellow yellow yellow yellow yellow" // good
 		koinifyexpect = "FA3cih2o2tjEUsnnFR4jX1tQXPpSXFwsp3rhVp6odL5PNCHWvZV1"
-		
+
 		bad_mnemonic = []string{
-			"",                        // bad empty
-			"yellow yellow yellow yellow yellow yellow yellow yellow yellow"+
-			" yellow yellow",          // bad short
-			"yellow yellow yellow yellow yellow yellow yellow yellow yellow"+
-			" yellow yellow asdfasdf", // bad word
+			"", // bad empty
+			"yellow yellow yellow yellow yellow yellow yellow yellow yellow" +
+				" yellow yellow", // bad short
+			"yellow yellow yellow yellow yellow yellow yellow yellow yellow" +
+				" yellow yellow asdfasdf", // bad word
 		}
 	)
 
@@ -95,7 +95,7 @@ func TestImportKoinify(t *testing.T) {
 	if fa.String() != koinifyexpect {
 		t.Error("Incorrect address from Koinify mnemonic", fa, koinifyexpect)
 	}
-	
+
 	for _, m := range bad_mnemonic {
 		if _, err := ImportKoinify(m); err == nil {
 			t.Error("No error for bad address:", m)
@@ -117,7 +117,7 @@ func populateTestWallet() error {
 	//
 	//EC2R4bPDj9WQ8eWA4X3K8NYfTkBh4HFvCopLBq48FyrNXNumSK6w
 	//Es355qB6tWo1ZZRTK8cXpHjxGECXaPGw98AFCRJ6kxZ3J6vp1M2i
-	
+
 	_, _, err := ImportAddresses(
 		"Fs2TCa7Mo4XGy9FQSoZS8JPnDfv7SjwUSGqrjMWvc1RJ9sKbJeXA",
 		"Fs1os7xg2mN9fTuJmaYZLk6EXz51x2wmmHr2365UAuPMJW3aNr25",
@@ -127,7 +127,7 @@ func populateTestWallet() error {
 	if err != nil {
 		return err
 	}
-	
+
 	return nil
 }
 
@@ -177,4 +177,3 @@ func StartTestWallet() (chan int, error) {
 
 	return done, nil
 }
-
