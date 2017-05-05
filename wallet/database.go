@@ -6,6 +6,7 @@ package wallet
 
 import (
 	"fmt"
+	"sync"
 
 	"github.com/FactomProject/factom"
 	"github.com/FactomProject/factomd/common/factoid"
@@ -14,6 +15,7 @@ import (
 // Wallet is a connection to a Factom Wallet Database
 type Wallet struct {
 	*WalletDatabaseOverlay
+	txlock       sync.Mutex
 	transactions map[string]*factoid.Transaction
 	txdb         *TXDatabaseOverlay
 }
