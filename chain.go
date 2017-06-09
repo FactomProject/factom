@@ -12,6 +12,8 @@ import (
 )
 
 type Chain struct {
+	//chainid was originally required as a paramater passed with the json.
+	//it is now overwritten with the chainid derived from the extid elements
 	ChainID    string `json:"chainid"`
 	FirstEntry *Entry `json:"firstentry"`
 }

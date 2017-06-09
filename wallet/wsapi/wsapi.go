@@ -740,6 +740,7 @@ func handleComposeChain(params []byte) (interface{}, *factom.JSONError) {
 	}
 
 	c := req.Chain
+	factom.NewChain(c.FirstEntry)
 	ecpub := req.ECPub
 	force := req.Force
 
