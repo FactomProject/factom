@@ -320,7 +320,7 @@ func (w *Wallet) ImportComposedTransaction(name string, hexEncoded string) error
 	w.txlock.Lock()
 	w.transactions[name] = trans
 	w.txlock.Unlock()
-	
+
 	return nil
 }
 
