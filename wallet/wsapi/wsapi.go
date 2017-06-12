@@ -740,6 +740,7 @@ func handleComposeChain(params []byte) (interface{}, *factom.JSONError) {
 	}
 
 	c := req.Chain
+	factom.NewChain(c.FirstEntry)
 	ecpub := req.ECPub
 	force := req.Force
 
@@ -757,13 +758,13 @@ func handleComposeChain(params []byte) (interface{}, *factom.JSONError) {
 		if err != nil {
 			return nil, newCustomInternalError(err.Error())
 		}
-		
+
 		if cost, err := factom.EntryCost(c.FirstEntry); err != nil {
 			return nil, newCustomInternalError(err.Error())
 		} else if balance < int64(cost)+10 {
 			return nil, newCustomInternalError("Not enough Entry Credits")
 		}
-		
+
 		if factom.ChainExists(c.ChainID) {
 			return nil, newCustomInvalidParamsError("Chain " + c.ChainID + " already exists")
 		}
