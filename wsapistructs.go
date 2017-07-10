@@ -13,7 +13,8 @@ type heightRequest struct {
 }
 
 type ackRequest struct {
-	TxID            string `json:"txid,omitempty"`
+	Hash            string `json:"hash,omitempty"`
+	ChainID         string `json:"chainid,omitempty"`
 	FullTransaction string `json:"fulltransaction,omitempty"`
 }
 
