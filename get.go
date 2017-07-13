@@ -6,6 +6,8 @@ package factom
 
 import (
 	"encoding/json"
+
+	"fmt"
 )
 
 // GetECBalance returns the balance in factoshi (factoid * 1e8) of a given Entry
@@ -248,6 +250,10 @@ func GetAllChainEntries(chainid string) ([]*Entry, error) {
 		return es, err
 	}
 
+	if head == "" {
+		return nil, fmt.Errorf("Chain not yet included in a Directory Block")
+	}
+
 	for ebhash := head; ebhash != ZeroHash; {
 		eb, err := GetEBlock(ebhash)
 		if err != nil {
@@ -271,6 +277,10 @@ func GetFirstEntry(chainid string) (*Entry, error) {
 	head, err := GetChainHead(chainid)
 	if err != nil {
 		return e, err
+	}
+
+	if head == "" {
+		return nil, fmt.Errorf("Chain not yet included in a Directory Block")
 	}
 
 	eb, err := GetEBlock(head)
