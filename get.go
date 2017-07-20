@@ -160,27 +160,39 @@ func GetEntry(hash string) (*Entry, error) {
 }
 
 func GetChainHead(chainid string) (string, error) {
-	type chainHeadResponse struct {
-		ChainHead          string `json:"chainhead"`
-		ChainInProcessList bool   `json:"chaininprocesslist"`
+	ch, err := getChainHead(chainid)
+	if err != nil {
+		return "", err
 	}
+	return ch.ChainHead, nil
+}
 
+type chainHeadResponse struct {
+	ChainHead          string `json:"chainhead"`
+	ChainInProcessList bool   `json:"chaininprocesslist"`
+}
+
+func GetChainHeadAndStatus(chainid string) (*chainHeadResponse, error) {
+	return getChainHead(chainid)
+}
+
+func getChainHead(chainid string) (*chainHeadResponse, error) {
 	params := chainIDRequest{ChainID: chainid}
 	req := NewJSON2Request("chain-head", APICounter(), params)
 	resp, err := factomdRequest(req)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 	if resp.Error != nil {
-		return "", resp.Error
+		return nil, resp.Error
 	}
 
 	head := new(chainHeadResponse)
 	if err := json.Unmarshal(resp.JSONResult(), head); err != nil {
-		return "", err
+		return nil, err
 	}
 
-	return head.ChainHead, nil
+	return head, nil
 }
 
 // GetAllEBlockEntries requests every Entry in a specific Entry Block
@@ -245,16 +257,16 @@ func GetRaw(keymr string) ([]byte, error) {
 func GetAllChainEntries(chainid string) ([]*Entry, error) {
 	es := make([]*Entry, 0)
 
-	head, err := GetChainHead(chainid)
+	head, err := GetChainHeadAndStatus(chainid)
 	if err != nil {
 		return es, err
 	}
 
-	if head == "" {
+	if head.ChainHead == "" && head.ChainInProcessList {
 		return nil, fmt.Errorf("Chain not yet included in a Directory Block")
 	}
 
-	for ebhash := head; ebhash != ZeroHash; {
+	for ebhash := head.ChainHead; ebhash != ZeroHash; {
 		eb, err := GetEBlock(ebhash)
 		if err != nil {
 			return es, err
@@ -274,16 +286,16 @@ func GetAllChainEntries(chainid string) ([]*Entry, error) {
 func GetFirstEntry(chainid string) (*Entry, error) {
 	e := new(Entry)
 
-	head, err := GetChainHead(chainid)
+	head, err := GetChainHeadAndStatus(chainid)
 	if err != nil {
 		return e, err
 	}
 
-	if head == "" {
+	if head.ChainHead == "" && head.ChainInProcessList {
 		return nil, fmt.Errorf("Chain not yet included in a Directory Block")
 	}
 
-	eb, err := GetEBlock(head)
+	eb, err := GetEBlock(head.ChainHead)
 	if err != nil {
 		return e, err
 	}
