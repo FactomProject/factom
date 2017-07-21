@@ -159,6 +159,12 @@ func GetEntry(hash string) (*Entry, error) {
 	return e, nil
 }
 
+// GetChainHead only returns the chainhead part of the response, so you are losing information
+// returned by the api. GetChainHeadAndStatus returns the full repsonse.
+// TODO: Depreciate this call, or make it return an error when the chainhead == ""
+//			When (chainhead == "" && err == nil ) the ChainInProcessList == true, and we could
+//			return an error indicating there is no chainhead found, but it will be created in the
+//			next block.
 func GetChainHead(chainid string) (string, error) {
 	ch, err := getChainHead(chainid)
 	if err != nil {
