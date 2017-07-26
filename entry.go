@@ -216,6 +216,7 @@ func CommitEntry(e *Entry, ec *ECAddress) (string, error) {
 	if err != nil {
 		return "", err
 	}
+
 	if resp.Error != nil {
 		return "", resp.Error
 	}
