@@ -9,6 +9,7 @@ import (
 	"fmt"
 
 	"github.com/FactomProject/factom"
+	"github.com/FactomProject/factomd/common/directoryBlock"
 	"github.com/FactomProject/factomd/common/factoid"
 	"github.com/FactomProject/factomd/common/interfaces"
 	"github.com/FactomProject/factomd/common/primitives"
@@ -262,11 +263,18 @@ func (db *TXDatabaseOverlay) update() (string, error) {
 		return "", err
 	}
 	if genesis != nil {
-		genesis2, err := getfblockbyheight(0)
+		genesis2, err := getdblockbyheight(0)
+		var gensisFBlockKeyMr interfaces.IHash
+		for _, e := range genesis2.GetDBEntries() {
+			if e.GetChainID().String() == "000000000000000000000000000000000000000000000000000000000000000f" {
+				gensisFBlockKeyMr = e.GetKeyMR()
+				break
+			}
+		}
 		if err != nil {
 			return "", err
 		}
-		if !genesis2.GetKeyMR().IsSameAs(genesis.GetKeyMR()) {
+		if gensisFBlockKeyMr != nil && !gensisFBlockKeyMr.IsSameAs(genesis.GetKeyMR()) {
 			start = 0
 		}
 	}
@@ -350,4 +358,16 @@ func getfblockbyheight(height uint32) (interfaces.IFBlock, error) {
 		return nil, err
 	}
 	return factoid.UnmarshalFBlock(h)
+}
+
+func getdblockbyheight(height uint32) (interfaces.IDirectoryBlock, error) {
+	p, err := factom.GetDBlockByHeight(int64(height))
+	if err != nil {
+		return nil, err
+	}
+	h, err := hex.DecodeString(p.RawData)
+	if err != nil {
+		return nil, err
+	}
+	return directoryBlock.UnmarshalDBlock(h)
 }
