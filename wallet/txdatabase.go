@@ -264,6 +264,10 @@ func (db *TXDatabaseOverlay) update() (string, error) {
 	}
 	if genesis != nil {
 		genesis2, err := getdblockbyheight(0)
+		if err != nil {
+			return "", err
+		}
+
 		var gensisFBlockKeyMr interfaces.IHash
 		for _, e := range genesis2.GetDBEntries() {
 			if e.GetChainID().String() == "000000000000000000000000000000000000000000000000000000000000000f" {
@@ -271,10 +275,12 @@ func (db *TXDatabaseOverlay) update() (string, error) {
 				break
 			}
 		}
-		if err != nil {
-			return "", err
+
+		if gensisFBlockKeyMr == nil {
+			return "", fmt.Errorf("there was an error fetching the genesis block via the api.")
 		}
-		if gensisFBlockKeyMr != nil && !gensisFBlockKeyMr.IsSameAs(genesis.GetKeyMR()) {
+
+		if !gensisFBlockKeyMr.IsSameAs(genesis.GetKeyMR()) {
 			start = 0
 		}
 	}
