@@ -26,6 +26,9 @@ var (
 
 type TXDatabaseOverlay struct {
 	DBO databaseOverlay.Overlay
+
+	// To indicate to sub processes to quit
+	quit bool
 }
 
 func NewTXOverlay(db interfaces.IDatabase) *TXDatabaseOverlay {
@@ -81,6 +84,7 @@ func NewTXBoltDB(boltPath string) (*TXDatabaseOverlay, error) {
 }
 
 func (db *TXDatabaseOverlay) Close() error {
+	db.quit = true
 	return db.DBO.Close()
 }
 
@@ -310,8 +314,16 @@ func (db *TXDatabaseOverlay) update() (string, error) {
 			db.DBO.ExecuteMultiBatch()
 			db.DBO.StartMultiBatch()
 		}
+
+		// If the wallet is stopped, this process becomes hard to kill. Have it exit
+		if db.quit {
+			break
+		}
 	}
-	fmt.Printf("Fetching block %v / %v\n", newestHeight, newestHeight)
+	if !db.quit { // Printing this would be a lie if we quit
+		fmt.Printf("Fetching block %v / %v\n", newestHeight, newestHeight)
+	}
+
 	err = db.DBO.ExecuteMultiBatch() // Save remaining blocks
 	if err != nil {
 		return "", err
