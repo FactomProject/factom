@@ -93,8 +93,9 @@ func (w *Wallet) AddOutput(name, address string, amount uint64) error {
 	}
 	trans := w.transactions[name]
 
-	if !factom.IsValidAddress(address) {
-		return errors.New("Invalid Address")
+	// Make sure that this is a valid Factoid output
+	if factom.AddressStringType(address) != factom.FactoidPub {
+		return errors.New("Invalid Factoid Address")
 	}
 
 	adr := factoid.NewAddress(base58.Decode(address)[2:34])
@@ -118,8 +119,9 @@ func (w *Wallet) AddECOutput(name, address string, amount uint64) error {
 	}
 	trans := w.transactions[name]
 
-	if !factom.IsValidAddress(address) {
-		return errors.New("Invalid Address")
+	// Make sure that this is a valid Entry Credit output
+	if factom.AddressStringType(address) != factom.ECPub {
+		return errors.New("Invalid Entry Credit Address")
 	}
 
 	adr := factoid.NewAddress(base58.Decode(address)[2:34])
