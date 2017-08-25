@@ -13,9 +13,19 @@ import (
 
 const (
 	SeedLength = 64
-	Version    = "0.2.2.7"
 	ApiVersion = "2.0"
 )
+
+// WalletVersion sets the semantic version number of the build
+// if using the standard vendor directory build process for factom-walletd in the factom-walletd repo is
+// $ go install -ldflags "-X github.com/FactomProject/factom/wallet.WalletVersion=`cat ./vendor/github.com/FactomProject/factom/wallet/VERSION`" -v
+
+//if doing development and modifying the factom repo, in factom-walletd run
+// $ go install -ldflags "-X github.com/FactomProject/factom/wallet.WalletVersion=`cat $GOPATH/src/github.com/FactomProject/factom/wallet/VERSION`" -v
+
+// It also seems to need to have the previous binary deleted if recompiling to have this message show up if no code has changed.
+
+var WalletVersion string = "BuiltWithoutVersion"
 
 // seed address prefix
 var seedPrefix = []byte{0x13, 0xdd}
