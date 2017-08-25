@@ -128,7 +128,7 @@ func (w *Wallet) GetSeed() (string, error) {
 }
 
 func (w *Wallet) GetVersion() string {
-	return Version
+	return WalletVersion
 }
 
 func (w *Wallet) GetApiVersion() string {
