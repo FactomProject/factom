@@ -739,8 +739,7 @@ func handleComposeChain(params []byte) (interface{}, *factom.JSONError) {
 		return nil, newInvalidParamsError()
 	}
 
-	c := req.Chain
-	factom.NewChain(c.FirstEntry)
+	c := factom.NewChain(req.Chain.FirstEntry)
 	ecpub := req.ECPub
 	force := req.Force
 
@@ -770,12 +769,12 @@ func handleComposeChain(params []byte) (interface{}, *factom.JSONError) {
 		}
 	}
 
-	commit, err := factom.ComposeChainCommit(&c, ec)
+	commit, err := factom.ComposeChainCommit(c, ec)
 	if err != nil {
 		return nil, newCustomInternalError(err.Error())
 	}
 
-	reveal, err := factom.ComposeChainReveal(&c)
+	reveal, err := factom.ComposeChainReveal(c)
 	if err != nil {
 		return nil, newCustomInternalError(err.Error())
 	}
