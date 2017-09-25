@@ -256,7 +256,7 @@ func handleV2Request(j *factom.JSON2Request) (*factom.JSON2Response, *factom.JSO
 		return nil, jsonError
 	}
 
-	fmt.Printf("API V2 method: <%v>  paramaters: %s\n", j.Method, params)
+	fmt.Printf("API V2 method: <%v>  parameters: %s\n", j.Method, params)
 
 	jsonResp := factom.NewJSON2Response()
 	jsonResp.ID = j.ID
@@ -739,8 +739,7 @@ func handleComposeChain(params []byte) (interface{}, *factom.JSONError) {
 		return nil, newInvalidParamsError()
 	}
 
-	c := req.Chain
-	factom.NewChain(c.FirstEntry)
+	c := factom.NewChain(req.Chain.FirstEntry)
 	ecpub := req.ECPub
 	force := req.Force
 
@@ -770,12 +769,12 @@ func handleComposeChain(params []byte) (interface{}, *factom.JSONError) {
 		}
 	}
 
-	commit, err := factom.ComposeChainCommit(&c, ec)
+	commit, err := factom.ComposeChainCommit(c, ec)
 	if err != nil {
 		return nil, newCustomInternalError(err.Error())
 	}
 
-	reveal, err := factom.ComposeChainReveal(&c)
+	reveal, err := factom.ComposeChainReveal(c)
 	if err != nil {
 		return nil, newCustomInternalError(err.Error())
 	}
