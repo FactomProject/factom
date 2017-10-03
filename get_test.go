@@ -207,10 +207,7 @@ func TestGetHeights(t *testing.T) {
       "directoryblockheight":72498,
       "leaderheight":72498,
       "entryblockheight":72498,
-      "entryheight":72498,
-      "missingentrycount":0,
-      "entryblockdbheightprocessing":72498,
-      "entryblockdbheightcomplete":72498
+      "entryheight":72498
    }
 }`
 
