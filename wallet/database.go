@@ -73,6 +73,22 @@ func NewMapDBWallet() (*Wallet, error) {
 	return w, nil
 }
 
+func NewEncryptedBoltDBWallet(path, password string) (*Wallet, error) {
+	w := new(Wallet)
+	w.transactions = make(map[string]*factoid.Transaction)
+	db, err := NewEncryptedBoltDB(path, password)
+	if err != nil {
+		return nil, err
+	}
+
+	w.WalletDatabaseOverlay = db
+	err = w.InitWallet()
+	if err != nil {
+		return nil, err
+	}
+	return w, nil
+}
+
 // Close closes a Factom Wallet Database
 func (w *Wallet) Close() error {
 	return w.DBO.Close()
