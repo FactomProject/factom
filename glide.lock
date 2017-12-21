@@ -1,10 +1,6 @@
 hash: 667e443b7fdaaa7f4aa150d9f5b15c37093e4c3042f6cd7d6728e2ca9eb73275
-updated: 2017-12-15T16:17:24.481481332-06:00
+updated: 2017-12-21T16:35:45.260827437-06:00
 imports:
-- name: github.com/beorn7/perks
-  version: 4c0e84591b9aa9e6dcfdf3e020114cd81f89d5f9
-  subpackages:
-  - quantile
 - name: github.com/btcsuitereleases/btcutil
   version: f2b1058a82554c0c7c3b8809c5956c38374604d8
   subpackages:
@@ -36,38 +32,6 @@ imports:
   version: fa03af8ca695eb98cef90a71fd0f506cf54ddbe8
   subpackages:
   - controlpanel
-- name: github.com/FactomProject/factomd
-  version: c82f59d1606ee993ccb3d58ae6333c51e94dc8d5
-  subpackages:
-  - anchor
-  - common/adminBlock
-  - common/constants
-  - common/directoryBlock
-  - common/directoryBlock/dbInfo
-  - common/entryBlock
-  - common/entryBlock/specialEntries
-  - common/entryCreditBlock
-  - common/factoid
-  - common/identity
-  - common/identityEntries
-  - common/interfaces
-  - common/messages
-  - common/primitives
-  - common/primitives/random
-  - database/blockExtractor
-  - database/boltdb
-  - database/databaseOverlay
-  - database/hybridDB
-  - database/leveldb
-  - database/mapdb
-  - database/securedb
-  - log
-  - p2p
-  - receipts
-  - state
-  - testHelper
-  - util
-  - wsapi
 - name: github.com/FactomProject/go-bip32
   version: 3b593af1c415abc1017648e4eb24a88c32fee0f3
 - name: github.com/FactomProject/go-bip39
@@ -95,64 +59,23 @@ imports:
   - leveldb/storage
   - leveldb/table
   - leveldb/util
-- name: github.com/FactomProject/logrustash
-  version: 9c7278ede46e1ccc03f0b17d6663730c340acb81
 - name: github.com/FactomProject/netki-go-partner-client
   version: 426acb535e66cc2f9e6226ae254555e3572fd142
 - name: github.com/FactomProject/snappy-go
   version: f2f83b22c29e5abc60e3a95062ce1491d3b95371
 - name: github.com/FactomProject/web
   version: 7daee1bf727fc2cd9142b9a73a797f98b3180756
-- name: github.com/golang/protobuf
-  version: 1e59b77b52bf8e4b449a57e6f79f21226d571845
-  subpackages:
-  - proto
-- name: github.com/matttproud/golang_protobuf_extensions
-  version: c12348ce28de40eed0136aa2b644d0ee0650e56c
-  subpackages:
-  - pbutil
-- name: github.com/prometheus/client_golang
-  version: 661e31bf844dfca9aeba15f27ea8aa0d485ad212
-  subpackages:
-  - prometheus
-- name: github.com/prometheus/client_model
-  version: 99fa1f4be8e564e8a6b613da7fa6f46c9edafc6c
-  subpackages:
-  - go
-- name: github.com/prometheus/common
-  version: 2e54d0b93cba2fd133edc32211dcc32c06ef72ca
-  subpackages:
-  - expfmt
-  - internal/bitbucket.org/ww/goautoneg
-  - model
-- name: github.com/prometheus/procfs
-  version: a6e9df898b1336106c743392c48ee0b71f5c4efa
-  subpackages:
-  - xfs
-- name: github.com/sirupsen/logrus
-  version: d682213848ed68c0a260ca37d6dd5ace8423f5ba
 - name: golang.org/x/crypto
-  version: 94eea52f7b742c7cbe0b03b22f0c4c8631ece122
+  version: d585fd2cc9195196078f516b69daff6744ef5e84
   subpackages:
   - pbkdf2
   - ripemd160
-  - scrypt
-  - ssh/terminal
 - name: golang.org/x/net
   version: d866cfc389cec985d6fda2859936a575a55a3ab6
   subpackages:
   - websocket
 - name: golang.org/x/sys
-  version: d5840adf789d732bc8b00f37b26ca956a7cc8e79
+  version: d818ba11af4465e00c1998bd3f8a55603b422290
   subpackages:
   - unix
-  - windows
-- name: gopkg.in/gcfg.v1
-  version: 298b7a6a3838f79debfaee8bd3bfb2b8d779e756
-  subpackages:
-  - scanner
-  - token
-  - types
-- name: gopkg.in/warnings.v0
-  version: ec4a0fea49c7b46c2aeb0b51aac55779c607e52b
 testImports: []
