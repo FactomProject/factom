@@ -1,5 +1,5 @@
 hash: 667e443b7fdaaa7f4aa150d9f5b15c37093e4c3042f6cd7d6728e2ca9eb73275
-updated: 2017-03-31T15:42:17.65751141-05:00
+updated: 2017-12-21T16:35:45.260827437-06:00
 imports:
 - name: github.com/btcsuitereleases/btcutil
   version: f2b1058a82554c0c7c3b8809c5956c38374604d8
@@ -45,7 +45,7 @@ imports:
   subpackages:
   - spew
 - name: github.com/FactomProject/goleveldb
-  version: 9d147f2b8f767adca2a29f9728658681081b03a8
+  version: e7800c6976c5d75f0a9c5e9e0e2ff8086940e58f
   subpackages:
   - leveldb
   - leveldb/cache
@@ -66,16 +66,16 @@ imports:
 - name: github.com/FactomProject/web
   version: 7daee1bf727fc2cd9142b9a73a797f98b3180756
 - name: golang.org/x/crypto
-  version: 3cb07270c9455e8ad27956a70891c962d121a228
+  version: d585fd2cc9195196078f516b69daff6744ef5e84
   subpackages:
   - pbkdf2
   - ripemd160
 - name: golang.org/x/net
-  version: ffcf1bedda3b04ebb15a168a59800a73d6dc0f4d
+  version: d866cfc389cec985d6fda2859936a575a55a3ab6
   subpackages:
   - websocket
 - name: golang.org/x/sys
-  version: 9a7256cb28ed514b4e1e5f68959914c4c28a92e0
+  version: d818ba11af4465e00c1998bd3f8a55603b422290
   subpackages:
   - unix
 testImports: []
