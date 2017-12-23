@@ -27,7 +27,7 @@ var (
 )
 
 func (w *Wallet) NewTransaction(name string) error {
-	if _, exist := w.transactions[name]; exist {
+	if w.TransactionExists(name) {
 		return ErrTXExists
 	}
 
@@ -44,25 +44,32 @@ func (w *Wallet) NewTransaction(name string) error {
 		return ErrTXInvalidName
 	}
 
-	t := new(factoid.Transaction)
-	t.SetTimestamp(primitives.NewTimestampNow())
-	w.transactions[name] = t
+	tx := new(factoid.Transaction)
+	tx.SetTimestamp(primitives.NewTimestampNow())
+
+	w.txlock.Lock()
+	defer w.txlock.Unlock()
+
+	w.transactions[name] = tx
 	return nil
 }
 
 func (w *Wallet) DeleteTransaction(name string) error {
-	if _, exists := w.transactions[name]; !exists {
+	if !w.TransactionExists(name) {
 		return ErrTXNotExists
 	}
+
+	w.txlock.Lock()
+	defer w.txlock.Unlock()
 	delete(w.transactions, name)
 	return nil
 }
 
 func (w *Wallet) AddInput(name, address string, amount uint64) error {
-	if _, exists := w.transactions[name]; !exists {
-		return ErrTXNotExists
+	tx, err := w.GetTransaction(name)
+	if err != nil {
+		return err
 	}
-	trans := w.transactions[name]
 
 	a, err := w.GetFCTAddress(address)
 	if err == leveldb.ErrNotFound {
@@ -73,7 +80,7 @@ func (w *Wallet) AddInput(name, address string, amount uint64) error {
 	adr := factoid.NewAddress(a.RCDHash())
 
 	// First look if this is really an update
-	for _, input := range trans.GetInputs() {
+	for _, input := range tx.GetInputs() {
 		if input.GetAddress().IsSameAs(adr) {
 			input.SetAmount(amount)
 			return nil
@@ -81,17 +88,17 @@ func (w *Wallet) AddInput(name, address string, amount uint64) error {
 	}
 
 	// Add our new input
-	trans.AddInput(adr, amount)
-	trans.AddRCD(factoid.NewRCD_1(a.PubBytes()))
+	tx.AddInput(adr, amount)
+	tx.AddRCD(factoid.NewRCD_1(a.PubBytes()))
 
 	return nil
 }
 
 func (w *Wallet) AddOutput(name, address string, amount uint64) error {
-	if _, exists := w.transactions[name]; !exists {
-		return ErrTXNotExists
+	tx, err := w.GetTransaction(name)
+	if err != nil {
+		return err
 	}
-	trans := w.transactions[name]
 
 	// Make sure that this is a valid Factoid output
 	if factom.AddressStringType(address) != factom.FactoidPub {
@@ -101,23 +108,23 @@ func (w *Wallet) AddOutput(name, address string, amount uint64) error {
 	adr := factoid.NewAddress(base58.Decode(address)[2:34])
 
 	// First look if this is really an update
-	for _, output := range trans.GetOutputs() {
+	for _, output := range tx.GetOutputs() {
 		if output.GetAddress().IsSameAs(adr) {
 			output.SetAmount(amount)
 			return nil
 		}
 	}
 
-	trans.AddOutput(adr, amount)
+	tx.AddOutput(adr, amount)
 
 	return nil
 }
 
 func (w *Wallet) AddECOutput(name, address string, amount uint64) error {
-	if _, exists := w.transactions[name]; !exists {
-		return ErrTXNotExists
+	tx, err := w.GetTransaction(name)
+	if err != nil {
+		return err
 	}
-	trans := w.transactions[name]
 
 	// Make sure that this is a valid Entry Credit output
 	if factom.AddressStringType(address) != factom.ECPub {
@@ -127,34 +134,34 @@ func (w *Wallet) AddECOutput(name, address string, amount uint64) error {
 	adr := factoid.NewAddress(base58.Decode(address)[2:34])
 
 	// First look if this is really an update
-	for _, output := range trans.GetECOutputs() {
+	for _, output := range tx.GetECOutputs() {
 		if output.GetAddress().IsSameAs(adr) {
 			output.SetAmount(amount)
 			return nil
 		}
 	}
 
-	trans.AddECOutput(adr, amount)
+	tx.AddECOutput(adr, amount)
 
 	return nil
 }
 
 func (w *Wallet) AddFee(name, address string, rate uint64) error {
-	if _, exists := w.transactions[name]; !exists {
-		return ErrTXNotExists
+	tx, err := w.GetTransaction(name)
+	if err != nil {
+		return err
 	}
-	trans := w.transactions[name]
 
 	{
-		ins, err := trans.TotalInputs()
+		ins, err := tx.TotalInputs()
 		if err != nil {
 			return err
 		}
-		outs, err := trans.TotalOutputs()
+		outs, err := tx.TotalOutputs()
 		if err != nil {
 			return err
 		}
-		ecs, err := trans.TotalECs()
+		ecs, err := tx.TotalECs()
 		if err != nil {
 			return err
 		}
@@ -164,7 +171,7 @@ func (w *Wallet) AddFee(name, address string, rate uint64) error {
 		}
 	}
 
-	transfee, err := trans.CalculateFee(rate)
+	txfee, err := tx.CalculateFee(rate)
 	if err != nil {
 		return err
 	}
@@ -175,9 +182,9 @@ func (w *Wallet) AddFee(name, address string, rate uint64) error {
 	}
 	adr := factoid.NewAddress(a.RCDHash())
 
-	for _, input := range trans.GetInputs() {
+	for _, input := range tx.GetInputs() {
 		if input.GetAddress().IsSameAs(adr) {
-			amt, err := factoid.ValidateAmounts(input.GetAmount(), transfee)
+			amt, err := factoid.ValidateAmounts(input.GetAmount(), txfee)
 			if err != nil {
 				return err
 			}
@@ -189,25 +196,25 @@ func (w *Wallet) AddFee(name, address string, rate uint64) error {
 }
 
 func (w *Wallet) SubFee(name, address string, rate uint64) error {
-	if _, exists := w.transactions[name]; !exists {
-		return ErrTXNotExists
+	tx, err := w.GetTransaction(name)
+	if err != nil {
+		return err
 	}
-	trans := w.transactions[name]
 
 	if !factom.IsValidAddress(address) {
 		return errors.New("Invalid Address")
 	}
 
 	{
-		ins, err := trans.TotalInputs()
+		ins, err := tx.TotalInputs()
 		if err != nil {
 			return err
 		}
-		outs, err := trans.TotalOutputs()
+		outs, err := tx.TotalOutputs()
 		if err != nil {
 			return err
 		}
-		ecs, err := trans.TotalECs()
+		ecs, err := tx.TotalECs()
 		if err != nil {
 			return err
 		}
@@ -217,16 +224,16 @@ func (w *Wallet) SubFee(name, address string, rate uint64) error {
 		}
 	}
 
-	transfee, err := trans.CalculateFee(rate)
+	txfee, err := tx.CalculateFee(rate)
 	if err != nil {
 		return err
 	}
 
 	adr := factoid.NewAddress(base58.Decode(address)[2:34])
 
-	for _, output := range trans.GetOutputs() {
+	for _, output := range tx.GetOutputs() {
 		if output.GetAddress().IsSameAs(adr) {
-			output.SetAmount(output.GetAmount() - transfee)
+			output.SetAmount(output.GetAmount() - txfee)
 			return nil
 		}
 	}
@@ -237,9 +244,9 @@ func (w *Wallet) SubFee(name, address string, rate uint64) error {
 // keys from the wallet db
 // force=true ignores the existing balance and fee overpayment checks.
 func (w *Wallet) SignTransaction(name string, force bool) error {
-	tx, exists := w.transactions[name]
-	if !exists {
-		return ErrTXNotExists
+	tx, err := w.GetTransaction(name)
+	if err != nil {
+		return err
 	}
 
 	if force == false {
@@ -280,22 +287,43 @@ func (w *Wallet) SignTransaction(name string, force bool) error {
 	return nil
 }
 
+func (w *Wallet) GetTransaction(name string) (*factoid.Transaction, error) {
+	if !w.TransactionExists(name) {
+		return nil, ErrTXNotExists
+	}
+
+	w.txlock.Lock()
+	defer w.txlock.Unlock()
+
+	return w.transactions[name], nil
+}
+
 func (w *Wallet) GetTransactions() map[string]*factoid.Transaction {
 	return w.transactions
 }
 
-func (w *Wallet) ComposeTransaction(name string) (*factom.JSON2Request, error) {
-	if _, exists := w.transactions[name]; !exists {
-		return nil, ErrTXNotExists
+func (w *Wallet) TransactionExists(name string) bool {
+	w.txlock.Lock()
+	defer w.txlock.Unlock()
+
+	if _, exists := w.transactions[name]; exists {
+		return true
 	}
-	trans := w.transactions[name]
+	return false
+}
+
+func (w *Wallet) ComposeTransaction(name string) (*factom.JSON2Request, error) {
+	tx, err := w.GetTransaction(name)
+	if err != nil {
+		return nil, err
+	}
 
 	type txreq struct {
 		Transaction string `json:"transaction"`
 	}
 
 	param := new(txreq)
-	if p, err := trans.MarshalBinary(); err != nil {
+	if p, err := tx.MarshalBinary(); err != nil {
 		return nil, err
 	} else {
 		param.Transaction = hex.EncodeToString(p)
@@ -308,19 +336,19 @@ func (w *Wallet) ComposeTransaction(name string) (*factom.JSON2Request, error) {
 
 // Hexencoded transaction
 func (w *Wallet) ImportComposedTransaction(name string, hexEncoded string) error {
-	trans := new(factoid.Transaction)
+	tx := new(factoid.Transaction)
 	data, err := hex.DecodeString(hexEncoded)
 	if err != nil {
 		return err
 	}
 
-	err = trans.UnmarshalBinary(data)
+	err = tx.UnmarshalBinary(data)
 	if err != nil {
 		return err
 	}
 
 	w.txlock.Lock()
-	w.transactions[name] = trans
+	w.transactions[name] = tx
 	w.txlock.Unlock()
 
 	return nil
