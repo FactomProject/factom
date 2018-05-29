@@ -13,6 +13,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"strings"
+	"time"
 )
 
 type RPCConfig struct {
@@ -27,6 +28,8 @@ type RPCConfig struct {
 	FactomdRPCPassword string
 	FactomdServer      string
 	WalletServer       string
+	WalletTimeout      time.Duration
+	FactomdTimeout     time.Duration
 }
 
 func EncodeJSON(data interface{}) ([]byte, error) {
@@ -150,6 +153,22 @@ func GetFactomdEncryption() (bool, string) {
 	return RpcConfig.FactomdTLSEnable, RpcConfig.FactomdTLSCertFile
 }
 
+func SetFactomdTimeout(timeout time.Duration) {
+	RpcConfig.FactomdTimeout = timeout
+}
+
+func GetFactomdTimeout() time.Duration {
+	return RpcConfig.FactomdTimeout
+}
+
+func SetWalletTimeout(timeout time.Duration) {
+	RpcConfig.WalletTimeout = timeout
+}
+
+func GetWalletTimeout() time.Duration {
+	return RpcConfig.WalletTimeout
+}
+
 func SetWalletRpcConfig(user string, password string) {
 	RpcConfig.WalletRPCUser = user
 	RpcConfig.WalletRPCPassword = password
@@ -213,11 +232,11 @@ func factomdRequest(req *JSON2Request) (*JSON2Response, error) {
 		caCertPool.AppendCertsFromPEM(caCert)
 		tr := &http.Transport{TLSClientConfig: &tls.Config{RootCAs: caCertPool}}
 
-		client = &http.Client{Transport: tr}
+		client = &http.Client{Transport: tr, Timeout: GetFactomdTimeout()}
 		httpx = "https"
 
 	} else {
-		client = &http.Client{}
+		client = &http.Client{Timeout: GetFactomdTimeout()}
 		httpx = "http"
 	}
 	re, err := http.NewRequest("POST",
@@ -275,11 +294,11 @@ func walletRequest(req *JSON2Request) (*JSON2Response, error) {
 		caCertPool.AppendCertsFromPEM(caCert)
 		tr := &http.Transport{TLSClientConfig: &tls.Config{RootCAs: caCertPool}}
 
-		client = &http.Client{Transport: tr}
+		client = &http.Client{Transport: tr, Timeout: GetWalletTimeout()}
 		httpx = "https"
 
 	} else {
-		client = &http.Client{}
+		client = &http.Client{Timeout: GetWalletTimeout()}
 		httpx = "http"
 	}
 
