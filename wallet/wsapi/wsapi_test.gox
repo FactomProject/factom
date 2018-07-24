@@ -15,6 +15,17 @@ import (
 
 var testnet = "localhost:8889"
 
+func TesthhandleWalletBalances(t *testing.T) {
+    // Replace the accounts will accounts in your wallet
+    req := `{"jsonrpc": "2.0", "id": 0, "method": "wallet-balances"}`
+
+    resp, err := apiCall(req)
+    if err != nil {
+        t.Error(err)
+    }
+    t.Log(resp)
+}
+
 func TestAllAddresses(t *testing.T) {
 	req := `{"jsonrpc":"2.0","id":0,"method":"all-addresses"}`
 

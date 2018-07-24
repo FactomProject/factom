@@ -250,10 +250,8 @@ func handleV2Request(j *factom.JSON2Request) (*factom.JSON2Response, *factom.JSO
 		resp, jsonError = handleComposeEntry(params)
 	case "get-height":
 		resp, jsonError = handleGetHeight(params)
-	case "multiple-fct-balances":
-		resp, jsonError = handleMultipleFCTBalances(params)
-	case "multiple-ec-balances":
-		resp, jsonError = handleMultipleECBalances(params)
+	case "wallet-balances":
+		resp, jsonError = handleWalletBalances(params)
 	default:
 		jsonError = newMethodNotFoundError()
 	}
@@ -274,94 +272,101 @@ func handleV2Request(j *factom.JSON2Request) (*factom.JSON2Response, *factom.JSO
 	return jsonResp, nil
 }
 
-func handleMultipleFCTBalances(params []byte) (interface{}, *factom.JSONError) {
-	unMarParams := new(addressesRequest)
-	if err := json.Unmarshal(params, unMarParams); err != nil {
-		return nil, newInvalidParamsError()
+func handleWalletBalances(params []byte) (interface{}, *factom.JSONError) {
+	//Get all of the addresses in the wallet
+	fs, es, err := fctWallet.GetAllAddresses()
+	if err != nil {
+		return nil, newCustomInternalError(err.Error()+" Wallet empty")
 	}
 
-	// API call to get balances from "multiple-fct-balances" in factomd
-	url := "http://localhost:8088/v2"
-	jsonStr := []byte(`{"jsonrpc": "2.0", "id": 0, "method": "multiple-fct-balances", "params":{"addresses":["`+strings.Join(unMarParams.Addresses, `", "`)+`"]}}  `)
-	req, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonStr))
-	req.Header.Set("content-type", "text/plain;")
+	fctAccounts := make([]string, 0)
+	ecAccounts := make([]string, 0)
 
-	client := &http.Client{}
-	callResp, err := client.Do(req)
+	for _, f := range fs {
+		if len(mkAddressResponse(f).Secret) > 0 {
+			fctAccounts = append(fctAccounts, mkAddressResponse(f).Public)
+		}
+	}
+	for _, e := range es {
+		if len(mkAddressResponse(e).Secret) > 0 {
+			ecAccounts = append(ecAccounts, mkAddressResponse(e).Public)
+		}
+	}
+
+	// Get Entry Credit balances from multiple-ec-balances API in factomd
+	url := "http://localhost:8088/v2"
+	jsonStrEC := []byte(`{"jsonrpc": "2.0", "id": 0, "method": "multiple-ec-balances", "params":{"addresses":["`+strings.Join(ecAccounts, `", "`)+`"]}}  `)
+	reqEC, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonStrEC))
+	reqEC.Header.Set("content-type", "text/plain;")
+
+	clientEC := &http.Client{}
+	callRespEC, err := clientEC.Do(reqEC)
 	if err != nil {
 		panic(err)
 	}
 
-	defer callResp.Body.Close()
-	body, _ := ioutil.ReadAll(callResp.Body)
+	defer callRespEC.Body.Close()
+	bodyEC, _ := ioutil.ReadAll(callRespEC.Body)
 
-	resp := new(User)
-	err1 := json.Unmarshal([]byte(body), &resp)
-	if err1 != nil {
-		return nil, newCustomInternalError(err.Error())
-	}
-
-	// add up all of the balances for temporary and permanent balances
-	var tempBalTotal int64 = 0
-	var permBalTotal int64 = 0
-
-	for _, k := range resp.Result.Balances {
-		tempBalTotal = tempBalTotal + k[0]
-		permBalTotal = permBalTotal + k[1]
-	}
-
-	returnedBalances := make([]int64, 0)
-	returnedBalances = append(returnedBalances, tempBalTotal)
-	returnedBalances = append(returnedBalances, permBalTotal)
-
-	finalResp := new(multiBalanceResponse)
-	finalResp.Balances = returnedBalances
-
-	return finalResp, nil
-}
-
-func handleMultipleECBalances(params []byte) (interface{}, *factom.JSONError) {
-	unMarParams := new(addressesRequest)
-	if err := json.Unmarshal(params, unMarParams); err != nil {
+	respEC := new(UnmarBody)
+	errEC := json.Unmarshal([]byte(bodyEC), &respEC)
+	if errEC != nil {
 		return nil, newInvalidParamsError()
 	}
 
-	// API call to get balances from "multiple-ec-balances" in factomd
-	url := "http://localhost:8088/v2"
-	jsonStr := []byte(`{"jsonrpc": "2.0", "id": 0, "method": "multiple-ec-balances", "params":{"addresses":["`+strings.Join(unMarParams.Addresses, `", "`)+`"]}}  `)
-	req, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonStr))
-	req.Header.Set("content-type", "text/plain;")
+	// Total up the balances
+	var tempBalTotalEC int64 = 0
+	var permBalTotalEC int64 = 0
 
-	client := &http.Client{}
-	callResp, err := client.Do(req)
-	if err != nil {
-		panic(err)
+	for _, k := range respEC.Result.Balances {
+		tempBalTotalEC = tempBalTotalEC + k[0]
+		permBalTotalEC = permBalTotalEC + k[1]
 	}
 
-	defer callResp.Body.Close()
-	body, _ := ioutil.ReadAll(callResp.Body)
+	returnedBalancesEC := make([]int64, 0)
+	returnedBalancesEC = append(returnedBalancesEC, tempBalTotalEC)
+	returnedBalancesEC = append(returnedBalancesEC, permBalTotalEC)
 
-	resp := new(User)
-	err1 := json.Unmarshal([]byte(body), &resp)
-	if err1 != nil {
-		return nil, newCustomInternalError(err.Error())
+	// Get Factoid balances from multiple-fct-balances API in factomd
+	jsonStrFCT := []byte(`{"jsonrpc": "2.0", "id": 0, "method": "multiple-fct-balances", "params":{"addresses":["`+strings.Join(fctAccounts, `", "`)+`"]}}  `)
+	reqFCT, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonStrFCT))
+	reqFCT.Header.Set("content-type", "text/plain;")
+
+	clientFCT := &http.Client{}
+	callRespFCT, errFCT := clientFCT.Do(reqFCT)
+	if errFCT != nil {
+		panic(errFCT)
 	}
 
-	// add up all of the balances for temporary and permanent balances
-	var tempBalTotal int64 = 0
-	var permBalTotal int64 = 0
+	defer callRespFCT.Body.Close()
+	bodyFCT, _ := ioutil.ReadAll(callRespFCT.Body)
 
-	for _, k := range resp.Result.Balances {
-		tempBalTotal = tempBalTotal + k[0]
-		permBalTotal = permBalTotal + k[1]
+	respFCT := new(UnmarBody)
+	errFCT2 := json.Unmarshal([]byte(bodyFCT), &respFCT)
+	if errFCT2 != nil {
+		return nil, newInvalidParamsError()
 	}
 
-	returnedBalances := make([]int64, 0)
-	returnedBalances = append(returnedBalances, tempBalTotal)
-	returnedBalances = append(returnedBalances, permBalTotal)
+	// Total up the balances
+	var tempBalTotalFCT int64 = 0
+	var permBalTotalFCT int64 = 0
+
+	for _, k := range respFCT.Result.Balances {
+		if k[0] != -1 {
+			tempBalTotalFCT = tempBalTotalFCT + k[0]
+		}
+		if k[1] != -1 {
+			permBalTotalFCT = permBalTotalFCT + k[1]
+		}
+	}
+
+	returnedBalancesFCT := make([]int64, 0)
+	returnedBalancesFCT = append(returnedBalancesFCT, tempBalTotalFCT)
+	returnedBalancesFCT = append(returnedBalancesFCT, permBalTotalFCT)
 
 	finalResp := new(multiBalanceResponse)
-	finalResp.Balances = returnedBalances
+	finalResp.FactoidAccountBalances = returnedBalancesFCT
+	finalResp.EntryCreditAccountBalances = returnedBalancesEC
 
 	return finalResp, nil
 }

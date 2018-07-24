@@ -89,7 +89,8 @@ type balanceResponse struct {
 }
 
 type multiBalanceResponse struct {
-	Balances []int64 `json:"balances"`
+	FactoidAccountBalances []int64 `json:"fctaccountbalances"`
+	EntryCreditAccountBalances []int64 `json:"ecaccountbalances"`
 }
 
 type walletBackupResponse struct {
@@ -121,7 +122,7 @@ type heightResponse struct {
 
 // Helper structs
 
-type User struct {
+type UnmarBody struct {
 	Jsonrpc string `json:"jsonrps"`
 	Id int	`json:"id"`
 	Result balanceResponse `json:"result"`
