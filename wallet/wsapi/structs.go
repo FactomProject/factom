@@ -20,6 +20,11 @@ type addressRequest struct {
 	Address string `json:"address"`
 }
 
+type addressesRequest struct {
+	Addresses []string `json:"addresses"`
+}
+
+
 type importRequest struct {
 	Addresses []struct {
 		Secret string `json:"secret"`
@@ -78,6 +83,15 @@ type multiAddressResponse struct {
 	Addresses []*addressResponse `json:"addresses"`
 }
 
+type balanceResponse struct {
+	Height   uint32    `json:"height"`
+	Balances [][]int64 `json:"balances"`
+}
+
+type multiBalanceResponse struct {
+	Balances []int64 `json:"balances"`
+}
+
 type walletBackupResponse struct {
 	Seed      string             `json:"wallet-seed"`
 	Addresses []*addressResponse `json:"addresses"`
@@ -103,4 +117,12 @@ type entryResponse struct {
 
 type heightResponse struct {
 	Height int64 `json:"height"`
+}
+
+// Helper structs
+
+type User struct {
+	Jsonrpc string `json:"jsonrps"`
+	Id int	`json:"id"`
+	Result balanceResponse `json:"result"`
 }
