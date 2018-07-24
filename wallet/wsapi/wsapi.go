@@ -280,6 +280,7 @@ func handleMultipleFCTBalances(params []byte) (interface{}, *factom.JSONError) {
 		return nil, newInvalidParamsError()
 	}
 
+	// API call to get balances from "multiple-fct-balances" in factomd
 	url := "http://localhost:8088/v2"
 	jsonStr := []byte(`{"jsonrpc": "2.0", "id": 0, "method": "multiple-fct-balances", "params":{"addresses":["`+strings.Join(unMarParams.Addresses, `", "`)+`"]}}  `)
 	req, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonStr))
@@ -300,6 +301,7 @@ func handleMultipleFCTBalances(params []byte) (interface{}, *factom.JSONError) {
 		return nil, newCustomInternalError(err.Error())
 	}
 
+	// add up all of the balances for temporary and permanent balances
 	var tempBalTotal int64 = 0
 	var permBalTotal int64 = 0
 
@@ -324,6 +326,7 @@ func handleMultipleECBalances(params []byte) (interface{}, *factom.JSONError) {
 		return nil, newInvalidParamsError()
 	}
 
+	// API call to get balances from "multiple-ec-balances" in factomd
 	url := "http://localhost:8088/v2"
 	jsonStr := []byte(`{"jsonrpc": "2.0", "id": 0, "method": "multiple-ec-balances", "params":{"addresses":["`+strings.Join(unMarParams.Addresses, `", "`)+`"]}}  `)
 	req, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonStr))
@@ -344,6 +347,7 @@ func handleMultipleECBalances(params []byte) (interface{}, *factom.JSONError) {
 		return nil, newCustomInternalError(err.Error())
 	}
 
+	// add up all of the balances for temporary and permanent balances
 	var tempBalTotal int64 = 0
 	var permBalTotal int64 = 0
 
