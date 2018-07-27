@@ -1,5 +1,5 @@
 hash: 667e443b7fdaaa7f4aa150d9f5b15c37093e4c3042f6cd7d6728e2ca9eb73275
-updated: 2017-12-21T16:35:45.260827437-06:00
+updated: 2018-07-27T13:14:01.336749829-05:00
 imports:
 - name: github.com/btcsuitereleases/btcutil
   version: f2b1058a82554c0c7c3b8809c5956c38374604d8
@@ -66,7 +66,7 @@ imports:
 - name: github.com/FactomProject/web
   version: 7daee1bf727fc2cd9142b9a73a797f98b3180756
 - name: golang.org/x/crypto
-  version: d585fd2cc9195196078f516b69daff6744ef5e84
+  version: bed12803fa9663d7aa2c2346b0c634ad2dcd43b7
   subpackages:
   - pbkdf2
   - ripemd160
@@ -75,7 +75,7 @@ imports:
   subpackages:
   - websocket
 - name: golang.org/x/sys
-  version: d818ba11af4465e00c1998bd3f8a55603b422290
+  version: 7a6e5648d140666db5d920909e082ca00a87ba2c
   subpackages:
   - unix
 testImports: []
