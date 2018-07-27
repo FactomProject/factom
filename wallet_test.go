@@ -12,6 +12,11 @@ import (
 
 	"github.com/FactomProject/factom/wallet"
 	"github.com/FactomProject/factom/wallet/wsapi"
+	"fmt"
+	"net/http"
+	"bytes"
+	"io/ioutil"
+	"encoding/json"
 )
 
 func TestImportAddress(t *testing.T) {
@@ -63,6 +68,92 @@ func TestImportAddress(t *testing.T) {
 			t.Error("Bad address was imported without error", bad)
 		}
 	}
+}
+
+func TestHandleWalletBalances(t *testing.T) {
+	// start the test wallet
+	done, err := StartTestWallet()
+	if err != nil {
+		t.Error(err)
+	}
+	defer func() { done <- 1 }()
+
+	// Testing when no accounts #1
+	addr := []string{}
+	testingVar, _ := helper(t, addr)
+	if len(testingVar.Result.FCT) != 0  && len(testingVar.Result.EC) != 0{
+		t.Error("balances are not what they should be")
+	}
+	fmt.Println("Passed no values in wallet #1")
+
+	// Testing when all accounts dont have balances #2
+	noBalFCT := "Fs1itDLe8GoFCLsdbqb2rs6U67wQX4TikkTJV69BxGuG1tDvs41q"
+	noBalEC := "Es3W3R2u85aN2MNr2EoyMazAy7yGTZZg8eDaW7vfjorkrWAANv6t"
+
+	addr2 := []string{noBalFCT, noBalEC}
+	testingVar2, _ := helper(t, addr2)
+	if testingVar2.Result.FCT[0] != 0 && testingVar2.Result.FCT[1] != 0 && testingVar2.Result.EC[0] != 0 && testingVar2.Result.EC[1] != 0{
+		t.Error("balances are not what they should be")
+	}
+	fmt.Println("Passed balance of 0 #2")
+
+	// Testing when all accounts have balances #3
+	hasBalFCT := "Fs1vEcszU16mC72CBMAfAnxVvKQKTtrTqiCfdGF8hycMn1j1DBKy"
+	hasBalEC := "Es2nSXmiaUuk9AxX2X43Ws4XjXPCxehTyHZAEn5NJH9ei1gLW1FR"
+
+	addr3 := []string{hasBalFCT, hasBalEC}
+	testingVar3, _ := helper(t, addr3)
+	if testingVar3.Result.EC[0] != 1000 && testingVar3.Result.EC[1] != 1000 && testingVar3.Result.FCT[0] != 1000000000 && testingVar3.Result.FCT[1] != 1000000000{
+		t.Error("balances are not what they should be")
+	}
+	fmt.Println("Passed when some have values #3")
+
+	// Testing when some balances have values and some don't #4
+	addr4 := []string{hasBalFCT, noBalFCT, hasBalEC, noBalEC}
+	testingVar4, _ := helper(t, addr4)
+	if testingVar4.Result.EC[0] != 1000 && testingVar4.Result.EC[1] != 1000 && testingVar4.Result.FCT[0] != 1000000000 && testingVar4.Result.FCT[1] != 1000000000{
+		t.Error("balances are not what they should be")
+	}
+	fmt.Println("Passed when some balances have values and some don't #4")
+}
+
+type walletcallHelper struct {
+	FCT  []int64    `json:"fctaccountbalances"`
+	EC []int64 `json:"ecaccountbalances"`
+}
+type walletcall struct {
+	Jsonrpc string `json:"jsonrps"`
+	Id int	`json:"id"`
+	Result walletcallHelper `json:"result"`
+}
+
+func helper(t *testing.T, addr []string) (*walletcall, string) {
+	for _, k := range addr {
+		if _, _, err := ImportAddresses(k); err != nil {
+			return nil, "failed"
+		}
+	}
+
+	url := "http://localhost:8089/v2"
+	jsonStrEC := []byte(`{"jsonrpc": "2.0", "id": 0, "method": "wallet-balances"}`)
+	reqEC, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonStrEC))
+	reqEC.Header.Set("content-type", "text/plain;")
+
+	clientEC := &http.Client{}
+	callRespEC, err := clientEC.Do(reqEC)
+	if err != nil {
+		t.Error(err)
+	}
+
+	defer callRespEC.Body.Close()
+	bodyEC, _ := ioutil.ReadAll(callRespEC.Body)
+
+	respEC := new(walletcall)
+	errEC := json.Unmarshal([]byte(bodyEC), &respEC)
+	if errEC != nil {
+		t.Error(errEC)
+	}
+	return respEC, ""
 }
 
 func TestImportKoinify(t *testing.T) {
