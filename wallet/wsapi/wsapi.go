@@ -319,8 +319,12 @@ func handleWalletBalances(params []byte) (interface{}, *factom.JSONError) {
 	var permBalTotalEC int64 = 0
 
 	for _, k := range respEC.Result.Balances {
-		tempBalTotalEC = tempBalTotalEC + k[0]
-		permBalTotalEC = permBalTotalEC + k[1]
+		if k[0] != -1 {
+			tempBalTotalEC = tempBalTotalEC + k[0]
+		}
+		if k[1] != -1 {
+			permBalTotalEC = permBalTotalEC + k[1]
+		}
 	}
 
 	returnedBalancesEC := make([]int64, 0)
