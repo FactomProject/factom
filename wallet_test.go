@@ -81,7 +81,7 @@ func TestHandleWalletBalances(t *testing.T) {
 	// Testing when no accounts #1
 	addr := []string{}
 	testingVar, _ := helper(t, addr)
-	if len(testingVar.Result.FCT) != 0  && len(testingVar.Result.EC) != 0{
+	if len(testingVar.Result.FCT) != 0 && len(testingVar.Result.EC) != 0 {
 		t.Error("balances are not what they should be")
 	}
 	fmt.Println("Passed no values in wallet #1")
@@ -92,7 +92,7 @@ func TestHandleWalletBalances(t *testing.T) {
 
 	addr2 := []string{noBalFCT, noBalEC}
 	testingVar2, _ := helper(t, addr2)
-	if testingVar2.Result.FCT[0] != 0 && testingVar2.Result.FCT[1] != 0 && testingVar2.Result.EC[0] != 0 && testingVar2.Result.EC[1] != 0{
+	if testingVar2.Result.FCT[0] != 0 && testingVar2.Result.FCT[1] != 0 && testingVar2.Result.EC[0] != 0 && testingVar2.Result.EC[1] != 0 {
 		t.Error("balances are not what they should be")
 	}
 	fmt.Println("Passed balance of 0 #2")
@@ -103,7 +103,7 @@ func TestHandleWalletBalances(t *testing.T) {
 
 	addr3 := []string{hasBalFCT, hasBalEC}
 	testingVar3, _ := helper(t, addr3)
-	if testingVar3.Result.EC[0] != 1000 && testingVar3.Result.EC[1] != 1000 && testingVar3.Result.FCT[0] != 1000000000 && testingVar3.Result.FCT[1] != 1000000000{
+	if testingVar3.Result.EC[0] != 1000 && testingVar3.Result.EC[1] != 1000 && testingVar3.Result.FCT[0] != 1000000000 && testingVar3.Result.FCT[1] != 1000000000 {
 		t.Error("balances are not what they should be")
 	}
 	fmt.Println("Passed when some have values #3")
@@ -111,20 +111,20 @@ func TestHandleWalletBalances(t *testing.T) {
 	// Testing when some balances have values and some don't #4
 	addr4 := []string{hasBalFCT, noBalFCT, hasBalEC, noBalEC}
 	testingVar4, _ := helper(t, addr4)
-	if testingVar4.Result.EC[0] != 1000 && testingVar4.Result.EC[1] != 1000 && testingVar4.Result.FCT[0] != 1000000000 && testingVar4.Result.FCT[1] != 1000000000{
+	if testingVar4.Result.EC[0] != 1000 && testingVar4.Result.EC[1] != 1000 && testingVar4.Result.FCT[0] != 1000000000 && testingVar4.Result.FCT[1] != 1000000000 {
 		t.Error("balances are not what they should be")
 	}
 	fmt.Println("Passed when some balances have values and some don't #4")
 }
 
 type walletcallHelper struct {
-	FCT  []int64    `json:"fctaccountbalances"`
-	EC []int64 `json:"ecaccountbalances"`
+	FCT []int64 `json:"fctaccountbalances"`
+	EC  []int64 `json:"ecaccountbalances"`
 }
 type walletcall struct {
-	Jsonrpc string `json:"jsonrps"`
-	Id int	`json:"id"`
-	Result walletcallHelper `json:"result"`
+	Jsonrpc string           `json:"jsonrps"`
+	Id      int              `json:"id"`
+	Result  walletcallHelper `json:"result"`
 }
 
 func helper(t *testing.T, addr []string) (*walletcall, string) {
@@ -165,7 +165,7 @@ func TestImportKoinify(t *testing.T) {
 		bad_mnemonic = []string{
 			"", // bad empty
 			"yellow yellow yellow yellow yellow yellow yellow yellow yellow" +
-				" yellow yellow", // bad short
+				" yellow yellow",          // bad short
 			"yellow yellow yellow yellow yellow yellow yellow yellow yellow" +
 				" yellow yellow asdfasdf", // bad word
 		}

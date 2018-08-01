@@ -24,7 +24,6 @@ type addressesRequest struct {
 	Addresses []string `json:"addresses"`
 }
 
-
 type importRequest struct {
 	Addresses []struct {
 		Secret string `json:"secret"`
@@ -84,12 +83,12 @@ type multiAddressResponse struct {
 }
 
 type balanceResponse struct {
-	Height   uint32    `json:"height"`
-	Balances [][]int64 `json:"balances"`
+	Height   uint32     `json:"height"`
+	Balances [][]string `json:"balances"`
 }
 
 type multiBalanceResponse struct {
-	FactoidAccountBalances []int64 `json:"fctaccountbalances"`
+	FactoidAccountBalances     []int64 `json:"fctaccountbalances"`
 	EntryCreditAccountBalances []int64 `json:"ecaccountbalances"`
 }
 
@@ -123,7 +122,7 @@ type heightResponse struct {
 // Helper structs
 
 type UnmarBody struct {
-	Jsonrpc string `json:"jsonrps"`
-	Id int	`json:"id"`
-	Result balanceResponse `json:"result"`
+	Jsonrpc string          `json:"jsonrps"`
+	Id      int             `json:"id"`
+	Result  balanceResponse `json:"result"`
 }

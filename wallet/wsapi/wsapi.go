@@ -28,6 +28,7 @@ import (
 	"github.com/FactomProject/factomd/common/primitives"
 	"github.com/FactomProject/web"
 	"bytes"
+	"strconv"
 )
 
 const APIVersion string = "2.0"
@@ -276,7 +277,7 @@ func handleWalletBalances(params []byte) (interface{}, *factom.JSONError) {
 	//Get all of the addresses in the wallet
 	fs, es, err := fctWallet.GetAllAddresses()
 	if err != nil {
-		return nil, newCustomInternalError(err.Error()+" Wallet empty")
+		return nil, newCustomInternalError(err.Error() + " Wallet empty")
 	}
 
 	fctAccounts := make([]string, 0)
@@ -295,7 +296,7 @@ func handleWalletBalances(params []byte) (interface{}, *factom.JSONError) {
 
 	// Get Entry Credit balances from multiple-ec-balances API in factomd
 	url := "http://localhost:8088/v2"
-	jsonStrEC := []byte(`{"jsonrpc": "2.0", "id": 0, "method": "multiple-ec-balances", "params":{"addresses":["`+strings.Join(ecAccounts, `", "`)+`"]}}  `)
+	jsonStrEC := []byte(`{"jsonrpc": "2.0", "id": 0, "method": "multiple-ec-balances", "params":{"addresses":["` + strings.Join(ecAccounts, `", "`) + `"]}}  `)
 	reqEC, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonStrEC))
 	reqEC.Header.Set("content-type", "text/plain;")
 
@@ -319,11 +320,11 @@ func handleWalletBalances(params []byte) (interface{}, *factom.JSONError) {
 	var permBalTotalEC int64 = 0
 
 	for _, k := range respEC.Result.Balances {
-		if k[0] != -1 {
-			tempBalTotalEC = tempBalTotalEC + k[0]
+		if s, err := strconv.ParseInt(k[0], 10, 64); err == nil {
+			tempBalTotalEC = tempBalTotalEC + s
 		}
-		if k[1] != -1 {
-			permBalTotalEC = permBalTotalEC + k[1]
+		if s, err := strconv.ParseInt(k[1], 10, 64); err == nil {
+			permBalTotalEC = permBalTotalEC + s
 		}
 	}
 
@@ -332,7 +333,7 @@ func handleWalletBalances(params []byte) (interface{}, *factom.JSONError) {
 	returnedBalancesEC = append(returnedBalancesEC, permBalTotalEC)
 
 	// Get Factoid balances from multiple-fct-balances API in factomd
-	jsonStrFCT := []byte(`{"jsonrpc": "2.0", "id": 0, "method": "multiple-fct-balances", "params":{"addresses":["`+strings.Join(fctAccounts, `", "`)+`"]}}  `)
+	jsonStrFCT := []byte(`{"jsonrpc": "2.0", "id": 0, "method": "multiple-fct-balances", "params":{"addresses":["` + strings.Join(fctAccounts, `", "`) + `"]}}  `)
 	reqFCT, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonStrFCT))
 	reqFCT.Header.Set("content-type", "text/plain;")
 
@@ -356,11 +357,11 @@ func handleWalletBalances(params []byte) (interface{}, *factom.JSONError) {
 	var permBalTotalFCT int64 = 0
 
 	for _, k := range respFCT.Result.Balances {
-		if k[0] != -1 {
-			tempBalTotalFCT = tempBalTotalFCT + k[0]
+		if s, err := strconv.ParseInt(k[0], 10, 64); err == nil {
+			tempBalTotalFCT = tempBalTotalFCT + s
 		}
-		if k[1] != -1 {
-			permBalTotalFCT = permBalTotalFCT + k[1]
+		if s, err := strconv.ParseInt(k[1], 10, 64); err == nil {
+			permBalTotalFCT = permBalTotalFCT + s
 		}
 	}
 
