@@ -320,6 +320,7 @@ func handleWalletBalances(params []byte) (interface{}, *factom.JSONError) {
 	var ackBalTotalEC int64 = 0
 	var savedBalTotalEC int64 = 0
 	var noTransEC int64 = 0
+	var badErrorEC = ""
 
 	var floatType = reflect.TypeOf(int64(0))
 
@@ -339,6 +340,8 @@ func handleWalletBalances(params []byte) (interface{}, *factom.JSONError) {
 		errors := x["err"]
 		if errors == "Address has not had a transaction" {
 			noTransEC = noTransEC + 1
+		} else if errors == "Not fully booted" {
+			badErrorEC = "Not fully booted"
 		}
 	}
 
@@ -375,6 +378,7 @@ func handleWalletBalances(params []byte) (interface{}, *factom.JSONError) {
 	var ackBalTotalFCT int64 = 0
 	var savedBalTotalFCT int64 = 0
 	var noTransFCT int64 = 0
+	var badErrorFCT = ""
 
 	for i, _ := range respFCT.Result.Balances {
 		x, ok := respFCT.Result.Balances[i].(map[string]interface{})
@@ -392,6 +396,8 @@ func handleWalletBalances(params []byte) (interface{}, *factom.JSONError) {
 		errors := x["err"]
 		if errors == "Address has not had a transaction" {
 			noTransFCT = noTransFCT + 1
+		} else if errors == "Not fully booted" {
+			badErrorFCT = "Not fully booted"
 		}
 
 	}
@@ -404,6 +410,14 @@ func handleWalletBalances(params []byte) (interface{}, *factom.JSONError) {
 	FCTreturns.PermBal = savedBalTotalFCT
 	FCTreturns.Error = string(noTransFCT)+" addresses have not had a transaction."
 
+	if badErrorFCT == "Not fully booted" && badErrorEC == "Not fully booted" {
+		type nfb struct {
+			NotFullyBooted string `json:"Factomd Error"`
+		}
+		nfbstatus := new(nfb)
+		nfbstatus.NotFullyBooted = "Factomd is not fully booted, please wait and try again."
+		return nfbstatus, nil
+	}
 	finalResp := new(multiBalanceResponse)
 	finalResp.FactoidAccountBalances = FCTreturns
 	finalResp.EntryCreditAccountBalances = ECreturns
