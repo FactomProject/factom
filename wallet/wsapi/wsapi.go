@@ -28,7 +28,7 @@ import (
 	"github.com/FactomProject/factomd/common/primitives"
 	"github.com/FactomProject/web"
 	"bytes"
-	"strconv"
+	"reflect"
 )
 
 const APIVersion string = "2.0"
@@ -295,7 +295,7 @@ func handleWalletBalances(params []byte) (interface{}, *factom.JSONError) {
 	}
 
 	// Get Entry Credit balances from multiple-ec-balances API in factomd
-	url := "http://localhost:8088/v2"
+	url := "http://"+factom.FactomdServer()+"/v2"
 	jsonStrEC := []byte(`{"jsonrpc": "2.0", "id": 0, "method": "multiple-ec-balances", "params":{"addresses":["` + strings.Join(ecAccounts, `", "`) + `"]}}  `)
 	reqEC, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonStrEC))
 	reqEC.Header.Set("content-type", "text/plain;")
@@ -308,6 +308,7 @@ func handleWalletBalances(params []byte) (interface{}, *factom.JSONError) {
 
 	defer callRespEC.Body.Close()
 	bodyEC, _ := ioutil.ReadAll(callRespEC.Body)
+	fmt.Println("EC BODY: ", string(bodyEC))
 
 	respEC := new(UnmarBody)
 	errEC := json.Unmarshal([]byte(bodyEC), &respEC)
@@ -315,22 +316,40 @@ func handleWalletBalances(params []byte) (interface{}, *factom.JSONError) {
 		return nil, newInvalidParamsError()
 	}
 
-	// Total up the balances
-	var tempBalTotalEC int64 = 0
-	var permBalTotalEC int64 = 0
+	//Total up the balances
+	var ackBalTotalEC int64 = 0
+	var savedBalTotalEC int64 = 0
+	var noTransEC int64 = 0
 
-	for _, k := range respEC.Result.Balances {
-		if s, err := strconv.ParseInt(k[0], 10, 64); err == nil {
-			tempBalTotalEC = tempBalTotalEC + s
+	var floatType = reflect.TypeOf(int64(0))
+
+	for i, _ := range respEC.Result.Balances {
+		x, ok := respEC.Result.Balances[i].(map[string]interface{})
+		if ok != true {
+			fmt.Println(x)
 		}
-		if s, err := strconv.ParseInt(k[1], 10, 64); err == nil {
-			permBalTotalEC = permBalTotalEC + s
+		v := reflect.ValueOf(x["ack"])
+		covneredAck := v.Convert(floatType)
+		ackBalTotalEC = ackBalTotalEC + covneredAck.Int()
+
+		rawr := reflect.ValueOf(x["saved"])
+		convertedSaved := rawr.Convert(floatType)
+		savedBalTotalEC = savedBalTotalEC + convertedSaved.Int()
+
+		errors := x["err"]
+		if errors == "Address has not had a transaction" {
+			noTransEC = noTransEC + 1
 		}
 	}
 
-	returnedBalancesEC := make([]int64, 0)
-	returnedBalancesEC = append(returnedBalancesEC, tempBalTotalEC)
-	returnedBalancesEC = append(returnedBalancesEC, permBalTotalEC)
+	//returnedBalancesEC := make([]int64, 0)
+	//returnedBalancesEC = append(returnedBalancesEC, ackBalTotalEC)
+	//returnedBalancesEC = append(returnedBalancesEC, savedBalTotalEC)
+	ECreturns := new(interfaces.StructToReturnValues)
+	ECreturns.TempBal = ackBalTotalEC
+	ECreturns.PermBal = savedBalTotalEC
+	ECreturns.Error = string(noTransEC)+" addresses have not had a transaction."
+
 
 	// Get Factoid balances from multiple-fct-balances API in factomd
 	jsonStrFCT := []byte(`{"jsonrpc": "2.0", "id": 0, "method": "multiple-fct-balances", "params":{"addresses":["` + strings.Join(fctAccounts, `", "`) + `"]}}  `)
@@ -353,25 +372,41 @@ func handleWalletBalances(params []byte) (interface{}, *factom.JSONError) {
 	}
 
 	// Total up the balances
-	var tempBalTotalFCT int64 = 0
-	var permBalTotalFCT int64 = 0
+	var ackBalTotalFCT int64 = 0
+	var savedBalTotalFCT int64 = 0
+	var noTransFCT int64 = 0
 
-	for _, k := range respFCT.Result.Balances {
-		if s, err := strconv.ParseInt(k[0], 10, 64); err == nil {
-			tempBalTotalFCT = tempBalTotalFCT + s
+	for i, _ := range respFCT.Result.Balances {
+		x, ok := respFCT.Result.Balances[i].(map[string]interface{})
+		if ok != true {
+			fmt.Println(x)
 		}
-		if s, err := strconv.ParseInt(k[1], 10, 64); err == nil {
-			permBalTotalFCT = permBalTotalFCT + s
+		v := reflect.ValueOf(x["ack"])
+		covneredAck := v.Convert(floatType)
+		ackBalTotalFCT = ackBalTotalFCT + covneredAck.Int()
+
+		rawr := reflect.ValueOf(x["saved"])
+		convertedSaved := rawr.Convert(floatType)
+		savedBalTotalFCT = savedBalTotalFCT + convertedSaved.Int()
+
+		errors := x["err"]
+		if errors == "Address has not had a transaction" {
+			noTransFCT = noTransFCT + 1
 		}
+
 	}
 
-	returnedBalancesFCT := make([]int64, 0)
-	returnedBalancesFCT = append(returnedBalancesFCT, tempBalTotalFCT)
-	returnedBalancesFCT = append(returnedBalancesFCT, permBalTotalFCT)
+	//returnedBalancesFCT := make([]int64, 0)
+	//returnedBalancesFCT = append(returnedBalancesFCT, ackBalTotalFCT)
+	//returnedBalancesFCT = append(returnedBalancesFCT, savedBalTotalFCT)
+	FCTreturns := new(interfaces.StructToReturnValues)
+	FCTreturns.TempBal = ackBalTotalFCT
+	FCTreturns.PermBal = savedBalTotalFCT
+	FCTreturns.Error = string(noTransFCT)+" addresses have not had a transaction."
 
 	finalResp := new(multiBalanceResponse)
-	finalResp.FactoidAccountBalances = returnedBalancesFCT
-	finalResp.EntryCreditAccountBalances = returnedBalancesEC
+	finalResp.FactoidAccountBalances = FCTreturns
+	finalResp.EntryCreditAccountBalances = ECreturns
 
 	return finalResp, nil
 }
