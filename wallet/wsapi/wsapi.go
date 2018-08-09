@@ -29,6 +29,7 @@ import (
 	"github.com/FactomProject/web"
 	"bytes"
 	"reflect"
+	"strconv"
 )
 
 const APIVersion string = "2.0"
@@ -319,7 +320,7 @@ func handleWalletBalances(params []byte) (interface{}, *factom.JSONError) {
 	//Total up the balances
 	var ackBalTotalEC int64 = 0
 	var savedBalTotalEC int64 = 0
-	var noTransEC int64 = 0
+	var noTransEC = 0
 	var badErrorEC = ""
 
 	var floatType = reflect.TypeOf(int64(0))
@@ -351,7 +352,7 @@ func handleWalletBalances(params []byte) (interface{}, *factom.JSONError) {
 	ECreturns := new(interfaces.StructToReturnValues)
 	ECreturns.TempBal = ackBalTotalEC
 	ECreturns.PermBal = savedBalTotalEC
-	ECreturns.Error = string(noTransEC)+" addresses have not had a transaction."
+	ECreturns.Error = strconv.Itoa(noTransEC)+" addresses have not had a transaction."
 
 
 	// Get Factoid balances from multiple-fct-balances API in factomd
@@ -377,7 +378,7 @@ func handleWalletBalances(params []byte) (interface{}, *factom.JSONError) {
 	// Total up the balances
 	var ackBalTotalFCT int64 = 0
 	var savedBalTotalFCT int64 = 0
-	var noTransFCT int64 = 0
+	var noTransFCT = 0
 	var badErrorFCT = ""
 
 	for i, _ := range respFCT.Result.Balances {
@@ -408,7 +409,7 @@ func handleWalletBalances(params []byte) (interface{}, *factom.JSONError) {
 	FCTreturns := new(interfaces.StructToReturnValues)
 	FCTreturns.TempBal = ackBalTotalFCT
 	FCTreturns.PermBal = savedBalTotalFCT
-	FCTreturns.Error = string(noTransFCT)+" addresses have not had a transaction."
+	FCTreturns.Error = strconv.Itoa(noTransFCT)+" addresses have not had a transaction."
 
 	if badErrorFCT == "Not fully booted" && badErrorEC == "Not fully booted" {
 		type nfb struct {
