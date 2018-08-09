@@ -29,8 +29,7 @@ import (
 	"github.com/FactomProject/web"
 	"bytes"
 	"reflect"
-	"strconv"
-)
+	)
 
 const APIVersion string = "2.0"
 
@@ -273,7 +272,10 @@ func handleV2Request(j *factom.JSON2Request) (*factom.JSON2Response, *factom.JSO
 
 	return jsonResp, nil
 }
-
+type StructToReturnValues struct {
+	TempBal int64  `json:"ack"`
+	PermBal int64  `json:"saved"`
+}
 func handleWalletBalances(params []byte) (interface{}, *factom.JSONError) {
 	//Get all of the addresses in the wallet
 	fs, es, err := fctWallet.GetAllAddresses()
@@ -320,7 +322,6 @@ func handleWalletBalances(params []byte) (interface{}, *factom.JSONError) {
 	//Total up the balances
 	var ackBalTotalEC int64 = 0
 	var savedBalTotalEC int64 = 0
-	var noTransEC = 0
 	var badErrorEC = ""
 
 	var floatType = reflect.TypeOf(int64(0))
@@ -339,20 +340,16 @@ func handleWalletBalances(params []byte) (interface{}, *factom.JSONError) {
 		savedBalTotalEC = savedBalTotalEC + convertedSaved.Int()
 
 		errors := x["err"]
-		if errors == "Address has not had a transaction" {
-			noTransEC = noTransEC + 1
-		} else if errors == "Not fully booted" {
+		if errors == "Not fully booted" {
 			badErrorEC = "Not fully booted"
+		} else if errors == "Error decoding address" {
+			badErrorEC = "Error decoding address"
 		}
 	}
 
-	//returnedBalancesEC := make([]int64, 0)
-	//returnedBalancesEC = append(returnedBalancesEC, ackBalTotalEC)
-	//returnedBalancesEC = append(returnedBalancesEC, savedBalTotalEC)
-	ECreturns := new(interfaces.StructToReturnValues)
+	ECreturns := new(StructToReturnValues)
 	ECreturns.TempBal = ackBalTotalEC
 	ECreturns.PermBal = savedBalTotalEC
-	ECreturns.Error = strconv.Itoa(noTransEC)+" addresses have not had a transaction."
 
 
 	// Get Factoid balances from multiple-fct-balances API in factomd
@@ -378,7 +375,6 @@ func handleWalletBalances(params []byte) (interface{}, *factom.JSONError) {
 	// Total up the balances
 	var ackBalTotalFCT int64 = 0
 	var savedBalTotalFCT int64 = 0
-	var noTransFCT = 0
 	var badErrorFCT = ""
 
 	for i, _ := range respFCT.Result.Balances {
@@ -395,21 +391,17 @@ func handleWalletBalances(params []byte) (interface{}, *factom.JSONError) {
 		savedBalTotalFCT = savedBalTotalFCT + convertedSaved.Int()
 
 		errors := x["err"]
-		if errors == "Address has not had a transaction" {
-			noTransFCT = noTransFCT + 1
-		} else if errors == "Not fully booted" {
+		if errors == "Not fully booted" {
 			badErrorFCT = "Not fully booted"
+		} else if errors == "Error decoding address" {
+			badErrorFCT = "Error decoding address"
 		}
 
 	}
 
-	//returnedBalancesFCT := make([]int64, 0)
-	//returnedBalancesFCT = append(returnedBalancesFCT, ackBalTotalFCT)
-	//returnedBalancesFCT = append(returnedBalancesFCT, savedBalTotalFCT)
-	FCTreturns := new(interfaces.StructToReturnValues)
+	FCTreturns := new(StructToReturnValues)
 	FCTreturns.TempBal = ackBalTotalFCT
 	FCTreturns.PermBal = savedBalTotalFCT
-	FCTreturns.Error = strconv.Itoa(noTransFCT)+" addresses have not had a transaction."
 
 	if badErrorFCT == "Not fully booted" && badErrorEC == "Not fully booted" {
 		type nfb struct {
@@ -418,6 +410,13 @@ func handleWalletBalances(params []byte) (interface{}, *factom.JSONError) {
 		nfbstatus := new(nfb)
 		nfbstatus.NotFullyBooted = "Factomd is not fully booted, please wait and try again."
 		return nfbstatus, nil
+	} else if badErrorFCT == "Error decoding address" || badErrorEC == "Error decoding address" {
+		type errorDecoding struct {
+			NotFullyBooted string `json:"Factomd Error"`
+		}
+		errDecReturn := new(errorDecoding)
+		errDecReturn.NotFullyBooted = "There was an error decoding and address"
+		return errDecReturn, nil
 	}
 	finalResp := new(multiBalanceResponse)
 	finalResp.FactoidAccountBalances = FCTreturns
