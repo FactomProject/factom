@@ -298,7 +298,7 @@ func handleWalletBalances(params []byte) (interface{}, *factom.JSONError) {
 	}
 
 
-	stringOfAccountsEC := ""
+	var stringOfAccountsEC string
 	if len(ecAccounts) == 0 || len(ecAccounts) == 1 {
 		stringOfAccountsEC = ""
 	} else {
