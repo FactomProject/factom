@@ -283,27 +283,33 @@ func handleWalletBalances(params []byte) (interface{}, *factom.JSONError) {
 		return nil, newCustomInternalError(err.Error() + " Wallet empty")
 	}
 
-	fctAcounts := make([]string, 0)
-	ecAcounts := make([]string, 0)
+	fctAccounts := make([]string, 0)
+	ecAccounts := make([]string, 0)
 
 	for _, f := range fs {
 		if len(mkAddressResponse(f).Secret) > 0 {
-			fctAcounts = append(fctAcounts, mkAddressResponse(f).Public)
+			fctAccounts = append(fctAccounts, mkAddressResponse(f).Public)
 		}
 	}
 	for _, e := range es {
 		if len(mkAddressResponse(e).Secret) > 0 {
-			ecAcounts = append(ecAcounts, mkAddressResponse(e).Public)
+			ecAccounts = append(ecAccounts, mkAddressResponse(e).Public)
 		}
 	}
 
 	// Get Entry Credit balances from multiple-ec-balances API in factomd
-	fmt.Println("ECACOUNTS",ecAcounts)
+	fmt.Println("ECACOUNTS",ecAccounts)
+	stringOfAccountsEC := ""
+	if len(ecAccounts) == 0 || len(ecAccounts) == 1 {
+		stringOfAccountsEC = ""
+	} else {
+		stringOfAccountsEC = strings.Join(ecAccounts, `", "`)
+	}
 	url := "http://"+factom.FactomdServer()+"/v2"
 	if url == "http:///v2" {
 		url = "http://localhost:8088/v2"
 	}
-	jsonStrEC := []byte(`{"jsonrpc": "2.0", "id": 0, "method": "multiple-ec-balances", "params":{"addresses":["` + strings.Join(ecAcounts, `", "`) + `"]}}  `)
+	jsonStrEC := []byte(`{"jsonrpc": "2.0", "id": 0, "method": "multiple-ec-balances", "params":{"addresses":["` + stringOfAccountsEC + `"]}}  `)
 	reqEC, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonStrEC))
 	reqEC.Header.Set("content-type", "text/plain;")
 
@@ -354,9 +360,16 @@ func handleWalletBalances(params []byte) (interface{}, *factom.JSONError) {
 	ECreturns.TempBal = ackBalTotalEC
 	ECreturns.PermBal = savedBalTotalEC
 
+	fmt.Println("ECACCOUNTS",fctAccounts)
+	stringOfAccountsFCT := ""
+	if len(fctAccounts) == 0 || len(fctAccounts) == 1 {
+		stringOfAccountsFCT = ""
+	} else {
+		stringOfAccountsFCT = strings.Join(fctAccounts, `", "`)
+	}
 
 	// Get Factoid balances from multiple-fct-balances API in factomd
-	jsonStrFCT := []byte(`{"jsonrpc": "2.0", "id": 0, "method": "multiple-fct-balances", "params":{"addresses":["` + strings.Join(fctAcounts, `", "`) + `"]}}  `)
+	jsonStrFCT := []byte(`{"jsonrpc": "2.0", "id": 0, "method": "multiple-fct-balances", "params":{"addresses":["` + stringOfAccountsFCT + `"]}}  `)
 	reqFCT, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonStrFCT))
 	reqFCT.Header.Set("content-type", "text/plain;")
 
