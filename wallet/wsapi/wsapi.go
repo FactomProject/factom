@@ -297,7 +297,6 @@ func handleWalletBalances(params []byte) (interface{}, *factom.JSONError) {
 		}
 	}
 
-
 	var stringOfAccountsEC string
 	if len(ecAccounts) != 0 {
 		stringOfAccountsEC = strings.Join(ecAccounts, `", "`)
@@ -377,7 +376,6 @@ func handleWalletBalances(params []byte) (interface{}, *factom.JSONError) {
 
 	defer callRespFCT.Body.Close()
 	bodyFCT, _ := ioutil.ReadAll(callRespFCT.Body)
-	fmt.Println("FCT BODY: ", string(bodyFCT))
 
 	respFCT := new(UnmarBody)
 	errFCT2 := json.Unmarshal([]byte(bodyFCT), &respFCT)
