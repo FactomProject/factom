@@ -322,6 +322,7 @@ func handleWalletBalances(params []byte) (interface{}, *factom.JSONError) {
 
 	defer callRespEC.Body.Close()
 	bodyEC, _ := ioutil.ReadAll(callRespEC.Body)
+	fmt.Println("EC BODY: ", string(bodyEC))
 
 	respEC := new(UnmarBody)
 	errEC := json.Unmarshal([]byte(bodyEC), &respEC)
@@ -381,6 +382,7 @@ func handleWalletBalances(params []byte) (interface{}, *factom.JSONError) {
 
 	defer callRespFCT.Body.Close()
 	bodyFCT, _ := ioutil.ReadAll(callRespFCT.Body)
+	fmt.Println("FCT BODY: ", string(bodyFCT))
 
 	respFCT := new(UnmarBody)
 	errFCT2 := json.Unmarshal([]byte(bodyFCT), &respFCT)
