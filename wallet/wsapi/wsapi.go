@@ -310,6 +310,7 @@ func handleWalletBalances(params []byte) (interface{}, *factom.JSONError) {
 		url = "http://localhost:8088/v2"
 	}
 	// Get Entry Credit balances from multiple-ec-balances API in factomd
+	fmt.Println(` THISSSSSSSSS: {"jsonrpc": "2.0", "id": 0, "method": "multiple-ec-balances", "params":{"addresses":["` + stringOfAccountsEC + `"]}}  `)
 	jsonStrEC := []byte(`{"jsonrpc": "2.0", "id": 0, "method": "multiple-ec-balances", "params":{"addresses":["` + stringOfAccountsEC + `"]}}  `)
 	reqEC, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonStrEC))
 	reqEC.Header.Set("content-type", "text/plain;")
