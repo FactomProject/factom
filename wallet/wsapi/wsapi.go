@@ -423,7 +423,7 @@ func handleWalletBalances(params []byte) (interface{}, *factom.JSONError) {
 	FCTreturns.TempBal = ackBalTotalFCT
 	FCTreturns.PermBal = savedBalTotalFCT
 
-	if badErrorFCT == "Not fully booted" && badErrorEC == "Not fully booted" {
+	if badErrorFCT == "Not fully booted" || badErrorEC == "Not fully booted" {
 		type nfb struct {
 			NotFullyBooted string `json:"Factomd Error"`
 		}
