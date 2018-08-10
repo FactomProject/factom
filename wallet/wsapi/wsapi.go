@@ -413,12 +413,12 @@ func handleWalletBalances(params []byte) (interface{}, *factom.JSONError) {
 		nfbstatus := new(nfb)
 		nfbstatus.NotFullyBooted = "Factomd is not fully booted, please wait and try again."
 		return nfbstatus, nil
-	} else if badErrorFCT == "Error decoding address" || badErrorEC == "Error decoding address" {
+	} else if badErrorFCT == "Error decoding address" {
 		type errorDecoding struct {
 			NotFullyBooted string `json:"Factomd Error"`
 		}
 		errDecReturn := new(errorDecoding)
-		errDecReturn.NotFullyBooted = "There was an error decoding and address"
+		errDecReturn.NotFullyBooted = "There was an error decoding an address"
 		return errDecReturn, nil
 	}
 	finalResp := new(multiBalanceResponse)
