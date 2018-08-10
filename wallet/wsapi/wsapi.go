@@ -299,9 +299,7 @@ func handleWalletBalances(params []byte) (interface{}, *factom.JSONError) {
 
 
 	var stringOfAccountsEC string
-	if len(ecAccounts) == 0 || len(ecAccounts) == 1 {
-		stringOfAccountsEC = ""
-	} else {
+	if len(ecAccounts) != 0 {
 		stringOfAccountsEC = strings.Join(ecAccounts, `", "`)
 	}
 
@@ -310,7 +308,6 @@ func handleWalletBalances(params []byte) (interface{}, *factom.JSONError) {
 		url = "http://localhost:8088/v2"
 	}
 	// Get Entry Credit balances from multiple-ec-balances API in factomd
-	fmt.Println(` THISSSSSSSSS: {"jsonrpc": "2.0", "id": 0, "method": "multiple-ec-balances", "params":{"addresses":["` + stringOfAccountsEC + `"]}}  `)
 	jsonStrEC := []byte(`{"jsonrpc": "2.0", "id": 0, "method": "multiple-ec-balances", "params":{"addresses":["` + stringOfAccountsEC + `"]}}  `)
 	reqEC, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonStrEC))
 	reqEC.Header.Set("content-type", "text/plain;")
@@ -351,7 +348,6 @@ func handleWalletBalances(params []byte) (interface{}, *factom.JSONError) {
 		savedBalTotalEC = savedBalTotalEC + convertedSaved.Int()
 
 		errors := x["err"]
-		fmt.Println("ERRORS",errors)
 		if errors == "Not fully booted" {
 			badErrorEC = "Not fully booted"
 		} else if errors == "Error decoding address" {
@@ -364,9 +360,7 @@ func handleWalletBalances(params []byte) (interface{}, *factom.JSONError) {
 	ECreturns.PermBal = savedBalTotalEC
 
 	stringOfAccountsFCT := ""
-	if len(fctAccounts) == 0 || len(fctAccounts) == 1 {
-		stringOfAccountsFCT = ""
-	} else {
+	if len(fctAccounts) != 0 {
 		stringOfAccountsFCT = strings.Join(fctAccounts, `", "`)
 	}
 
