@@ -304,7 +304,7 @@ func handleWalletBalances(params []byte) (interface{}, *factom.JSONError) {
 	} else {
 		stringOfAccountsEC = strings.Join(ecAccounts, `", "`)
 	}
-	fmt.Println("stringOfAccountsEC ",stringOfAccountsEC)
+
 	url := "http://"+factom.FactomdServer()+"/v2"
 	if url == "http:///v2" {
 		url = "http://localhost:8088/v2"
@@ -323,7 +323,6 @@ func handleWalletBalances(params []byte) (interface{}, *factom.JSONError) {
 
 	defer callRespEC.Body.Close()
 	bodyEC, _ := ioutil.ReadAll(callRespEC.Body)
-	fmt.Println("EC BODY: ", string(bodyEC))
 
 	respEC := new(UnmarBody)
 	errEC := json.Unmarshal([]byte(bodyEC), &respEC)
@@ -352,6 +351,7 @@ func handleWalletBalances(params []byte) (interface{}, *factom.JSONError) {
 		savedBalTotalEC = savedBalTotalEC + convertedSaved.Int()
 
 		errors := x["err"]
+		fmt.Println("ERRORS",errors)
 		if errors == "Not fully booted" {
 			badErrorEC = "Not fully booted"
 		} else if errors == "Error decoding address" {
@@ -369,7 +369,7 @@ func handleWalletBalances(params []byte) (interface{}, *factom.JSONError) {
 	} else {
 		stringOfAccountsFCT = strings.Join(fctAccounts, `", "`)
 	}
-	fmt.Println("stringOfAccountsFCT ",stringOfAccountsFCT)
+
 	// Get Factoid balances from multiple-fct-balances API in factomd
 	jsonStrFCT := []byte(`{"jsonrpc": "2.0", "id": 0, "method": "multiple-fct-balances", "params":{"addresses":["` + stringOfAccountsFCT + `"]}}  `)
 	reqFCT, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonStrFCT))
