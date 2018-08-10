@@ -297,18 +297,19 @@ func handleWalletBalances(params []byte) (interface{}, *factom.JSONError) {
 		}
 	}
 
-	// Get Entry Credit balances from multiple-ec-balances API in factomd
-	fmt.Println("ECACOUNTS",ecAccounts)
+
 	stringOfAccountsEC := ""
 	if len(ecAccounts) == 0 || len(ecAccounts) == 1 {
 		stringOfAccountsEC = ""
 	} else {
 		stringOfAccountsEC = strings.Join(ecAccounts, `", "`)
 	}
+	fmt.Println("stringOfAccountsEC ",stringOfAccountsEC)
 	url := "http://"+factom.FactomdServer()+"/v2"
 	if url == "http:///v2" {
 		url = "http://localhost:8088/v2"
 	}
+	// Get Entry Credit balances from multiple-ec-balances API in factomd
 	jsonStrEC := []byte(`{"jsonrpc": "2.0", "id": 0, "method": "multiple-ec-balances", "params":{"addresses":["` + stringOfAccountsEC + `"]}}  `)
 	reqEC, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonStrEC))
 	reqEC.Header.Set("content-type", "text/plain;")
@@ -360,14 +361,13 @@ func handleWalletBalances(params []byte) (interface{}, *factom.JSONError) {
 	ECreturns.TempBal = ackBalTotalEC
 	ECreturns.PermBal = savedBalTotalEC
 
-	fmt.Println("ECACCOUNTS",fctAccounts)
 	stringOfAccountsFCT := ""
 	if len(fctAccounts) == 0 || len(fctAccounts) == 1 {
 		stringOfAccountsFCT = ""
 	} else {
 		stringOfAccountsFCT = strings.Join(fctAccounts, `", "`)
 	}
-
+	fmt.Println("stringOfAccountsFCT ",stringOfAccountsFCT)
 	// Get Factoid balances from multiple-fct-balances API in factomd
 	jsonStrFCT := []byte(`{"jsonrpc": "2.0", "id": 0, "method": "multiple-fct-balances", "params":{"addresses":["` + stringOfAccountsFCT + `"]}}  `)
 	reqFCT, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonStrFCT))
