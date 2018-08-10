@@ -299,6 +299,9 @@ func handleWalletBalances(params []byte) (interface{}, *factom.JSONError) {
 
 	// Get Entry Credit balances from multiple-ec-balances API in factomd
 	url := "http://"+factom.FactomdServer()+"/v2"
+	if url == "http:///v2" {
+		url = "http://localhost:8088/v2"
+	}
 	jsonStrEC := []byte(`{"jsonrpc": "2.0", "id": 0, "method": "multiple-ec-balances", "params":{"addresses":["` + strings.Join(ecAccounts, `", "`) + `"]}}  `)
 	reqEC, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonStrEC))
 	reqEC.Header.Set("content-type", "text/plain;")
@@ -311,7 +314,6 @@ func handleWalletBalances(params []byte) (interface{}, *factom.JSONError) {
 
 	defer callRespEC.Body.Close()
 	bodyEC, _ := ioutil.ReadAll(callRespEC.Body)
-	fmt.Println("EC BODY: ", string(bodyEC))
 
 	respEC := new(UnmarBody)
 	errEC := json.Unmarshal([]byte(bodyEC), &respEC)
@@ -378,6 +380,7 @@ func handleWalletBalances(params []byte) (interface{}, *factom.JSONError) {
 	var badErrorFCT = ""
 
 	for i, _ := range respFCT.Result.Balances {
+		fmt.Println(i)
 		x, ok := respFCT.Result.Balances[i].(map[string]interface{})
 		if ok != true {
 			fmt.Println(x)

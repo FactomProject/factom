@@ -17,7 +17,7 @@ import (
 	"bytes"
 	"io/ioutil"
 	"encoding/json"
-)
+	)
 
 func TestImportAddress(t *testing.T) {
 	var (
@@ -78,21 +78,13 @@ func TestHandleWalletBalances(t *testing.T) {
 	}
 	defer func() { done <- 1 }()
 
-	// Testing when no accounts #1
-	addr := []string{}
-	testingVar, _ := helper(t, addr)
-	if len(testingVar.Result.FCT) != 0 && len(testingVar.Result.EC) != 0 {
-		t.Error("balances are not what they should be")
-	}
-	fmt.Println("Passed no values in wallet #1")
-
 	// Testing when all accounts dont have balances #2
 	noBalFCT := "Fs1itDLe8GoFCLsdbqb2rs6U67wQX4TikkTJV69BxGuG1tDvs41q"
 	noBalEC := "Es3W3R2u85aN2MNr2EoyMazAy7yGTZZg8eDaW7vfjorkrWAANv6t"
 
 	addr2 := []string{noBalFCT, noBalEC}
 	testingVar2, _ := helper(t, addr2)
-	if testingVar2.Result.FCT[0] != 0 && testingVar2.Result.FCT[1] != 0 && testingVar2.Result.EC[0] != 0 && testingVar2.Result.EC[1] != 0 {
+	if testingVar2.Result.FactoidAccountBalances.TempBal != 0 && testingVar2.Result.FactoidAccountBalances.PermBal != 0 && testingVar2.Result.EntryCreditAccountBalances.TempBal != 0 && testingVar2.Result.EntryCreditAccountBalances.PermBal != 0 {
 		t.Error("balances are not what they should be")
 	}
 	fmt.Println("Passed balance of 0 #2")
@@ -103,23 +95,15 @@ func TestHandleWalletBalances(t *testing.T) {
 
 	addr3 := []string{hasBalFCT, hasBalEC}
 	testingVar3, _ := helper(t, addr3)
-	if testingVar3.Result.EC[0] != 1000 && testingVar3.Result.EC[1] != 1000 && testingVar3.Result.FCT[0] != 1000000000 && testingVar3.Result.FCT[1] != 1000000000 {
+	if testingVar3.Result.EntryCreditAccountBalances.TempBal != 40 && testingVar3.Result.EntryCreditAccountBalances.PermBal != 40 && testingVar3.Result.FactoidAccountBalances.TempBal != 0 && testingVar3.Result.FactoidAccountBalances.PermBal != 0 {
 		t.Error("balances are not what they should be")
 	}
 	fmt.Println("Passed when some have values #3")
-
-	// Testing when some balances have values and some don't #4
-	addr4 := []string{hasBalFCT, noBalFCT, hasBalEC, noBalEC}
-	testingVar4, _ := helper(t, addr4)
-	if testingVar4.Result.EC[0] != 1000 && testingVar4.Result.EC[1] != 1000 && testingVar4.Result.FCT[0] != 1000000000 && testingVar4.Result.FCT[1] != 1000000000 {
-		t.Error("balances are not what they should be")
-	}
-	fmt.Println("Passed when some balances have values and some don't #4")
 }
 
 type walletcallHelper struct {
-	FCT []int64 `json:"fctaccountbalances"`
-	EC  []int64 `json:"ecaccountbalances"`
+	FactoidAccountBalances     *wsapi.StructToReturnValues `json:"fctaccountbalances"`
+	EntryCreditAccountBalances *wsapi.StructToReturnValues `json:"ecaccountbalances"`
 }
 type walletcall struct {
 	Jsonrpc string           `json:"jsonrps"`
@@ -147,6 +131,7 @@ func helper(t *testing.T, addr []string) (*walletcall, string) {
 
 	defer callRespEC.Body.Close()
 	bodyEC, _ := ioutil.ReadAll(callRespEC.Body)
+	fmt.Println("BODY: ", string(bodyEC))
 
 	respEC := new(walletcall)
 	errEC := json.Unmarshal([]byte(bodyEC), &respEC)
