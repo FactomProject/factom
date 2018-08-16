@@ -27,7 +27,9 @@ import (
 	"github.com/FactomProject/factomd/common/interfaces"
 	"github.com/FactomProject/factomd/common/primitives"
 	"github.com/FactomProject/web"
-)
+	"bytes"
+	"reflect"
+	)
 
 const APIVersion string = "2.0"
 
@@ -249,6 +251,8 @@ func handleV2Request(j *factom.JSON2Request) (*factom.JSON2Response, *factom.JSO
 		resp, jsonError = handleComposeEntry(params)
 	case "get-height":
 		resp, jsonError = handleGetHeight(params)
+	case "wallet-balances":
+		resp, jsonError = handleWalletBalances(params)
 	default:
 		jsonError = newMethodNotFoundError()
 	}
@@ -267,6 +271,170 @@ func handleV2Request(j *factom.JSON2Request) (*factom.JSON2Response, *factom.JSO
 	}
 
 	return jsonResp, nil
+}
+type StructToReturnValues struct {
+	TempBal int64  `json:"ack"`
+	PermBal int64  `json:"saved"`
+}
+func handleWalletBalances(params []byte) (interface{}, *factom.JSONError) {
+	//Get all of the addresses in the wallet
+	fs, es, err := fctWallet.GetAllAddresses()
+	if err != nil {
+		return nil, newCustomInternalError(err.Error() + " Wallet empty")
+	}
+
+	fctAccounts := make([]string, 0)
+	ecAccounts := make([]string, 0)
+
+	for _, f := range fs {
+		if len(mkAddressResponse(f).Secret) > 0 {
+			fctAccounts = append(fctAccounts, mkAddressResponse(f).Public)
+		}
+	}
+	for _, e := range es {
+		if len(mkAddressResponse(e).Secret) > 0 {
+			ecAccounts = append(ecAccounts, mkAddressResponse(e).Public)
+		}
+	}
+
+	var stringOfAccountsEC string
+	if len(ecAccounts) != 0 {
+		stringOfAccountsEC = strings.Join(ecAccounts, `", "`)
+	}
+
+	url := "http://"+factom.FactomdServer()+"/v2"
+	if url == "http:///v2" {
+		url = "http://localhost:8088/v2"
+	}
+	// Get Entry Credit balances from multiple-ec-balances API in factomd
+	jsonStrEC := []byte(`{"jsonrpc": "2.0", "id": 0, "method": "multiple-ec-balances", "params":{"addresses":["` + stringOfAccountsEC + `"]}}  `)
+	reqEC, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonStrEC))
+	reqEC.Header.Set("content-type", "text/plain;")
+
+	clientEC := &http.Client{}
+	callRespEC, err := clientEC.Do(reqEC)
+	if err != nil {
+		panic(err)
+	}
+
+	defer callRespEC.Body.Close()
+	bodyEC, _ := ioutil.ReadAll(callRespEC.Body)
+
+	respEC := new(UnmarBody)
+	errEC := json.Unmarshal([]byte(bodyEC), &respEC)
+	if errEC != nil {
+		return nil, newInvalidParamsError()
+	}
+
+	//Total up the balances
+	var ackBalTotalEC int64 = 0
+	var savedBalTotalEC int64 = 0
+	var badErrorEC = ""
+
+	var floatType = reflect.TypeOf(int64(0))
+
+	for i, _ := range respEC.Result.Balances {
+		x, ok := respEC.Result.Balances[i].(map[string]interface{})
+		if ok != true {
+			fmt.Println(x)
+		}
+		v := reflect.ValueOf(x["ack"])
+		covneredAck := v.Convert(floatType)
+		ackBalTotalEC = ackBalTotalEC + covneredAck.Int()
+
+		rawr := reflect.ValueOf(x["saved"])
+		convertedSaved := rawr.Convert(floatType)
+		savedBalTotalEC = savedBalTotalEC + convertedSaved.Int()
+
+		errors := x["err"]
+		if errors == "Not fully booted" {
+			badErrorEC = "Not fully booted"
+		} else if errors == "Error decoding address" {
+			badErrorEC = "Error decoding address"
+		}
+	}
+
+	ECreturns := new(StructToReturnValues)
+	ECreturns.TempBal = ackBalTotalEC
+	ECreturns.PermBal = savedBalTotalEC
+
+	stringOfAccountsFCT := ""
+	if len(fctAccounts) != 0 {
+		stringOfAccountsFCT = strings.Join(fctAccounts, `", "`)
+	}
+
+	// Get Factoid balances from multiple-fct-balances API in factomd
+	jsonStrFCT := []byte(`{"jsonrpc": "2.0", "id": 0, "method": "multiple-fct-balances", "params":{"addresses":["` + stringOfAccountsFCT + `"]}}  `)
+	reqFCT, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonStrFCT))
+	reqFCT.Header.Set("content-type", "text/plain;")
+
+	clientFCT := &http.Client{}
+	callRespFCT, errFCT := clientFCT.Do(reqFCT)
+	if errFCT != nil {
+		panic(errFCT)
+	}
+
+	defer callRespFCT.Body.Close()
+	bodyFCT, _ := ioutil.ReadAll(callRespFCT.Body)
+
+	respFCT := new(UnmarBody)
+	errFCT2 := json.Unmarshal([]byte(bodyFCT), &respFCT)
+	if errFCT2 != nil {
+		return nil, newInvalidParamsError()
+	}
+
+	// Total up the balances
+	var ackBalTotalFCT int64 = 0
+	var savedBalTotalFCT int64 = 0
+	var badErrorFCT = ""
+
+	for i, _ := range respFCT.Result.Balances {
+		fmt.Println(i)
+		x, ok := respFCT.Result.Balances[i].(map[string]interface{})
+		if ok != true {
+			fmt.Println(x)
+		}
+		v := reflect.ValueOf(x["ack"])
+		covneredAck := v.Convert(floatType)
+		ackBalTotalFCT = ackBalTotalFCT + covneredAck.Int()
+
+		rawr := reflect.ValueOf(x["saved"])
+		convertedSaved := rawr.Convert(floatType)
+		savedBalTotalFCT = savedBalTotalFCT + convertedSaved.Int()
+
+		errors := x["err"]
+		if errors == "Not fully booted" {
+			badErrorFCT = "Not fully booted"
+		} else if errors == "Error decoding address" {
+			badErrorFCT = "Error decoding address"
+		}
+
+	}
+
+	FCTreturns := new(StructToReturnValues)
+	FCTreturns.TempBal = ackBalTotalFCT
+	FCTreturns.PermBal = savedBalTotalFCT
+
+	if badErrorFCT == "Not fully booted" || badErrorEC == "Not fully booted" {
+		type nfb struct {
+			NotFullyBooted string `json:"Factomd Error"`
+		}
+		nfbstatus := new(nfb)
+		nfbstatus.NotFullyBooted = "Factomd is not fully booted, please wait and try again."
+		return nfbstatus, nil
+	} else if badErrorFCT == "Error decoding address" || badErrorEC == "Error decoding address" {
+		type errorDecoding struct {
+			NotFullyBooted string `json:"Factomd Error"`
+		}
+		errDecReturn := new(errorDecoding)
+		errDecReturn.NotFullyBooted = "There was an error decoding an address"
+		return errDecReturn, nil
+	}
+	finalResp := new(multiBalanceResponse)
+	finalResp.FactoidAccountBalances = FCTreturns
+	finalResp.EntryCreditAccountBalances = ECreturns
+
+	return finalResp, nil
 }
 
 func handleRemoveAddress(params []byte) (interface{}, *factom.JSONError) {
