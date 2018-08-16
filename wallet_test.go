@@ -10,14 +10,14 @@ import (
 
 	"os"
 
+	"bytes"
+	"encoding/json"
+	"fmt"
 	"github.com/FactomProject/factom/wallet"
 	"github.com/FactomProject/factom/wallet/wsapi"
-	"fmt"
-	"net/http"
-	"bytes"
 	"io/ioutil"
-	"encoding/json"
-	)
+	"net/http"
+)
 
 func TestImportAddress(t *testing.T) {
 	var (
@@ -150,7 +150,7 @@ func TestImportKoinify(t *testing.T) {
 		bad_mnemonic = []string{
 			"", // bad empty
 			"yellow yellow yellow yellow yellow yellow yellow yellow yellow" +
-				" yellow yellow",          // bad short
+				" yellow yellow", // bad short
 			"yellow yellow yellow yellow yellow yellow yellow yellow yellow" +
 				" yellow yellow asdfasdf", // bad word
 		}
