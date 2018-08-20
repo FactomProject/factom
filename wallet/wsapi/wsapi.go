@@ -1105,9 +1105,11 @@ func feesRequired(t interfaces.ITransaction) uint64 {
 	if err != nil {
 		rate = 0
 	}
-	if i, err := t.CalculateFee(rate); err != nil {
+
+	fee, err := t.CalculateFee(rate)
+	if err != nil {
 		return 0
-	} else {
-		return i
 	}
+
+	return fee
 }
