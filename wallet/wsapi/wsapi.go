@@ -325,13 +325,15 @@ func handleWalletBalances(params []byte) (interface{}, *factom.JSONError) {
 	}
 
 	//Total up the balances
-	var ackBalTotalEC int64 = 0
-	var savedBalTotalEC int64 = 0
-	var badErrorEC = ""
+	var (
+		ackBalTotalEC   int64
+		savedBalTotalEC int64
+		badErrorEC      string
+	)
 
 	var floatType = reflect.TypeOf(int64(0))
 
-	for i, _ := range respEC.Result.Balances {
+	for i := range respEC.Result.Balances {
 		x, ok := respEC.Result.Balances[i].(map[string]interface{})
 		if ok != true {
 			fmt.Println(x)
@@ -378,11 +380,13 @@ func handleWalletBalances(params []byte) (interface{}, *factom.JSONError) {
 	}
 
 	// Total up the balances
-	var ackBalTotalFCT int64 = 0
-	var savedBalTotalFCT int64 = 0
-	var badErrorFCT = ""
+	var (
+		ackBalTotalFCT   int64
+		savedBalTotalFCT int64
+		badErrorFCT      string
+	)
 
-	for i, _ := range respFCT.Result.Balances {
+	for i := range respFCT.Result.Balances {
 		fmt.Println(i)
 		x, ok := respFCT.Result.Balances[i].(map[string]interface{})
 		if ok != true {
