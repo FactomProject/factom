@@ -6,7 +6,7 @@ package wsapi
 
 import (
 	"github.com/FactomProject/factom"
-	)
+)
 
 type TLSConfig struct {
 	TLSEnable   bool
@@ -83,14 +83,20 @@ type multiAddressResponse struct {
 }
 
 type balanceResponse struct {
-	CurrentHeight   uint32   `json:"current-height"`
-	LastSavedHeight uint `json:"last-saved-height"`
-	Balances []interface{} `json:"balances"`
+	CurrentHeight   uint32        `json:"current-height"`
+	LastSavedHeight uint          `json:"last-saved-height"`
+	Balances        []interface{} `json:"balances"`
 }
 
 type multiBalanceResponse struct {
-	FactoidAccountBalances     *StructToReturnValues `json:"fctaccountbalances"`
-	EntryCreditAccountBalances *StructToReturnValues `json:"ecaccountbalances"`
+	FactoidAccountBalances struct {
+		Temp  int64 `json:"ack"`
+		Saved int64 `json:"saved"`
+	} `json:"fctaccountbalances"`
+	EntryCreditAccountBalances struct {
+		Temp  int64 `json:"ack"`
+		Saved int64 `json:"saved"`
+	} `json:"ecaccountbalances"`
 }
 
 type walletBackupResponse struct {

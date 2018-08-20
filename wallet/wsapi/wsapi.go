@@ -20,6 +20,9 @@ import (
 	"strings"
 	"time"
 
+	"bytes"
+	"reflect"
+
 	"github.com/FactomProject/btcutil/certs"
 	"github.com/FactomProject/factom"
 	"github.com/FactomProject/factom/wallet"
@@ -27,9 +30,7 @@ import (
 	"github.com/FactomProject/factomd/common/interfaces"
 	"github.com/FactomProject/factomd/common/primitives"
 	"github.com/FactomProject/web"
-	"bytes"
-	"reflect"
-	)
+)
 
 const APIVersion string = "2.0"
 
@@ -272,10 +273,7 @@ func handleV2Request(j *factom.JSON2Request) (*factom.JSON2Response, *factom.JSO
 
 	return jsonResp, nil
 }
-type StructToReturnValues struct {
-	TempBal int64  `json:"ack"`
-	PermBal int64  `json:"saved"`
-}
+
 func handleWalletBalances(params []byte) (interface{}, *factom.JSONError) {
 	//Get all of the addresses in the wallet
 	fs, es, err := fctWallet.GetAllAddresses()
@@ -302,7 +300,7 @@ func handleWalletBalances(params []byte) (interface{}, *factom.JSONError) {
 		stringOfAccountsEC = strings.Join(ecAccounts, `", "`)
 	}
 
-	url := "http://"+factom.FactomdServer()+"/v2"
+	url := "http://" + factom.FactomdServer() + "/v2"
 	if url == "http:///v2" {
 		url = "http://localhost:8088/v2"
 	}
@@ -353,10 +351,6 @@ func handleWalletBalances(params []byte) (interface{}, *factom.JSONError) {
 			badErrorEC = "Error decoding address"
 		}
 	}
-
-	ECreturns := new(StructToReturnValues)
-	ECreturns.TempBal = ackBalTotalEC
-	ECreturns.PermBal = savedBalTotalEC
 
 	stringOfAccountsFCT := ""
 	if len(fctAccounts) != 0 {
@@ -411,10 +405,6 @@ func handleWalletBalances(params []byte) (interface{}, *factom.JSONError) {
 
 	}
 
-	FCTreturns := new(StructToReturnValues)
-	FCTreturns.TempBal = ackBalTotalFCT
-	FCTreturns.PermBal = savedBalTotalFCT
-
 	if badErrorFCT == "Not fully booted" || badErrorEC == "Not fully booted" {
 		type nfb struct {
 			NotFullyBooted string `json:"Factomd Error"`
@@ -430,11 +420,14 @@ func handleWalletBalances(params []byte) (interface{}, *factom.JSONError) {
 		errDecReturn.NotFullyBooted = "There was an error decoding an address"
 		return errDecReturn, nil
 	}
-	finalResp := new(multiBalanceResponse)
-	finalResp.FactoidAccountBalances = FCTreturns
-	finalResp.EntryCreditAccountBalances = ECreturns
 
-	return finalResp, nil
+	resp := new(multiBalanceResponse)
+	resp.FactoidAccountBalances.Temp = ackBalTotalFCT
+	resp.FactoidAccountBalances.Saved = savedBalTotalFCT
+	resp.EntryCreditAccountBalances.Temp = ackBalTotalEC
+	resp.EntryCreditAccountBalances.Saved = savedBalTotalEC
+
+	return resp, nil
 }
 
 func handleRemoveAddress(params []byte) (interface{}, *factom.JSONError) {
