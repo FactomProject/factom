@@ -90,11 +90,11 @@ type balanceResponse struct {
 
 type multiBalanceResponse struct {
 	FactoidAccountBalances struct {
-		Temp  int64 `json:"ack"`
+		Ack   int64 `json:"ack"`
 		Saved int64 `json:"saved"`
 	} `json:"fctaccountbalances"`
 	EntryCreditAccountBalances struct {
-		Temp  int64 `json:"ack"`
+		Ack   int64 `json:"ack"`
 		Saved int64 `json:"saved"`
 	} `json:"ecaccountbalances"`
 }

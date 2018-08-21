@@ -426,9 +426,9 @@ func handleWalletBalances(params []byte) (interface{}, *factom.JSONError) {
 	}
 
 	resp := new(multiBalanceResponse)
-	resp.FactoidAccountBalances.Temp = ackBalTotalFCT
+	resp.FactoidAccountBalances.Ack = ackBalTotalFCT
 	resp.FactoidAccountBalances.Saved = savedBalTotalFCT
-	resp.EntryCreditAccountBalances.Temp = ackBalTotalEC
+	resp.EntryCreditAccountBalances.Ack = ackBalTotalEC
 	resp.EntryCreditAccountBalances.Saved = savedBalTotalEC
 
 	return resp, nil
