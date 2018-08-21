@@ -5,6 +5,7 @@
 package wsapi
 
 import (
+	"bytes"
 	"crypto/sha256"
 	"crypto/subtle"
 	"crypto/tls"
@@ -17,11 +18,9 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"reflect"
 	"strings"
 	"time"
-
-	"bytes"
-	"reflect"
 
 	"github.com/FactomProject/btcutil/certs"
 	"github.com/FactomProject/factom"
