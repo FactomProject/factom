@@ -386,7 +386,6 @@ func handleWalletBalances(params []byte) (interface{}, *factom.JSONError) {
 	)
 
 	for i := range respFCT.Result.Balances {
-		fmt.Println(i)
 		x, ok := respFCT.Result.Balances[i].(map[string]interface{})
 		if ok != true {
 			fmt.Println(x)
