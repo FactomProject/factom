@@ -274,14 +274,6 @@ func handleV2Request(j *factom.JSON2Request) (*factom.JSON2Response, *factom.JSO
 	return jsonResp, nil
 }
 
-<<<<<<< HEAD
-type StructToReturnValues struct {
-	TempBal int64 `json:"ack"`
-	PermBal int64 `json:"saved"`
-}
-
-=======
->>>>>>> FD-615
 func handleWalletBalances(params []byte) (interface{}, *factom.JSONError) {
 	//Get all of the addresses in the wallet
 	fs, es, err := fctWallet.GetAllAddresses()
