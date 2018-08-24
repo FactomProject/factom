@@ -7,6 +7,7 @@ package wallet
 import (
 	"encoding/hex"
 	"fmt"
+	"os"
 
 	"github.com/FactomProject/factom"
 	"github.com/FactomProject/factomd/common/directoryBlock"
@@ -16,7 +17,6 @@ import (
 	"github.com/FactomProject/factomd/database/databaseOverlay"
 	"github.com/FactomProject/factomd/database/hybridDB"
 	"github.com/FactomProject/factomd/database/mapdb"
-	"os"
 )
 
 // Database keys and key prefixes
@@ -61,12 +61,12 @@ func NewTXLevelDB(ldbpath string) (*TXDatabaseOverlay, error) {
 
 func NewTXBoltDB(boltPath string) (*TXDatabaseOverlay, error) {
 	fileInfo, err := os.Stat(boltPath)
-	if err == nil { //if it exists
-		if fileInfo.IsDir() { //if it is a folder though
-			return nil, fmt.Errorf("The path %s is a directory.  Please specify a file name.", boltPath)
+	if err == nil {
+		if fileInfo.IsDir() {
+			return nil, fmt.Errorf("%s is not a Bolt databse file", boltPath)
 		}
 	}
-	if err != nil && !os.IsNotExist(err) { //some other error, besides the file not existing
+	if err != nil && !os.IsNotExist(err) {
 		fmt.Printf("database error %s\n", err)
 		return nil, err
 	}
@@ -141,8 +141,7 @@ func (db *TXDatabaseOverlay) GetAllTXs() ([]interfaces.ITransaction, error) {
 }
 
 // GetTX gets a transaction by the transaction id
-func (db *TXDatabaseOverlay) GetTX(txid string) (
-	interfaces.ITransaction, error) {
+func (db *TXDatabaseOverlay) GetTX(txid string) (interfaces.ITransaction, error) {
 	txs, err := db.GetAllTXs()
 	if err != nil {
 		return nil, err
@@ -261,7 +260,7 @@ func (db *TXDatabaseOverlay) update() (string, error) {
 		return "", err
 	}
 
-	//Making sure we didn't switch networks
+	// Make sure we didn't switch networks
 	genesis, err := db.DBO.FetchFBlockByHeight(0)
 	if err != nil {
 		return "", err
@@ -281,7 +280,7 @@ func (db *TXDatabaseOverlay) update() (string, error) {
 		}
 
 		if gensisFBlockKeyMr == nil {
-			return "", fmt.Errorf("there was an error fetching the genesis block via the api.")
+			return "", fmt.Errorf("unable to fetch the genesis block via the api")
 		}
 
 		if !gensisFBlockKeyMr.IsSameAs(genesis.GetKeyMR()) {
@@ -291,15 +290,18 @@ func (db *TXDatabaseOverlay) update() (string, error) {
 
 	newestHeight := newestFBlock.GetDatabaseHeight()
 
+	// If the newest block in the tx cashe has a greater height than the newest
+	// fblock then clear the cashe and start from 0.
 	if start >= newestHeight {
-		return newestFBlock.GetKeyMR().String(), nil
+		// TODO: we should clear all of the cashed fblocks at this time
+		start = 0
 	}
 
 	db.DBO.StartMultiBatch()
 	for i := start; i <= newestHeight; i++ {
 		if i%1000 == 0 {
 			if newestHeight-start > 1000 {
-				fmt.Printf("Fetching block %v / %v\n", i, newestHeight)
+				fmt.Printf("Fetching block %v/%v\n", i, newestHeight)
 			}
 		}
 		fblock, err := getfblockbyheight(i)
@@ -320,12 +322,13 @@ func (db *TXDatabaseOverlay) update() (string, error) {
 			break
 		}
 	}
-	if !db.quit { // Printing this would be a lie if we quit
-		fmt.Printf("Fetching block %v / %v\n", newestHeight, newestHeight)
+
+	if !db.quit {
+		fmt.Printf("Fetching block %v/%v\n", newestHeight, newestHeight)
 	}
 
-	err = db.DBO.ExecuteMultiBatch() // Save remaining blocks
-	if err != nil {
+	// Save the remaining blocks
+	if err = db.DBO.ExecuteMultiBatch(); err != nil {
 		return "", err
 	}
 
