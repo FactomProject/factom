@@ -5,6 +5,7 @@
 package wsapi
 
 import (
+	"bytes"
 	"crypto/sha256"
 	"crypto/subtle"
 	"crypto/tls"
@@ -17,6 +18,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"reflect"
 	"strings"
 	"time"
 
@@ -27,9 +29,7 @@ import (
 	"github.com/FactomProject/factomd/common/interfaces"
 	"github.com/FactomProject/factomd/common/primitives"
 	"github.com/FactomProject/web"
-	"bytes"
-	"reflect"
-	)
+)
 
 const APIVersion string = "2.0"
 
@@ -144,16 +144,17 @@ func Stop() {
 }
 
 func checkAuthHeader(r *http.Request) error {
-	if "" == rpcUser {
-		//no username was specified in the config file or command line, meaning factomd API is open access
+	// Don't bother to check the autorization if the rpc user/pass is not
+	// specified.
+	if rpcUser == "" {
 		return nil
 	}
+
 	authhdr := r.Header["Authorization"]
 	if len(authhdr) == 0 {
 		fmt.Println("Username and Password expected, but none were received")
 		return errors.New("no auth")
 	}
-	fmt.Println(authhdr)
 
 	h := sha256.New()
 	h.Write([]byte(authhdr[0]))
@@ -272,10 +273,12 @@ func handleV2Request(j *factom.JSON2Request) (*factom.JSON2Response, *factom.JSO
 
 	return jsonResp, nil
 }
+
 type StructToReturnValues struct {
-	TempBal int64  `json:"ack"`
-	PermBal int64  `json:"saved"`
+	TempBal int64 `json:"ack"`
+	PermBal int64 `json:"saved"`
 }
+
 func handleWalletBalances(params []byte) (interface{}, *factom.JSONError) {
 	//Get all of the addresses in the wallet
 	fs, es, err := fctWallet.GetAllAddresses()
@@ -302,7 +305,7 @@ func handleWalletBalances(params []byte) (interface{}, *factom.JSONError) {
 		stringOfAccountsEC = strings.Join(ecAccounts, `", "`)
 	}
 
-	url := "http://"+factom.FactomdServer()+"/v2"
+	url := "http://" + factom.FactomdServer() + "/v2"
 	if url == "http:///v2" {
 		url = "http://localhost:8088/v2"
 	}
