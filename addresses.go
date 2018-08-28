@@ -18,6 +18,7 @@ import (
 
 type addressStringType byte
 
+// Magic numbers representing values that AddressStringType() returns.
 const (
 	InvalidAddress addressStringType = iota
 	FactoidPub
@@ -26,6 +27,7 @@ const (
 	ECSec
 )
 
+// Address structure length values
 const (
 	AddressLength  = 38
 	PrefixLength   = 2
@@ -40,6 +42,9 @@ var (
 	fcSecPrefix = []byte{0x64, 0x78}
 )
 
+// AddressStringType parses an address and returns an addressStringType
+// representing the type of address. An address can be a public or private
+// Factoid or Entry Credit address. See Constants.
 func AddressStringType(s string) addressStringType {
 	p := base58.Decode(s)
 
@@ -69,6 +74,8 @@ func AddressStringType(s string) addressStringType {
 	}
 }
 
+// IsValidAddress takes a string and returns true if it is a valid address. A
+// valid address has a correct prefix and ends with a valid checksum.
 func IsValidAddress(s string) bool {
 	p := base58.Decode(s)
 
@@ -100,11 +107,13 @@ func IsValidAddress(s string) bool {
 	return false
 }
 
+// ECAddress stores the bytes of the public and secret keys for an EC address.
 type ECAddress struct {
 	Pub *[ed.PublicKeySize]byte
 	Sec *[ed.PrivateKeySize]byte
 }
 
+// NewECAddress returns an initialized but empty ECAddress struct.
 func NewECAddress() *ECAddress {
 	a := new(ECAddress)
 	a.Pub = new([ed.PublicKeySize]byte)
@@ -112,11 +121,15 @@ func NewECAddress() *ECAddress {
 	return a
 }
 
+// UnmarshalBinary satisfies the BinaryUnmarshaler interface for ECAddress. It
+// takes binary data and unmarshals it into an ECAddress.
 func (a *ECAddress) UnmarshalBinary(data []byte) error {
 	_, err := a.UnmarshalBinaryData(data)
 	return err
 }
 
+// UnmarshalBinaryData takes binary data and unmarshals it into an ECAddress
+// and returns a byte slice with the first 32 bytes of data removed.
 func (a *ECAddress) UnmarshalBinaryData(data []byte) ([]byte, error) {
 	if len(data) < 32 {
 		return nil, fmt.Errorf("secret key portion must be 32 bytes")
@@ -132,11 +145,14 @@ func (a *ECAddress) UnmarshalBinaryData(data []byte) ([]byte, error) {
 	return data[32:], nil
 }
 
+// MarshalBinary satisfies the BinaryMarshaler interface for ECAddress. It
+// returns a byte slice containing the raw bytes of the secret key.
 func (a *ECAddress) MarshalBinary() ([]byte, error) {
 	return a.SecBytes()[:32], nil
 }
 
-// GetECAddress takes a private address string (Es...) and returns an ECAddress.
+// GetECAddress takes a private address string (Es...) and returns an
+// ECAddress.
 func GetECAddress(s string) (*ECAddress, error) {
 	if !IsValidAddress(s) {
 		return nil, fmt.Errorf("Invalid Address")
@@ -151,6 +167,8 @@ func GetECAddress(s string) (*ECAddress, error) {
 	return MakeECAddress(p[PrefixLength:BodyLength])
 }
 
+// MakeECAddress takes a 32 byte secret key and returns an ECAddress
+// representing that key.
 func MakeECAddress(sec []byte) (*ECAddress, error) {
 	if len(sec) != 32 {
 		return nil, fmt.Errorf("secret key portion must be 32 bytes")
@@ -166,17 +184,17 @@ func MakeECAddress(sec []byte) (*ECAddress, error) {
 	return a, nil
 }
 
-// PubBytes returns the []byte representation of the public key
+// PubBytes returns the public key as a []byte.
 func (a *ECAddress) PubBytes() []byte {
 	return a.Pub[:]
 }
 
-// PubFixed returns the fixed size public key
+// PubFixed returns the public key as a fixed size array.
 func (a *ECAddress) PubFixed() *[ed.PublicKeySize]byte {
 	return a.Pub
 }
 
-// PubString returns the string encoding of the public key
+// PubString returns the string encoding of the public key.
 func (a *ECAddress) PubString() string {
 	buf := new(bytes.Buffer)
 
@@ -193,17 +211,17 @@ func (a *ECAddress) PubString() string {
 	return base58.Encode(buf.Bytes())
 }
 
-// SecBytes returns the []byte representation of the secret key
+// SecBytes returns the public key as a []byte.
 func (a *ECAddress) SecBytes() []byte {
 	return a.Sec[:]
 }
 
-// SecFixed returns the fixed size secret key
+// SecFixed returns the public key as a fixed size array.
 func (a *ECAddress) SecFixed() *[ed.PrivateKeySize]byte {
 	return a.Sec
 }
 
-// SecString returns the string encoding of the secret key
+// SecString returns the string encoding of the secret key.
 func (a *ECAddress) SecString() string {
 	buf := new(bytes.Buffer)
 
@@ -220,15 +238,18 @@ func (a *ECAddress) SecString() string {
 	return base58.Encode(buf.Bytes())
 }
 
-// Sign the message with the ECAddress private key
+// Sign returns a signature of the msg with the ECAddress private key.
 func (a *ECAddress) Sign(msg []byte) *[ed.SignatureSize]byte {
 	return ed.Sign(a.SecFixed(), msg)
 }
 
+// String satisfies the Stringer interface for ECAddress and returns the
+// PubString.
 func (a *ECAddress) String() string {
 	return a.PubString()
 }
 
+// FactoidAddress stores
 type FactoidAddress struct {
 	RCD RCD
 	Sec *[ed.PrivateKeySize]byte
@@ -243,11 +264,15 @@ func NewFactoidAddress() *FactoidAddress {
 	return a
 }
 
+// UnmarshalBinary satisfies the BinaryMarshaler interface and populates a
+// FactoidAddress from the binary data passed to it.
 func (t *FactoidAddress) UnmarshalBinary(data []byte) error {
 	_, err := t.UnmarshalBinaryData(data)
 	return err
 }
 
+// UnmarshalBinaryData populates a FactoidAddress from the binary data passed
+// to it.
 func (t *FactoidAddress) UnmarshalBinaryData(data []byte) ([]byte, error) {
 	if len(data) < 32 {
 		return nil, fmt.Errorf("secret key portion must be 32 bytes")
@@ -265,6 +290,8 @@ func (t *FactoidAddress) UnmarshalBinaryData(data []byte) ([]byte, error) {
 	return data[32:], nil
 }
 
+// MarshalBinaryData returns a byte slice of the raw bytes of the secret key of
+// the FactoidAddress.
 func (t *FactoidAddress) MarshalBinary() ([]byte, error) {
 	return t.SecBytes()[:32], nil
 }
@@ -285,6 +312,8 @@ func GetFactoidAddress(s string) (*FactoidAddress, error) {
 	return MakeFactoidAddress(p[PrefixLength:BodyLength])
 }
 
+// MakeFactoidAddress makes a new factoid address using the sec bytes as the
+// secret key.
 func MakeFactoidAddress(sec []byte) (*FactoidAddress, error) {
 	if len(sec) != 32 {
 		return nil, fmt.Errorf("secret key portion must be 32 bytes")
@@ -299,6 +328,9 @@ func MakeFactoidAddress(sec []byte) (*FactoidAddress, error) {
 	return a, nil
 }
 
+// ParseAndValidateMnemonic takes a mnemonic strings and verifies that it is of
+// the correct length and format. It returns the mnemonic with any whitespace
+// trimmed and replaced with single spaces.
 func ParseAndValidateMnemonic(mnemonic string) (string, error) {
 	if l := len(strings.Fields(mnemonic)); l != 12 {
 		return "", fmt.Errorf("Incorrect mnemonic length. Expecitng 12 words, found %d", l)
