@@ -289,6 +289,39 @@ func GetAllChainEntries(chainid string) ([]*Entry, error) {
 	return es, nil
 }
 
+func GetAllChainEntriesAtHeight(chainid string, height int64) ([]*Entry, error) {
+	es := make([]*Entry, 0)
+
+	head, err := GetChainHeadAndStatus(chainid)
+	if err != nil {
+		return es, err
+	}
+
+	if head.ChainHead == "" && head.ChainInProcessList {
+		return nil, fmt.Errorf("Chain not yet included in a Directory Block")
+	}
+
+	for ebhash := head.ChainHead; ebhash != ZeroHash; {
+		eb, err := GetEBlock(ebhash)
+		if err != nil {
+			return es, err
+		}
+		if eb.Header.DBHeight > height {
+			ebhash = eb.Header.PrevKeyMR
+			continue
+		}
+		s, err := GetAllEBlockEntries(ebhash)
+		if err != nil {
+			return es, err
+		}
+		es = append(s, es...)
+
+		ebhash = eb.Header.PrevKeyMR
+	}
+
+	return es, nil
+}
+
 func GetFirstEntry(chainid string) (*Entry, error) {
 	e := new(Entry)
 
