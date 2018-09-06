@@ -293,8 +293,7 @@ func (db *TXDatabaseOverlay) update() (string, error) {
 	// If the newest block in the tx cashe has a greater height than the newest
 	// fblock then clear the cashe and start from 0.
 	if start >= newestHeight {
-		// TODO: we should clear all of the cashed fblocks at this time
-		start = 0
+		return newestFBlock.GetKeyMR().String(), nil
 	}
 
 	db.DBO.StartMultiBatch()
