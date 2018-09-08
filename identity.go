@@ -2,19 +2,19 @@ package factom
 
 import (
 	"bytes"
-	"fmt"
+	"crypto/sha256"
+	"encoding/base64"
+	"encoding/hex"
 	"encoding/json"
+	"fmt"
 
 	ed "github.com/FactomProject/ed25519"
-	"crypto/sha256"
-	"encoding/hex"
-	"github.com/FactomProject/factomd/common/primitives/random"
 )
 
 type Identity struct {
 	ChainID string
-	Name []string
-	Keys []*IdentityKey
+	Name    []string
+	Keys    []*IdentityKey
 }
 
 func GetIdentity(name []string) (*Identity, error) {
@@ -42,7 +42,7 @@ func GetIdentity(name []string) (*Identity, error) {
 }
 
 func CreateIdentityChain(name []string, keys []*IdentityKey, ec *ECAddress) (string, error) {
-	e := Entry {}
+	e := Entry{}
 	for _, part := range name {
 		e.ExtIDs = append(e.ExtIDs, []byte(part))
 	}
@@ -93,7 +93,7 @@ func GetKeysAtHeight(chainID string, height int64) ([]*IdentityKey, error) {
 
 	var validKeys []*IdentityKey
 	for _, pubString := range initialKeys["keys"] {
-		pub, err := hex.DecodeString(pubString)
+		pub, err := base64.StdEncoding.DecodeString(pubString)
 		if err != nil || len(pub) != 32 {
 			return nil, fmt.Errorf("invalid Identity public key string in first entry")
 		}
@@ -154,7 +154,7 @@ func (i *Identity) ReplaceKey(oldKey *[32]byte, newKey *[32]byte, privateKey *[6
 	signature := ed.Sign(privateKey, message)
 	e := Entry{}
 	e.ChainID = i.ChainID
-	e.ExtIDs = [][]byte{[]byte("ReplaceKey"), oldKey[:], newKey[:],  signature[:]}
+	e.ExtIDs = [][]byte{[]byte("ReplaceKey"), oldKey[:], newKey[:], signature[:]}
 
 	txID, err := CommitEntry(&e, ec)
 	if err != nil {
@@ -311,116 +311,4 @@ func IsValidEndorsement(entryHash string) (bool, error) {
 		}
 	}
 	return false, nil
-}
-
-type IdentityKey struct {
-	Pub *[ed.PublicKeySize]byte
-	Sec *[ed.PrivateKeySize]byte
-}
-
-func GenerateRandomIdentityKey() *IdentityKey {
-	randomSecret := random.RandByteSliceOfLen(32)
-
-	key := NewIdentityKey()
-	copy(key.Sec[:32], randomSecret[:])
-	key.Pub = ed.GetPublicKey(key.Sec)
-	return key
-}
-
-func NewIdentityKey() *IdentityKey {
-	k := new(IdentityKey)
-	k.Pub = new([ed.PublicKeySize]byte)
-	k.Sec = new([ed.PrivateKeySize]byte)
-	return k
-}
-
-func (k *IdentityKey) UnmarshalBinary(data []byte) error {
-	_, err := k.UnmarshalBinaryData(data)
-	return err
-}
-
-func (k *IdentityKey) UnmarshalBinaryData(data []byte) ([]byte, error) {
-	if len(data) < 32 {
-		return nil, fmt.Errorf("secret key portion must be 32 bytes")
-	}
-
-	if k.Sec == nil {
-		k.Sec = new([ed.PrivateKeySize]byte)
-	}
-
-	copy(k.Sec[:], data[:32])
-	k.Pub = ed.GetPublicKey(k.Sec)
-
-	return data[32:], nil
-}
-
-func (k *IdentityKey) MarshalBinary() ([]byte, error) {
-	return k.SecBytes()[:32], nil
-}
-
-// GetIdentityKey takes a private key string and returns an IdentityKey.
-func GetIdentityKey(s string) (*IdentityKey, error) {
-	sec, err := hex.DecodeString(s)
-	if err != nil {
-		return nil, fmt.Errorf("failed to decode identity private key string")
-	}
-	if len(sec) != 32 {
-		return nil, fmt.Errorf("incorrect length for identity private key string")
-	}
-
-	return MakeIdentityKey(sec)
-}
-
-func MakeIdentityKey(sec []byte) (*IdentityKey, error) {
-	if len(sec) != 32 {
-		return nil, fmt.Errorf("secret key portion must be 32 bytes")
-	}
-
-	k := NewIdentityKey()
-
-	err := k.UnmarshalBinary(sec)
-	if err != nil {
-		return nil, err
-	}
-
-	return k, nil
-}
-
-// PubBytes returns the []byte representation of the public key
-func (k *IdentityKey) PubBytes() []byte {
-	return k.Pub[:]
-}
-
-// PubFixed returns the fixed size public key
-func (k *IdentityKey) PubFixed() *[ed.PublicKeySize]byte {
-	return k.Pub
-}
-
-// PubString returns the string encoding of the public key
-func (k *IdentityKey) PubString() string {
-	return hex.EncodeToString(k.PubBytes())
-}
-
-// SecBytes returns the []byte representation of the secret key
-func (k *IdentityKey) SecBytes() []byte {
-	return k.Sec[:]
-}
-
-// SecFixed returns the fixed size secret key
-func (k *IdentityKey) SecFixed() *[ed.PrivateKeySize]byte {
-	return k.Sec
-}
-
-// SecString returns the string encoding of the secret key
-func (k *IdentityKey) SecString() string {
-	return hex.EncodeToString(k.SecBytes()[:32])
-}
-
-// Sign the message with the Identity private key
-func (k *IdentityKey) Sign(msg []byte) *[ed.SignatureSize]byte {
-	return ed.Sign(k.SecFixed(), msg)
-}
-
-func (k *IdentityKey) String() string {
-	return k.PubString()
 }
