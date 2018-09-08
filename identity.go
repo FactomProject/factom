@@ -11,36 +11,26 @@ import (
 	ed "github.com/FactomProject/ed25519"
 )
 
+// An Identity is an array of names and a hierarchy of keys. It can assign/receive
+// Attributes as JSON objects and rotate/replace its currently valid keys.
 type Identity struct {
 	ChainID string
 	Name    []string
 	Keys    []*IdentityKey
 }
 
-func GetIdentity(name []string) (*Identity, error) {
-	// Create the ChainID from a series of hashes of the Identity name
+// GetIdentityChainID takes an identity name and returns its corresponding ChainID
+func GetIdentityChainID(name []string) string {
 	hs := sha256.New()
 	for _, part := range name {
 		h := sha256.Sum256([]byte(part))
 		hs.Write(h[:])
 	}
-	chainID := hex.EncodeToString(hs.Sum(nil))
-	i := Identity{}
-	i.ChainID = chainID
-	i.Name = name
-
-	if !ChainExists(chainID) {
-		return nil, fmt.Errorf("chain not found")
-	}
-
-	keys, err := GetKeysAtCurrentHeight(i.ChainID)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get identity keys: %v", err)
-	}
-	i.Keys = keys
-	return &i, nil
+	return hex.EncodeToString(hs.Sum(nil))
 }
 
+// CreateIdentityChain creates a new chain with name as the ExtIDs and a json object
+// describing the identity's keys in the Content field
 func CreateIdentityChain(name []string, keys []*IdentityKey, ec *ECAddress) (string, error) {
 	e := Entry{}
 	for _, part := range name {
@@ -146,6 +136,10 @@ func GetKeysAtHeight(chainID string, height int64) ([]*IdentityKey, error) {
 	return validKeys, nil
 }
 
+// ReplaceKey creates an entry in the given identity's chain saying that from this point (the current block),
+// the old key will be considered invalid and the new key will be considered valid.
+// In order to be recognized as a valid replacement, the identity key used to authorize the
+// action must be of the same or higher priority than the one being replaced.
 func (i *Identity) ReplaceKey(oldKey *[32]byte, newKey *[32]byte, privateKey *[64]byte, ec *ECAddress) (string, error) {
 	//publicKey := ed.GetPublicKey(privateKey)
 	var message []byte
@@ -167,6 +161,8 @@ func (i *Identity) ReplaceKey(oldKey *[32]byte, newKey *[32]byte, privateKey *[6
 	return txID, nil
 }
 
+// WriteAttribute creates an entry that assigns an attribute JSON object to a given identity, signs it
+// an identity key, and appends that entry to the specified destination chain.
 func WriteAttribute(receiverChainID string, destinationChainID string, attributesJSON string, privateKey *[64]byte, signerChainID string, ec *ECAddress) (string, []byte, error) {
 	message := []byte(receiverChainID + destinationChainID + attributesJSON)
 	signature := ed.Sign(privateKey, message)
