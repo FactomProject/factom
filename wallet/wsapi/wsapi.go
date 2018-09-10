@@ -5,6 +5,7 @@
 package wsapi
 
 import (
+	"bytes"
 	"crypto/sha256"
 	"crypto/subtle"
 	"crypto/tls"
@@ -17,6 +18,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"reflect"
 	"strings"
 	"time"
 
@@ -27,9 +29,7 @@ import (
 	"github.com/FactomProject/factomd/common/interfaces"
 	"github.com/FactomProject/factomd/common/primitives"
 	"github.com/FactomProject/web"
-	"bytes"
-	"reflect"
-	)
+)
 
 const APIVersion string = "2.0"
 
@@ -144,16 +144,17 @@ func Stop() {
 }
 
 func checkAuthHeader(r *http.Request) error {
-	if "" == rpcUser {
-		//no username was specified in the config file or command line, meaning factomd API is open access
+	// Don't bother to check the autorization if the rpc user/pass is not
+	// specified.
+	if rpcUser == "" {
 		return nil
 	}
+
 	authhdr := r.Header["Authorization"]
 	if len(authhdr) == 0 {
 		fmt.Println("Username and Password expected, but none were received")
 		return errors.New("no auth")
 	}
-	fmt.Println(authhdr)
 
 	h := sha256.New()
 	h.Write([]byte(authhdr[0]))
@@ -272,10 +273,7 @@ func handleV2Request(j *factom.JSON2Request) (*factom.JSON2Response, *factom.JSO
 
 	return jsonResp, nil
 }
-type StructToReturnValues struct {
-	TempBal int64  `json:"ack"`
-	PermBal int64  `json:"saved"`
-}
+
 func handleWalletBalances(params []byte) (interface{}, *factom.JSONError) {
 	//Get all of the addresses in the wallet
 	fs, es, err := fctWallet.GetAllAddresses()
@@ -302,7 +300,7 @@ func handleWalletBalances(params []byte) (interface{}, *factom.JSONError) {
 		stringOfAccountsEC = strings.Join(ecAccounts, `", "`)
 	}
 
-	url := "http://"+factom.FactomdServer()+"/v2"
+	url := "http://" + factom.FactomdServer() + "/v2"
 	if url == "http:///v2" {
 		url = "http://localhost:8088/v2"
 	}
@@ -327,13 +325,15 @@ func handleWalletBalances(params []byte) (interface{}, *factom.JSONError) {
 	}
 
 	//Total up the balances
-	var ackBalTotalEC int64 = 0
-	var savedBalTotalEC int64 = 0
-	var badErrorEC = ""
+	var (
+		ackBalTotalEC   int64
+		savedBalTotalEC int64
+		badErrorEC      string
+	)
 
 	var floatType = reflect.TypeOf(int64(0))
 
-	for i, _ := range respEC.Result.Balances {
+	for i := range respEC.Result.Balances {
 		x, ok := respEC.Result.Balances[i].(map[string]interface{})
 		if ok != true {
 			fmt.Println(x)
@@ -353,10 +353,6 @@ func handleWalletBalances(params []byte) (interface{}, *factom.JSONError) {
 			badErrorEC = "Error decoding address"
 		}
 	}
-
-	ECreturns := new(StructToReturnValues)
-	ECreturns.TempBal = ackBalTotalEC
-	ECreturns.PermBal = savedBalTotalEC
 
 	stringOfAccountsFCT := ""
 	if len(fctAccounts) != 0 {
@@ -384,12 +380,13 @@ func handleWalletBalances(params []byte) (interface{}, *factom.JSONError) {
 	}
 
 	// Total up the balances
-	var ackBalTotalFCT int64 = 0
-	var savedBalTotalFCT int64 = 0
-	var badErrorFCT = ""
+	var (
+		ackBalTotalFCT   int64
+		savedBalTotalFCT int64
+		badErrorFCT      string
+	)
 
-	for i, _ := range respFCT.Result.Balances {
-		fmt.Println(i)
+	for i := range respFCT.Result.Balances {
 		x, ok := respFCT.Result.Balances[i].(map[string]interface{})
 		if ok != true {
 			fmt.Println(x)
@@ -411,10 +408,6 @@ func handleWalletBalances(params []byte) (interface{}, *factom.JSONError) {
 
 	}
 
-	FCTreturns := new(StructToReturnValues)
-	FCTreturns.TempBal = ackBalTotalFCT
-	FCTreturns.PermBal = savedBalTotalFCT
-
 	if badErrorFCT == "Not fully booted" || badErrorEC == "Not fully booted" {
 		type nfb struct {
 			NotFullyBooted string `json:"Factomd Error"`
@@ -430,11 +423,14 @@ func handleWalletBalances(params []byte) (interface{}, *factom.JSONError) {
 		errDecReturn.NotFullyBooted = "There was an error decoding an address"
 		return errDecReturn, nil
 	}
-	finalResp := new(multiBalanceResponse)
-	finalResp.FactoidAccountBalances = FCTreturns
-	finalResp.EntryCreditAccountBalances = ECreturns
 
-	return finalResp, nil
+	resp := new(multiBalanceResponse)
+	resp.FactoidAccountBalances.Ack = ackBalTotalFCT
+	resp.FactoidAccountBalances.Saved = savedBalTotalFCT
+	resp.EntryCreditAccountBalances.Ack = ackBalTotalEC
+	resp.EntryCreditAccountBalances.Saved = savedBalTotalEC
+
+	return resp, nil
 }
 
 func handleRemoveAddress(params []byte) (interface{}, *factom.JSONError) {
@@ -1112,9 +1108,11 @@ func feesRequired(t interfaces.ITransaction) uint64 {
 	if err != nil {
 		rate = 0
 	}
-	if i, err := t.CalculateFee(rate); err != nil {
+
+	fee, err := t.CalculateFee(rate)
+	if err != nil {
 		return 0
-	} else {
-		return i
 	}
+
+	return fee
 }
