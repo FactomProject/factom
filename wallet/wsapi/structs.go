@@ -126,6 +126,22 @@ type heightResponse struct {
 	Height int64 `json:"height"`
 }
 
+type identityKeyResponse struct {
+	Public string `json:"public"`
+	Secret string `json:"secret,omitempty"`
+}
+
+type identityKeysAtHeightRequest struct {
+	ChainID string `json:"chainid"`
+	Height  int64  `json:"height"`
+}
+
+type identityKeysAtHeightResponse struct {
+	ChainID string                 `json:"chainid"`
+	Height  int64                  `json:"height"`
+	Keys    []*identityKeyResponse `json:"keys"`
+}
+
 // Helper structs
 
 type UnmarBody struct {

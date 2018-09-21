@@ -58,17 +58,17 @@ func CreateIdentityChain(name []string, keys []*IdentityKey, ec *ECAddress) (str
 }
 
 // GetKeysAtHeight returns the identity's public keys that were/are valid at the highest saved block height
-func GetKeysAtCurrentHeight(chainID string) ([]*IdentityKey, error) {
+func (i *Identity) GetKeysAtCurrentHeight() ([]*IdentityKey, error) {
 	heights, err := GetHeights()
 	if err != nil {
 		return nil, err
 	}
-	return GetKeysAtHeight(chainID, heights.DirectoryBlockHeight)
+	return i.GetKeysAtHeight(heights.DirectoryBlockHeight)
 }
 
 // GetKeysAtHeight returns the identity's public keys that were valid at the specified block height
-func GetKeysAtHeight(chainID string, height int64) ([]*IdentityKey, error) {
-	entries, err := GetAllChainEntriesAtHeight(chainID, height)
+func (i *Identity) GetKeysAtHeight(height int64) ([]*IdentityKey, error) {
+	entries, err := GetAllChainEntriesAtHeight(i.ChainID, height)
 	if err != nil {
 		return nil, err
 	}
@@ -246,7 +246,10 @@ func IsValidAttribute(entryHash string) (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	validKeys, err := GetKeysAtHeight(signerChainID, dblock.Header.SequenceNumber)
+
+	signer := &Identity{}
+	signer.ChainID = signerChainID
+	validKeys, err := signer.GetKeysAtHeight(dblock.Header.SequenceNumber)
 	if err != nil {
 		return false, err
 	}
@@ -296,7 +299,10 @@ func IsValidEndorsement(entryHash string) (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	validKeys, err := GetKeysAtHeight(signerChainID, dblock.Header.SequenceNumber)
+
+	signer := &Identity{}
+	signer.ChainID = signerChainID
+	validKeys, err := signer.GetKeysAtHeight(dblock.Header.SequenceNumber)
 	if err != nil {
 		return false, err
 	}
