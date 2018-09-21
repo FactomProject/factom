@@ -253,6 +253,8 @@ func handleV2Request(j *factom.JSON2Request) (*factom.JSON2Response, *factom.JSO
 		resp, jsonError = handleGetHeight(params)
 	case "wallet-balances":
 		resp, jsonError = handleWalletBalances(params)
+	case "identity-keys-at-height":
+		resp, jsonError = handleIdentityKeysAtHeight(params)
 	default:
 		jsonError = newMethodNotFoundError()
 	}
@@ -1025,6 +1027,33 @@ func handleGetHeight(params []byte) (interface{}, *factom.JSONError) {
 	}
 
 	resp.Height = int64(block.GetDBHeight())
+	return resp, nil
+}
+
+func handleIdentityKeysAtHeight(params []byte) (interface{}, *factom.JSONError) {
+	req := new(identityKeysAtHeightRequest)
+	if err := json.Unmarshal(params, req); err != nil {
+		return nil, newCustomInternalError(err.Error())
+	}
+
+	identity := &factom.Identity{}
+	identity.ChainID = req.ChainID
+	keys, err := identity.GetKeysAtHeight(req.Height)
+	if err != nil {
+		return nil, newCustomInternalError(err.Error())
+	}
+
+	resp := new(identityKeysAtHeightResponse)
+	resp.ChainID = req.ChainID
+	resp.Height = req.Height
+	for _, key := range keys {
+		keyResponse := new(identityKeyResponse)
+		keyResponse.Public = key.PubString()
+		if bytes.Compare(key.SecBytes(), factom.NewIdentityKey().SecBytes()) != 0 {
+			keyResponse.Secret = key.SecString()
+		}
+		resp.Keys = append(resp.Keys, keyResponse)
+	}
 	return resp, nil
 }
 
