@@ -253,6 +253,8 @@ func handleV2Request(j *factom.JSON2Request) (*factom.JSON2Response, *factom.JSO
 		resp, jsonError = handleGetHeight(params)
 	case "wallet-balances":
 		resp, jsonError = handleWalletBalances(params)
+	case "import-identity-keys":
+		resp, jsonError = handleImportIdentityKeys(params)
 	case "identity-keys-at-height":
 		resp, jsonError = handleIdentityKeysAtHeight(params)
 	default:
@@ -1027,6 +1029,29 @@ func handleGetHeight(params []byte) (interface{}, *factom.JSONError) {
 	}
 
 	resp.Height = int64(block.GetDBHeight())
+	return resp, nil
+}
+
+func handleImportIdentityKeys(params []byte) (interface{}, *factom.JSONError) {
+	req := new(importIdentityKeysRequest)
+	if err := json.Unmarshal(params, req); err != nil {
+		return nil, newInvalidParamsError()
+	}
+
+	resp := new(multiIdentityKeyResponse)
+	for _, v := range req.Keys {
+		key, err := factom.GetIdentityKey(v.Secret)
+		if err != nil {
+			return nil, newCustomInternalError(err.Error())
+		}
+		if err := fctWallet.InsertIdentityKey(key); err != nil {
+			return nil, newCustomInternalError(err.Error())
+		}
+		keyResp := new(identityKeyResponse)
+		keyResp.Public = key.PubString()
+		keyResp.Secret = v.Secret
+		resp.Keys = append(resp.Keys, keyResp)
+	}
 	return resp, nil
 }
 

@@ -71,6 +71,17 @@ type chainRequest struct {
 	Force bool         `json:"force"`
 }
 
+type importIdentityKeysRequest struct {
+	Keys []struct {
+		Secret string `json:"secret"`
+	} `json:keys`
+}
+
+type identityKeysAtHeightRequest struct {
+	ChainID string `json:"chainid"`
+	Height  int64  `json:"height"`
+}
+
 // responses
 
 type addressResponse struct {
@@ -125,9 +136,8 @@ type identityKeyResponse struct {
 	Secret string `json:"secret,omitempty"`
 }
 
-type identityKeysAtHeightRequest struct {
-	ChainID string `json:"chainid"`
-	Height  int64  `json:"height"`
+type multiIdentityKeyResponse struct {
+	Keys []*identityKeyResponse `json:"keys"`
 }
 
 type identityKeysAtHeightResponse struct {
