@@ -259,6 +259,8 @@ func handleV2Request(j *factom.JSON2Request) (*factom.JSON2Response, *factom.JSO
 		resp, jsonError = handleAllIdentityKeys(params)
 	case "import-identity-keys":
 		resp, jsonError = handleImportIdentityKeys(params)
+	case "remove-identity-key":
+		resp, jsonError = handleRemoveIdentityKey(params)
 	case "identity-keys-at-height":
 		resp, jsonError = handleIdentityKeysAtHeight(params)
 	default:
@@ -1092,6 +1094,23 @@ func handleImportIdentityKeys(params []byte) (interface{}, *factom.JSONError) {
 		keyResp.Secret = v.Secret
 		resp.Keys = append(resp.Keys, keyResp)
 	}
+	return resp, nil
+}
+
+func handleRemoveIdentityKey(params []byte) (interface{}, *factom.JSONError) {
+	req := new(identityKeyRequest)
+	if err := json.Unmarshal(params, req); err != nil {
+		return nil, newInvalidParamsError()
+	}
+
+	err := fctWallet.WalletDatabaseOverlay.RemoveIdentityKey(req.Public)
+	if err != nil {
+		return nil, newCustomInternalError(err.Error())
+	}
+
+	resp := new(simpleResponse)
+	resp.Success = true
+
 	return resp, nil
 }
 
