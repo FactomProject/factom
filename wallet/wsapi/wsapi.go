@@ -253,6 +253,10 @@ func handleV2Request(j *factom.JSON2Request) (*factom.JSON2Response, *factom.JSO
 		resp, jsonError = handleGetHeight(params)
 	case "wallet-balances":
 		resp, jsonError = handleWalletBalances(params)
+	case "identity-key":
+		resp, jsonError = handleIdentityKey(params)
+	case "all-identity-keys":
+		resp, jsonError = handleAllIdentityKeys(params)
 	case "import-identity-keys":
 		resp, jsonError = handleImportIdentityKeys(params)
 	case "identity-keys-at-height":
@@ -1029,6 +1033,42 @@ func handleGetHeight(params []byte) (interface{}, *factom.JSONError) {
 	}
 
 	resp.Height = int64(block.GetDBHeight())
+	return resp, nil
+}
+
+func handleIdentityKey(params []byte) (interface{}, *factom.JSONError) {
+	req := new(identityKeyRequest)
+	if err := json.Unmarshal(params, req); err != nil {
+		return nil, newInvalidParamsError()
+	}
+
+	e, err := fctWallet.GetIdentityKey(req.Public)
+	if err != nil {
+		return nil, newCustomInternalError(err.Error())
+	}
+	if e == nil {
+		return nil, newCustomInternalError("Wallet: identity key not found")
+	}
+	resp := new(identityKeyResponse)
+	resp.Public = e.PubString()
+	resp.Secret = e.SecString()
+	return resp, nil
+}
+
+func handleAllIdentityKeys(params []byte) (interface{}, *factom.JSONError) {
+	resp := new(multiIdentityKeyResponse)
+
+	keys, err := fctWallet.GetAllIdentityKeys()
+	if err != nil {
+		return nil, newCustomInternalError(err.Error())
+	}
+	for _, v := range keys {
+		key := new(identityKeyResponse)
+		key.Public = v.PubString()
+		key.Secret = v.SecString()
+		resp.Keys = append(resp.Keys, key)
+	}
+
 	return resp, nil
 }
 

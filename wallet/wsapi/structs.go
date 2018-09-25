@@ -71,6 +71,10 @@ type chainRequest struct {
 	Force bool         `json:"force"`
 }
 
+type identityKeyRequest struct {
+	Public string `json:"public"`
+}
+
 type importIdentityKeysRequest struct {
 	Keys []struct {
 		Secret string `json:"secret"`
