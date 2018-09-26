@@ -93,6 +93,15 @@ type identityChainRequest struct {
 	Force   bool     `json:"force"`
 }
 
+type identityKeyReplacementRequest struct {
+	ChainID   string `json:"chainid"`
+	OldKey    string `json:"oldkey"`
+	NewKey    string `json:"newkey"`
+	SignerKey string `json:"signerkey"`
+	ECPub     string `json:"ecpub"`
+	Force     bool   `json:"force"`
+}
+
 // responses
 
 type addressResponse struct {
