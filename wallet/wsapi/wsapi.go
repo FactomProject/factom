@@ -269,6 +269,10 @@ func handleV2Request(j *factom.JSON2Request) (*factom.JSON2Response, *factom.JSO
 		resp, jsonError = handleComposeIdentityChain(params)
 	case "compose-identity-key-replacement":
 		resp, jsonError = handleComposeIdentityKeyReplacement(params)
+	case "compose-identity-attribute":
+		resp, jsonError = handleComposeIdentityAttribute(params)
+	case "compose-identity-attribute-endorsement":
+		resp, jsonError = handleComposeIdentityAttributeEndorsement(params)
 	default:
 		jsonError = newMethodNotFoundError()
 	}
@@ -1251,6 +1255,137 @@ func handleComposeIdentityKeyReplacement(params []byte) (interface{}, *factom.JS
 	}
 
 	e := factom.NewIdentityKeyReplacementEntry(req.ChainID, oldKey, newKey, signerKey)
+	ecpub := req.ECPub
+	force := req.Force
+
+	ec, err := fctWallet.GetECAddress(ecpub)
+	if err != nil {
+		return nil, newCustomInternalError(err.Error())
+	}
+	if ec == nil {
+		return nil, newCustomInternalError("Wallet: address not found")
+	}
+	if !force {
+		// check ec address balance
+		balance, err := factom.GetECBalance(ecpub)
+		if err != nil {
+			return nil, newCustomInternalError(err.Error())
+		}
+
+		if cost, err := factom.EntryCost(e); err != nil {
+			newCustomInternalError(err.Error())
+		} else if balance < int64(cost) {
+			newCustomInternalError("Not enough Entry Credits")
+		}
+
+		if !factom.ChainExists(e.ChainID) {
+			return nil, newCustomInvalidParamsError("Chain " + e.ChainID + " was not found")
+		}
+	}
+
+	commit, err := factom.ComposeEntryCommit(e, ec)
+	if err != nil {
+		return nil, newCustomInternalError(err.Error())
+	}
+
+	reveal, err := factom.ComposeEntryReveal(e)
+	if err != nil {
+		return nil, newCustomInternalError(err.Error())
+	}
+
+	resp := new(entryResponse)
+	resp.Commit = commit
+	resp.Reveal = reveal
+	return resp, nil
+}
+
+func handleComposeIdentityAttribute(params []byte) (interface{}, *factom.JSONError) {
+	req := new(identityAttributeRequest)
+	if err := json.Unmarshal(params, req); err != nil {
+		return nil, newInvalidParamsError()
+	}
+
+	signerKey, err := fctWallet.GetIdentityKey(req.SignerKey)
+	if err != nil {
+		return nil, newCustomInternalError(err.Error())
+	}
+	if signerKey == nil {
+		return nil, newCustomInternalError("Wallet: identity key not found")
+	}
+
+	for _, attribute := range req.Attributes {
+		if attribute.Key == nil {
+			return nil, newCustomInternalError("Attribute key must not be nil")
+		}
+		if attribute.Value == nil {
+			return nil, newCustomInternalError("Attribute value must not be nil")
+		}
+	}
+	attributesJSON, err := json.Marshal(req.Attributes)
+	if err != nil {
+		return nil, newCustomInternalError(err.Error())
+	}
+
+	e := factom.NewIdentityAttributeEntry(req.ReceiverChainID, req.DestinationChainID, string(attributesJSON), signerKey, req.SignerChainID)
+	ecpub := req.ECPub
+	force := req.Force
+
+	ec, err := fctWallet.GetECAddress(ecpub)
+	if err != nil {
+		return nil, newCustomInternalError(err.Error())
+	}
+	if ec == nil {
+		return nil, newCustomInternalError("Wallet: address not found")
+	}
+	if !force {
+		// check ec address balance
+		balance, err := factom.GetECBalance(ecpub)
+		if err != nil {
+			return nil, newCustomInternalError(err.Error())
+		}
+
+		if cost, err := factom.EntryCost(e); err != nil {
+			newCustomInternalError(err.Error())
+		} else if balance < int64(cost) {
+			newCustomInternalError("Not enough Entry Credits")
+		}
+
+		if !factom.ChainExists(e.ChainID) {
+			return nil, newCustomInvalidParamsError("Chain " + e.ChainID + " was not found")
+		}
+	}
+
+	commit, err := factom.ComposeEntryCommit(e, ec)
+	if err != nil {
+		return nil, newCustomInternalError(err.Error())
+	}
+
+	reveal, err := factom.ComposeEntryReveal(e)
+	if err != nil {
+		return nil, newCustomInternalError(err.Error())
+	}
+
+	resp := new(entryResponse)
+	resp.Commit = commit
+	resp.Reveal = reveal
+	return resp, nil
+}
+
+func handleComposeIdentityAttributeEndorsement(params []byte) (interface{}, *factom.JSONError) {
+	req := new(identityAttributeEndorsementRequest)
+	if err := json.Unmarshal(params, req); err != nil {
+		return nil, newInvalidParamsError()
+	}
+
+	signerKey, err := fctWallet.GetIdentityKey(req.SignerKey)
+	if err != nil {
+		return nil, newCustomInternalError(err.Error())
+	}
+	if signerKey == nil {
+		return nil, newCustomInternalError("Wallet: identity key not found")
+	}
+
+	e := factom.NewIdentityAttributeEndorsementEntry(req.DestinationChainID, req.EntryHash, signerKey, req.SignerChainID)
 	ecpub := req.ECPub
 	force := req.Force
 
