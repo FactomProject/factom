@@ -262,6 +262,27 @@ func FetchFactoidAddress(fctpub string) (*FactoidAddress, error) {
 	return GetFactoidAddress(r.Secret)
 }
 
+func FetchIdentityKey(pub string) (*IdentityKey, error) {
+	params := new(addressRequest)
+	params.Address = pub
+
+	req := NewJSON2Request("identity-key", APICounter(), params)
+	resp, err := walletRequest(req)
+	if err != nil {
+		return nil, err
+	}
+	if resp.Error != nil {
+		return nil, resp.Error
+	}
+
+	r := new(addressResponse)
+	if err := json.Unmarshal(resp.JSONResult(), r); err != nil {
+		return nil, err
+	}
+
+	return GetIdentityKey(r.Secret)
+}
+
 func GetWalletHeight() (uint32, error) {
 	req := NewJSON2Request("get-height", APICounter(), nil)
 	resp, err := walletRequest(req)

@@ -158,9 +158,9 @@ type multiIdentityKeyResponse struct {
 }
 
 type identityKeysAtHeightResponse struct {
-	ChainID string                 `json:"chainid"`
-	Height  int64                  `json:"height"`
-	Keys    []*identityKeyResponse `json:"keys"`
+	ChainID string   `json:"chainid"`
+	Height  int64    `json:"height"`
+	Keys    []string `json:"keys"`
 }
 
 // Helper structs

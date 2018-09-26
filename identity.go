@@ -90,11 +90,24 @@ func (i *Identity) GetKeysAtHeight(height int64) ([]*IdentityKey, error) {
 		if len(e.ExtIDs[1]) != 32 || len(e.ExtIDs[2]) != 32 || len(e.ExtIDs[3]) != 64 {
 			continue
 		}
+
 		var oldKey [32]byte
+		oldPubString := string(e.ExtIDs[1])
+		b, err := base64.StdEncoding.DecodeString(oldPubString)
+		if err != nil {
+			continue
+		}
+		copy(oldKey[:], b)
+
 		var newKey [32]byte
+		newPubString := string(e.ExtIDs[2])
+		b, err = base64.StdEncoding.DecodeString(newPubString)
+		if err != nil {
+			continue
+		}
+		copy(newKey[:], b)
+
 		var signature [64]byte
-		copy(oldKey[:], e.ExtIDs[1])
-		copy(newKey[:], e.ExtIDs[2])
 		copy(signature[:], e.ExtIDs[3])
 
 		levelToReplace := -1
@@ -118,12 +131,10 @@ func (i *Identity) GetKeysAtHeight(height int64) ([]*IdentityKey, error) {
 			}
 			if ed.Verify(key.Pub, message, &signature) {
 				validKeys[levelToReplace].Pub = &newKey
-				validKeys[levelToReplace].Sec = new([ed.PrivateKeySize]byte)
 				break
 			}
 		}
 	}
-
 	return validKeys, nil
 }
 
@@ -131,15 +142,15 @@ func (i *Identity) GetKeysAtHeight(height int64) ([]*IdentityKey, error) {
 // the old key will be considered invalid and the new key will be considered valid.
 // In order to be recognized as a valid replacement, the identity key used to authorize the
 // action must be of the same or higher priority than the one being replaced.
-func (i *Identity) ReplaceKey(oldKey *[32]byte, newKey *[32]byte, privateKey *[64]byte, ec *ECAddress) (string, error) {
+func (i *Identity) ReplaceKey(oldKey *IdentityKey, newKey *IdentityKey, signerKey *IdentityKey, ec *ECAddress) (string, error) {
 	//publicKey := ed.GetPublicKey(privateKey)
 	var message []byte
-	message = append(message, oldKey[:]...)
-	message = append(message, newKey[:]...)
-	signature := ed.Sign(privateKey, message)
+	message = append(message, []byte(oldKey.String())...)
+	message = append(message, []byte(newKey.String())...)
+	signature := signerKey.Sign(message)
 	e := Entry{}
 	e.ChainID = i.ChainID
-	e.ExtIDs = [][]byte{[]byte("ReplaceKey"), oldKey[:], newKey[:], signature[:]}
+	e.ExtIDs = [][]byte{[]byte("ReplaceKey"), []byte(oldKey.String()), []byte(newKey.String()), signature[:]}
 
 	txID, err := CommitEntry(&e, ec)
 	if err != nil {
