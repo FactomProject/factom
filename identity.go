@@ -29,7 +29,7 @@ func GetIdentityChainID(name []string) string {
 	return hex.EncodeToString(hs.Sum(nil))
 }
 
-// NewIdentityChain creates an returns a Chain struct for a new identity. Publish it to
+// NewIdentityChain creates an returns a Chain struct for a new identity. Publish it to the
 // blockchain using the usual factom.CommitChain(...) and factom.RevealChain(...) calls.
 func NewIdentityChain(name []string, keys []*IdentityKey) *Chain {
 	e := &Entry{}
@@ -139,29 +139,17 @@ func (i *Identity) GetKeysAtHeight(height int64) ([]*IdentityKey, error) {
 	return validKeys, nil
 }
 
-// ReplaceKey creates an entry in the given identity's chain saying that from this point (the current block),
-// the old key will be considered invalid and the new key will be considered valid.
-// In order to be recognized as a valid replacement, the identity key used to authorize the
-// action must be of the same or higher priority than the one being replaced.
-func (i *Identity) ReplaceKey(oldKey *IdentityKey, newKey *IdentityKey, signerKey *IdentityKey, ec *ECAddress) (string, error) {
-	//publicKey := ed.GetPublicKey(privateKey)
+// NewIdentityKeyReplacementEntry creates and returns a new Entry struct for the key replacement. Publish it to the
+// blockchain using the usual factom.CommitEntry(...) and factom.RevealEntry(...) calls.
+func NewIdentityKeyReplacementEntry(chainID string, oldKey *IdentityKey, newKey *IdentityKey, signerKey *IdentityKey) *Entry {
 	var message []byte
 	message = append(message, []byte(oldKey.String())...)
 	message = append(message, []byte(newKey.String())...)
 	signature := signerKey.Sign(message)
 	e := Entry{}
-	e.ChainID = i.ChainID
+	e.ChainID = chainID
 	e.ExtIDs = [][]byte{[]byte("ReplaceKey"), []byte(oldKey.String()), []byte(newKey.String()), signature[:], []byte(signerKey.PubString())}
-
-	txID, err := CommitEntry(&e, ec)
-	if err != nil {
-		return "", err
-	}
-	_, err = RevealEntry(&e)
-	if err != nil {
-		return "", err
-	}
-	return txID, nil
+	return &e
 }
 
 // WriteAttribute creates an entry that assigns an attribute JSON object to a given identity, signs it
