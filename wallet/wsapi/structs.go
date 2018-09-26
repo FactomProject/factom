@@ -86,6 +86,13 @@ type identityKeysAtHeightRequest struct {
 	Height  int64  `json:"height"`
 }
 
+type identityChainRequest struct {
+	Name    []string `json:"name"`
+	PubKeys []string `json:"pubkeys"`
+	ECPub   string   `json:"ecpub"`
+	Force   bool     `json:"force"`
+}
+
 // responses
 
 type addressResponse struct {

@@ -29,10 +29,10 @@ func GetIdentityChainID(name []string) string {
 	return hex.EncodeToString(hs.Sum(nil))
 }
 
-// CreateIdentityChain creates a new chain with name as the ExtIDs and a json object
-// describing the identity's keys in the Content field
-func CreateIdentityChain(name []string, keys []*IdentityKey, ec *ECAddress) (string, error) {
-	e := Entry{}
+// NewIdentityChain creates an returns a Chain struct for a new identity. Publish it to
+// blockchain using the usual factom.CommitChain(...) and factom.RevealChain(...) calls.
+func NewIdentityChain(name []string, keys []*IdentityKey) *Chain {
+	e := &Entry{}
 	for _, part := range name {
 		e.ExtIDs = append(e.ExtIDs, []byte(part))
 	}
@@ -44,17 +44,8 @@ func CreateIdentityChain(name []string, keys []*IdentityKey, ec *ECAddress) (str
 	keysMap := map[string][]string{"keys": publicKeys}
 	keysJSON, _ := json.Marshal(keysMap)
 	e.Content = []byte(keysJSON)
-	chain := NewChain(&e)
-
-	txID, err := CommitChain(chain, ec)
-	if err != nil {
-		return "", err
-	}
-	_, err = RevealChain(chain)
-	if err != nil {
-		return "", err
-	}
-	return txID, nil
+	c := NewChain(e)
+	return c
 }
 
 // GetKeysAtHeight returns the identity's public keys that were/are valid at the highest saved block height
