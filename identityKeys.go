@@ -6,21 +6,11 @@ import (
 	"encoding/base64"
 
 	ed "github.com/FactomProject/ed25519"
-	"github.com/FactomProject/factomd/common/primitives/random"
 )
 
 type IdentityKey struct {
 	Pub *[ed.PublicKeySize]byte
 	Sec *[ed.PrivateKeySize]byte
-}
-
-func GenerateRandomIdentityKey() *IdentityKey {
-	randomSecret := random.RandByteSliceOfLen(32)
-
-	key := NewIdentityKey()
-	copy(key.Sec[:32], randomSecret[:])
-	key.Pub = ed.GetPublicKey(key.Sec)
-	return key
 }
 
 func NewIdentityKey() *IdentityKey {
