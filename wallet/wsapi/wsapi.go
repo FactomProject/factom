@@ -265,6 +265,8 @@ func handleV2Request(j *factom.JSON2Request) (*factom.JSON2Response, *factom.JSO
 		resp, jsonError = handleRemoveIdentityKey(params)
 	case "identity-keys-at-height":
 		resp, jsonError = handleIdentityKeysAtHeight(params)
+	case "compose-identity-chain":
+		resp, jsonError = handleComposeIdentityChain(params)
 	default:
 		jsonError = newMethodNotFoundError()
 	}
@@ -1040,6 +1042,8 @@ func handleGetHeight(params []byte) (interface{}, *factom.JSONError) {
 	return resp, nil
 }
 
+// Identity handlers
+
 func handleIdentityKey(params []byte) (interface{}, *factom.JSONError) {
 	req := new(identityKeyRequest)
 	if err := json.Unmarshal(params, req); err != nil {
@@ -1151,6 +1155,71 @@ func handleIdentityKeysAtHeight(params []byte) (interface{}, *factom.JSONError) 
 		}
 		resp.Keys = append(resp.Keys, keyResponse)
 	}
+	return resp, nil
+}
+
+func handleComposeIdentityChain(params []byte) (interface{}, *factom.JSONError) {
+	req := new(identityChainRequest)
+	if err := json.Unmarshal(params, req); err != nil {
+		return nil, newInvalidParamsError()
+	}
+
+	var keys []*factom.IdentityKey
+	for _, v := range req.PubKeys {
+		pub, err := base64.StdEncoding.DecodeString(v)
+		if err != nil {
+			return nil, newCustomInternalError(fmt.Sprintf("Failed to decode identity public key string: %s", v))
+		}
+		if len(pub) != 32 {
+			return nil, newCustomInternalError(fmt.Sprintf("Invalid length for identity public key string: %s", v))
+		}
+		k := factom.NewIdentityKey()
+		copy(k.Pub[:], pub[:32])
+		keys = append(keys, k)
+	}
+	ecpub := req.ECPub
+	force := req.Force
+	c := factom.NewIdentityChain(req.Name, keys)
+
+	ec, err := fctWallet.GetECAddress(ecpub)
+	if err != nil {
+		return nil, newCustomInternalError(err.Error())
+	}
+	if ec == nil {
+		return nil, newCustomInternalError("Wallet: address not found")
+	}
+
+	if !force {
+		// check ec address balance
+		balance, err := factom.GetECBalance(ecpub)
+		if err != nil {
+			return nil, newCustomInternalError(err.Error())
+		}
+
+		if cost, err := factom.EntryCost(c.FirstEntry); err != nil {
+			return nil, newCustomInternalError(err.Error())
+		} else if balance < int64(cost)+10 {
+			return nil, newCustomInternalError("Not enough Entry Credits")
+		}
+
+		if factom.ChainExists(c.ChainID) {
+			return nil, newCustomInvalidParamsError("Chain " + c.ChainID + " already exists")
+		}
+	}
+
+	commit, err := factom.ComposeChainCommit(c, ec)
+	if err != nil {
+		return nil, newCustomInternalError(err.Error())
+	}
+
+	reveal, err := factom.ComposeChainReveal(c)
+	if err != nil {
+		return nil, newCustomInternalError(err.Error())
+	}
+
+	resp := new(entryResponse)
+	resp.Commit = commit
+	resp.Reveal = reveal
 	return resp, nil
 }
 
