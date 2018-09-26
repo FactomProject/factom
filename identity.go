@@ -84,10 +84,10 @@ func (i *Identity) GetKeysAtHeight(height int64) ([]*IdentityKey, error) {
 	}
 
 	for _, e := range entries {
-		if len(e.ExtIDs) < 4 || bytes.Compare(e.ExtIDs[0], []byte("ReplaceKey")) != 0 {
+		if len(e.ExtIDs) < 5 || bytes.Compare(e.ExtIDs[0], []byte("ReplaceKey")) != 0 {
 			continue
 		}
-		if len(e.ExtIDs[1]) != 32 || len(e.ExtIDs[2]) != 32 || len(e.ExtIDs[3]) != 64 {
+		if len(e.ExtIDs[1]) != 44 || len(e.ExtIDs[2]) != 44 || len(e.ExtIDs[3]) != 64 {
 			continue
 		}
 
@@ -109,6 +109,7 @@ func (i *Identity) GetKeysAtHeight(height int64) ([]*IdentityKey, error) {
 
 		var signature [64]byte
 		copy(signature[:], e.ExtIDs[3])
+		signerPubString := string(e.ExtIDs[4])
 
 		levelToReplace := -1
 		for level, key := range validKeys {
@@ -122,14 +123,14 @@ func (i *Identity) GetKeysAtHeight(height int64) ([]*IdentityKey, error) {
 		}
 
 		var message []byte
-		message = append(message, oldKey[:]...)
-		message = append(message, newKey[:]...)
+		message = append(message, oldPubString...)
+		message = append(message, newPubString...)
 		for level, key := range validKeys {
 			if level > levelToReplace {
 				// low priority key trying to replace high priority key, disregard
 				break
 			}
-			if ed.Verify(key.Pub, message, &signature) {
+			if key.PubString() == signerPubString && ed.Verify(key.Pub, message, &signature) {
 				validKeys[levelToReplace].Pub = &newKey
 				break
 			}
@@ -150,7 +151,7 @@ func (i *Identity) ReplaceKey(oldKey *IdentityKey, newKey *IdentityKey, signerKe
 	signature := signerKey.Sign(message)
 	e := Entry{}
 	e.ChainID = i.ChainID
-	e.ExtIDs = [][]byte{[]byte("ReplaceKey"), []byte(oldKey.String()), []byte(newKey.String()), signature[:]}
+	e.ExtIDs = [][]byte{[]byte("ReplaceKey"), []byte(oldKey.String()), []byte(newKey.String()), signature[:], []byte(signerKey.PubString())}
 
 	txID, err := CommitEntry(&e, ec)
 	if err != nil {
