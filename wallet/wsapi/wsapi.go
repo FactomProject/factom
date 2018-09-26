@@ -260,6 +260,8 @@ func handleV2Request(j *factom.JSON2Request) (*factom.JSON2Response, *factom.JSO
 		resp, jsonError = handleAllIdentityKeys(params)
 	case "import-identity-keys":
 		resp, jsonError = handleImportIdentityKeys(params)
+	case "generate-identity-key":
+		resp, jsonError = handleGenerateIdentityKey(params)
 	case "remove-identity-key":
 		resp, jsonError = handleRemoveIdentityKey(params)
 	case "identity-keys-at-height":
@@ -1090,6 +1092,17 @@ func handleImportIdentityKeys(params []byte) (interface{}, *factom.JSONError) {
 		keyResp.Secret = v.Secret
 		resp.Keys = append(resp.Keys, keyResp)
 	}
+	return resp, nil
+}
+
+func handleGenerateIdentityKey(params []byte) (interface{}, *factom.JSONError) {
+	k, err := fctWallet.GenerateIdentityKey()
+	if err != nil {
+		return nil, newCustomInternalError(err.Error())
+	}
+	resp := identityKeyResponse{}
+	resp.Public = k.PubString()
+	resp.Secret = k.SecString()
 	return resp, nil
 }
 
