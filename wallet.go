@@ -85,6 +85,28 @@ func GenerateECAddress() (*ECAddress, error) {
 	return e, nil
 }
 
+func GenerateIdentityKey() (*IdentityKey, error) {
+	req := NewJSON2Request("generate-identity-key", APICounter(), nil)
+	resp, err := walletRequest(req)
+	if err != nil {
+		return nil, err
+	}
+	if resp.Error != nil {
+		return nil, resp.Error
+	}
+
+	k := new(addressResponse)
+	if err := json.Unmarshal(resp.JSONResult(), k); err != nil {
+		return nil, err
+	}
+	e, err := GetIdentityKey(k.Secret)
+	if err != nil {
+		return nil, err
+	}
+
+	return e, nil
+}
+
 func ImportAddresses(addrs ...string) (
 	[]*FactoidAddress,
 	[]*ECAddress,
