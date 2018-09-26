@@ -152,50 +152,30 @@ func NewIdentityKeyReplacementEntry(chainID string, oldKey *IdentityKey, newKey 
 	return &e
 }
 
-// WriteAttribute creates an entry that assigns an attribute JSON object to a given identity, signs it
-// an identity key, and appends that entry to the specified destination chain.
-func WriteAttribute(receiverChainID string, destinationChainID string, attributesJSON string, privateKey *[64]byte, signerChainID string, ec *ECAddress) (string, []byte, error) {
+// NewIdentityAttributeEntry creates and returns an Entry struct that assigns an attribute JSON object to a given
+// identity. Publish it to the blockchain using the usual factom.CommitEntry(...) and factom.RevealEntry(...) calls.
+func NewIdentityAttributeEntry(receiverChainID string, destinationChainID string, attributesJSON string, signerKey *IdentityKey, signerChainID string) *Entry {
 	message := []byte(receiverChainID + destinationChainID + attributesJSON)
-	signature := ed.Sign(privateKey, message)
-	publicKey := ed.GetPublicKey(privateKey)
+	signature := signerKey.Sign(message)
 
 	e := Entry{}
 	e.ChainID = destinationChainID
-	e.ExtIDs = [][]byte{[]byte("IdentityAttribute"), []byte(receiverChainID), signature[:], publicKey[:], []byte(signerChainID)}
+	e.ExtIDs = [][]byte{[]byte("IdentityAttribute"), []byte(receiverChainID), signature[:], []byte(signerKey.PubString()), []byte(signerChainID)}
 	e.Content = []byte(attributesJSON)
-
-	txID, err := CommitEntry(&e, ec)
-	if err != nil {
-		return "", nil, err
-	}
-	_, err = RevealEntry(&e)
-	if err != nil {
-		return "", nil, err
-	}
-	return txID, e.Hash(), nil
+	return &e
 }
 
-// EndorseIdentityAttribute signs a message using the provided private key saying that the signing identity acknowledges/agrees with
-// the attribute entry located at entryHash
-func EndorseIdentityAttribute(destinationChainID string, attributeEntryHash string, privateKey *[64]byte, signerChainID string, ec *ECAddress) (string, []byte, error) {
+// NewIdentityAttributeEndorsementEntry creates and returns an Entry struct that agrees with or recognizes a given
+// attribute. Publish it to the blockchain using the usual factom.CommitEntry(...) and factom.RevealEntry(...) calls.
+func NewIdentityAttributeEndorsementEntry(destinationChainID string, attributeEntryHash string, signerKey *IdentityKey, signerChainID string) *Entry {
 	message := []byte(destinationChainID + attributeEntryHash)
-	signature := ed.Sign(privateKey, message)
-	publicKey := ed.GetPublicKey(privateKey)
+	signature := signerKey.Sign(message)
 
 	e := Entry{}
 	e.ChainID = destinationChainID
-	e.ExtIDs = [][]byte{[]byte("IdentityAttributeEndorsement"), signature[:], publicKey[:], []byte(signerChainID)}
+	e.ExtIDs = [][]byte{[]byte("IdentityAttributeEndorsement"), signature[:], []byte(signerKey.PubString()), []byte(signerChainID)}
 	e.Content = []byte(attributeEntryHash)
-
-	txID, err := CommitEntry(&e, ec)
-	if err != nil {
-		return "", nil, err
-	}
-	_, err = RevealEntry(&e)
-	if err != nil {
-		return "", nil, err
-	}
-	return txID, e.Hash(), nil
+	return &e
 }
 
 // IsValidAttribute returns true if the EntryHash points to a correctly formatted attribute entry with a signature
@@ -210,21 +190,26 @@ func IsValidAttribute(entryHash string) (bool, error) {
 	if len(e.ExtIDs) < 5 || bytes.Compare(e.ExtIDs[0], []byte("IdentityAttribute")) != 0 {
 		return false, nil
 	}
-	if len(e.ExtIDs[1]) != 64 || len(e.ExtIDs[2]) != 64 || len(e.ExtIDs[3]) != 32 || len(e.ExtIDs[4]) != 64 {
+	if len(e.ExtIDs[1]) != 64 || len(e.ExtIDs[2]) != 64 || len(e.ExtIDs[3]) != 44 || len(e.ExtIDs[4]) != 64 {
 		return false, nil
 	}
 	receiverChainID := e.ExtIDs[1]
 	var signature [64]byte
 	copy(signature[:], e.ExtIDs[2])
-	var pubKey [32]byte
-	copy(pubKey[:], e.ExtIDs[3])
+	var signerKey [32]byte
+	signerPubString := string(e.ExtIDs[3])
+	b, err := base64.StdEncoding.DecodeString(signerPubString)
+	if err != nil {
+		return false, err
+	}
+	copy(signerKey[:], b)
 	signerChainID := string(e.ExtIDs[4])
 
 	// Message that was signed = ReceiverChainID + DestinationChainID + AttributesJSON
 	message := receiverChainID
 	message = append(message, []byte(e.ChainID)...)
 	message = append(message, e.Content...)
-	if !ed.Verify(&pubKey, message, &signature) {
+	if !ed.Verify(&signerKey, message, &signature) {
 		return false, nil
 	}
 
@@ -245,7 +230,7 @@ func IsValidAttribute(entryHash string) (bool, error) {
 		return false, err
 	}
 	for _, key := range validKeys {
-		if bytes.Compare(pubKey[:], key.Pub[:]) == 0 {
+		if bytes.Compare(signerKey[:], key.Pub[:]) == 0 {
 			// Found provided key to be valid at time of publishing attribute
 			return true, nil
 		}
@@ -265,19 +250,24 @@ func IsValidEndorsement(entryHash string) (bool, error) {
 	if len(e.ExtIDs) < 4 || bytes.Compare(e.ExtIDs[0], []byte("IdentityAttributeEndorsement")) != 0 {
 		return false, nil
 	}
-	if len(e.ExtIDs[1]) != 64 || len(e.ExtIDs[2]) != 32 || len(e.ExtIDs[3]) != 64 {
+	if len(e.ExtIDs[1]) != 64 || len(e.ExtIDs[2]) != 44 || len(e.ExtIDs[3]) != 64 {
 		return false, nil
 	}
 	var signature [64]byte
 	copy(signature[:], e.ExtIDs[1])
-	var pubKey [32]byte
-	copy(pubKey[:], e.ExtIDs[2])
+	var signerKey [32]byte
+	signerPubString := string(e.ExtIDs[2])
+	b, err := base64.StdEncoding.DecodeString(signerPubString)
+	if err != nil {
+		return false, err
+	}
+	copy(signerKey[:], b)
 	signerChainID := string(e.ExtIDs[3])
 
 	// Message that was signed = DestinationChainID + AttributeEntryHash
 	message := []byte(e.ChainID)
 	message = append(message, e.Content...)
-	if !ed.Verify(&pubKey, message, &signature) {
+	if !ed.Verify(&signerKey, message, &signature) {
 		return false, nil
 	}
 
@@ -298,7 +288,7 @@ func IsValidEndorsement(entryHash string) (bool, error) {
 		return false, err
 	}
 	for _, key := range validKeys {
-		if bytes.Compare(pubKey[:], key.Pub[:]) == 0 {
+		if bytes.Compare(signerKey[:], key.Pub[:]) == 0 {
 			// Found provided key to be valid at time of publishing attribute
 			return true, nil
 		}
