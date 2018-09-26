@@ -1148,12 +1148,7 @@ func handleIdentityKeysAtHeight(params []byte) (interface{}, *factom.JSONError) 
 	resp.ChainID = req.ChainID
 	resp.Height = req.Height
 	for _, key := range keys {
-		keyResponse := new(identityKeyResponse)
-		keyResponse.Public = key.PubString()
-		if bytes.Compare(key.SecBytes(), factom.NewIdentityKey().SecBytes()) != 0 {
-			keyResponse.Secret = key.SecString()
-		}
-		resp.Keys = append(resp.Keys, keyResponse)
+		resp.Keys = append(resp.Keys, key.PubString())
 	}
 	return resp, nil
 }
