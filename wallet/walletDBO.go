@@ -134,6 +134,7 @@ type DBSeedBase struct {
 	MnemonicSeed            string
 	NextFactoidAddressIndex uint32
 	NextECAddressIndex      uint32
+	NextIdentityKeyIndex    uint32
 }
 
 type DBSeed struct {
@@ -207,6 +208,20 @@ func (e *DBSeed) NextECAddress() (*factom.ECAddress, error) {
 		bip32.FirstHardenedChild,
 		0,
 		e.NextECAddressIndex,
+	)
+	if err != nil {
+		return nil, err
+	}
+	e.NextECAddressIndex++
+	return add, nil
+}
+
+func (e *DBSeed) NextIdentityKey() (*factom.IdentityKey, error) {
+	add, err := factom.MakeBIP44IdentityKey(
+		e.MnemonicSeed,
+		bip32.FirstHardenedChild,
+		0,
+		e.NextIdentityKeyIndex,
 	)
 	if err != nil {
 		return nil, err
@@ -486,6 +501,25 @@ func (t *FA) New() interfaces.BinaryMarshallableAndCopyable {
 	return e
 }
 
+func (db *WalletDatabaseOverlay) GetNextIdentityKey() (*factom.IdentityKey, error) {
+	seed, err := db.GetOrCreateDBSeed()
+	if err != nil {
+		return nil, err
+	}
+	add, err := seed.NextIdentityKey()
+	if err != nil {
+		return nil, err
+	}
+	err = db.InsertDBSeed(seed)
+	if err != nil {
+		return nil, err
+	}
+	err = db.InsertIdentityKey(add)
+	if err != nil {
+		return nil, err
+	}
+	return add, nil
+}
 
 func (db *WalletDatabaseOverlay) InsertIdentityKey(e *factom.IdentityKey) error {
 	if e == nil {

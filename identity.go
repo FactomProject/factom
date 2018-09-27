@@ -9,6 +9,7 @@ import (
 	"fmt"
 
 	ed "github.com/FactomProject/ed25519"
+	"github.com/FactomProject/btcutil/base58"
 )
 
 // An Identity is an array of names and a hierarchy of keys. It can assign/receive
@@ -79,12 +80,12 @@ func (i *Identity) GetKeysAtHeight(height int64) ([]*IdentityKey, error) {
 
 	var validKeys []*IdentityKey
 	for _, pubString := range initialKeys["keys"] {
-		pub, err := base64.StdEncoding.DecodeString(pubString)
-		if err != nil || len(pub) != 32 {
-			return nil, fmt.Errorf("invalid Identity public key string in first entry")
+		if !IsValidIdentityKey(pubString) {
+			return nil, fmt.Errorf("invalid Identity Public Key string in first entry")
 		}
+		pub := base58.Decode(pubString)
 		k := NewIdentityKey()
-		copy(k.Pub[:], pub)
+		copy(k.Pub[:], pub[IDKeyPrefixLength:IDKeyBodyLength])
 		validKeys = append(validKeys, k)
 	}
 
@@ -92,25 +93,25 @@ func (i *Identity) GetKeysAtHeight(height int64) ([]*IdentityKey, error) {
 		if len(e.ExtIDs) < 5 || bytes.Compare(e.ExtIDs[0], []byte("ReplaceKey")) != 0 {
 			continue
 		}
-		if len(e.ExtIDs[1]) != 44 || len(e.ExtIDs[2]) != 44 || len(e.ExtIDs[3]) != 64 {
+		if len(e.ExtIDs[1]) != 55 || len(e.ExtIDs[2]) != 55 || len(e.ExtIDs[3]) != 64 {
 			continue
 		}
 
 		var oldKey [32]byte
 		oldPubString := string(e.ExtIDs[1])
-		b, err := base64.StdEncoding.DecodeString(oldPubString)
-		if err != nil {
+		if !IsValidIdentityKey(oldPubString) {
 			continue
 		}
-		copy(oldKey[:], b)
+		b := base58.Decode(oldPubString)
+		copy(oldKey[:], b[IDKeyPrefixLength:IDKeyBodyLength])
 
 		var newKey [32]byte
 		newPubString := string(e.ExtIDs[2])
-		b, err = base64.StdEncoding.DecodeString(newPubString)
-		if err != nil {
+		if !IsValidIdentityKey(newPubString) {
 			continue
 		}
-		copy(newKey[:], b)
+		b = base58.Decode(newPubString)
+		copy(newKey[:], b[IDKeyPrefixLength:IDKeyBodyLength])
 
 		var signature [64]byte
 		copy(signature[:], e.ExtIDs[3])
@@ -192,7 +193,7 @@ func IsValidAttribute(entryHash string) (bool, error) {
 	if len(e.ExtIDs) < 5 || bytes.Compare(e.ExtIDs[0], []byte("IdentityAttribute")) != 0 {
 		return false, nil
 	}
-	if len(e.ExtIDs[1]) != 64 || len(e.ExtIDs[2]) != 64 || len(e.ExtIDs[3]) != 44 || len(e.ExtIDs[4]) != 64 {
+	if len(e.ExtIDs[1]) != 64 || len(e.ExtIDs[2]) != 64 || len(e.ExtIDs[3]) != 55 || len(e.ExtIDs[4]) != 64 {
 		return false, nil
 	}
 	receiverChainID := e.ExtIDs[1]
@@ -200,11 +201,12 @@ func IsValidAttribute(entryHash string) (bool, error) {
 	copy(signature[:], e.ExtIDs[2])
 	var signerKey [32]byte
 	signerPubString := string(e.ExtIDs[3])
-	b, err := base64.StdEncoding.DecodeString(signerPubString)
-	if err != nil {
-		return false, err
+	if !IsValidIdentityKey(signerPubString) {
+		// TODO: evaluate whether we should return false just because the key is in the wrong format here
+		return false, nil
 	}
-	copy(signerKey[:], b)
+	b := base58.Decode(signerPubString)
+	copy(signerKey[:], b[IDKeyPrefixLength:IDKeyBodyLength])
 	signerChainID := string(e.ExtIDs[4])
 
 	// Message that was signed = ReceiverChainID + DestinationChainID + AttributesJSON
@@ -252,7 +254,7 @@ func IsValidEndorsement(entryHash string) (bool, error) {
 	if len(e.ExtIDs) < 4 || bytes.Compare(e.ExtIDs[0], []byte("IdentityAttributeEndorsement")) != 0 {
 		return false, nil
 	}
-	if len(e.ExtIDs[1]) != 64 || len(e.ExtIDs[2]) != 44 || len(e.ExtIDs[3]) != 64 {
+	if len(e.ExtIDs[1]) != 64 || len(e.ExtIDs[2]) != 55 || len(e.ExtIDs[3]) != 64 {
 		return false, nil
 	}
 	var signature [64]byte

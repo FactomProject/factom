@@ -248,7 +248,7 @@ func TestGetAllAddresses(t *testing.T) {
 }
 
 func TestPutIdentityKey(t *testing.T) {
-	sec := "aokN4TYcmHBxP4WTYCan0ymYQtqLoLeKbnNWivylD8g="
+	sec := "idsec2J3nNoqdiyboCBKDGauqN9Jb33dyFSqaJKZqTs6i5FmztsTn5f"
 
 	// create a new database
 	w, err := NewMapDBWallet()
@@ -301,8 +301,8 @@ func TestGenerateIdentityKey(t *testing.T) {
 }
 
 func TestGetAllIdentityKeys(t *testing.T) {
-	sec1 := "OQt+S8561HclsbNHEgPF6gE8ElOl+cQ/I9bqolAW2WE="
-	sec2 := "IwlkC3xooRM2xq7N0m94InOYj9xcavQ36V3Ar3NUCW0="
+	sec1 := "idsec2J3nNoqdiyboCBKDGauqN9Jb33dyFSqaJKZqTs6i5FmztsTn5f"
+	sec2 := "idsec1xuUyeCCrJhsojf2wLAZqRxPzPFR8Gidd9DRRid1yGy8ncAJG3"
 
 	correctLen := 2
 
