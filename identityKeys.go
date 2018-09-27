@@ -1,12 +1,84 @@
 package factom
 
 import (
+	"bytes"
 	"fmt"
 
-	"encoding/base64"
-
 	ed "github.com/FactomProject/ed25519"
+	"github.com/FactomProject/btcutil/base58"
+	"github.com/FactomProject/go-bip44"
 )
+
+type identityKeyStringType byte
+
+const (
+	InvalidIdentityKey identityKeyStringType = iota
+	IDPub
+	IDSec
+)
+
+const (
+	IDKeyLength         = 41
+	IDKeyPrefixLength = 5
+	IDKeyBodyLength   = IDKeyLength - ChecksumLength
+)
+
+var (
+	idPubPrefix = []byte{0x03, 0x45, 0xef, 0x9d, 0xe0}
+	idSecPrefix = []byte{0x03, 0x45, 0xf3, 0xd0, 0xd6}
+)
+
+func IdentityKeyStringType(s string) identityKeyStringType {
+	p := base58.Decode(s)
+
+	if len(p) != IDKeyLength {
+		return InvalidIdentityKey
+	}
+
+	// verify the address checksum
+	body := p[:BodyLength]
+	check := p[AddressLength-ChecksumLength:]
+	if !bytes.Equal(shad(body)[:ChecksumLength], check) {
+		return InvalidIdentityKey
+	}
+
+	prefix := p[:IDKeyPrefixLength]
+	switch {
+	case bytes.Equal(prefix, idPubPrefix):
+		return IDPub
+	case bytes.Equal(prefix, idSecPrefix):
+		return IDPub
+	default:
+		return InvalidIdentityKey
+	}
+}
+
+func IsValidIdentityKey(s string) bool {
+	p := base58.Decode(s)
+
+	if len(p) != IDKeyLength {
+		return false
+	}
+
+	prefix := p[:IDKeyPrefixLength]
+	switch {
+	case bytes.Equal(prefix, idPubPrefix):
+		break
+	case bytes.Equal(prefix, idSecPrefix):
+		break
+	default:
+		return false
+	}
+
+	// verify the address checksum
+	body := p[:IDKeyBodyLength]
+	check := p[IDKeyLength-ChecksumLength:]
+	if bytes.Equal(shad(body)[:ChecksumLength], check) {
+		return true
+	}
+
+	return false
+}
 
 type IdentityKey struct {
 	Pub *[ed.PublicKeySize]byte
@@ -46,15 +118,16 @@ func (k *IdentityKey) MarshalBinary() ([]byte, error) {
 
 // GetIdentityKey takes a private key string and returns an IdentityKey.
 func GetIdentityKey(s string) (*IdentityKey, error) {
-	sec, err := base64.StdEncoding.DecodeString(s)
-	if err != nil {
-		return nil, fmt.Errorf("failed to decode identity private key string")
+	if !IsValidIdentityKey(s) {
+		return nil, fmt.Errorf("invalid Identity Private Key")
 	}
-	if len(sec) != 32 {
-		return nil, fmt.Errorf("incorrect length for identity private key string")
+	p := base58.Decode(s)
+
+	if !bytes.Equal(p[:IDKeyPrefixLength], idSecPrefix) {
+		return nil, fmt.Errorf("invalid Identity Private Key")
 	}
 
-	return MakeIdentityKey(sec)
+	return MakeIdentityKey(p[IDKeyPrefixLength:IDKeyBodyLength])
 }
 
 func MakeIdentityKey(sec []byte) (*IdentityKey, error) {
@@ -72,6 +145,20 @@ func MakeIdentityKey(sec []byte) (*IdentityKey, error) {
 	return k, nil
 }
 
+func MakeBIP44IdentityKey(mnemonic string, account, chain, address uint32) (*IdentityKey, error) {
+	mnemonic, err := ParseAndValidateMnemonic(mnemonic)
+	if err != nil {
+		return nil, err
+	}
+
+	child, err := bip44.NewKeyFromMnemonic(mnemonic, 0x88888888, account, chain, address)
+	if err != nil {
+		return nil, err
+	}
+
+	return MakeIdentityKey(child.Key)
+}
+
 // PubBytes returns the []byte representation of the public key
 func (k *IdentityKey) PubBytes() []byte {
 	return k.Pub[:]
@@ -84,7 +171,14 @@ func (k *IdentityKey) PubFixed() *[ed.PublicKeySize]byte {
 
 // PubString returns the string encoding of the public key
 func (k *IdentityKey) PubString() string {
-	return base64.StdEncoding.EncodeToString(k.PubBytes())
+	buf := new(bytes.Buffer)
+	buf.Write(idPubPrefix)
+	buf.Write(k.PubBytes())
+
+	check := shad(buf.Bytes())[:ChecksumLength]
+	buf.Write(check)
+
+	return base58.Encode(buf.Bytes())
 }
 
 // SecBytes returns the []byte representation of the secret key
@@ -99,7 +193,14 @@ func (k *IdentityKey) SecFixed() *[ed.PrivateKeySize]byte {
 
 // SecString returns the string encoding of the secret key
 func (k *IdentityKey) SecString() string {
-	return base64.StdEncoding.EncodeToString(k.SecBytes()[:32])
+	buf := new(bytes.Buffer)
+	buf.Write(idSecPrefix)
+	buf.Write(k.SecBytes()[:32])
+
+	check := shad(buf.Bytes())[:ChecksumLength]
+	buf.Write(check)
+
+	return base58.Encode(buf.Bytes())
 }
 
 // Sign the message with the Identity private key

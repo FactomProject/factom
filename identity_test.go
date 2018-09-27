@@ -20,10 +20,10 @@ func TestGetIdentityChainID(t *testing.T) {
 func TestNewIdentityChain(t *testing.T) {
 	name := []string{"John", "Jacob", "Jingleheimer-Schmidt"}
 	secretKeys := []string{
-		"OQt+S8561HclsbNHEgPF6gE8ElOl+cQ/I9bqolAW2WE=",
-		"IwlkC3xooRM2xq7N0m94InOYj9xcavQ36V3Ar3NUCW0=",
-		"oZU/23DMo3UK4HctBUGkpdUqgt0UqeCF6BhlNdmcPwY=",
-		"mwkcvN2a38Uv16FXlK01csWVjqXSvF7I6l+oBPmVCRQ=",
+		"idsec2rChEHLz3SPQQx3syQtB11pHAmxyGjux5FntnS7xqTCieHxxTc",
+		"idsec1xuUyeCCrJhsojf2wLAZqRxPzPFR8Gidd9DRRid1yGy8ncAJG3",
+		"idsec2J3nNoqdiyboCBKDGauqN9Jb33dyFSqaJKZqTs6i5FmztsTn5f",
+		"idsec1jztZ7dypqtwtPPWxybZFNpvvpUh6g8oog6Mnk2gGCm1pNBTgE",
 	}
 	var keys []*IdentityKey
 	for _, v := range secretKeys {
@@ -58,9 +58,9 @@ func TestNewIdentityChain(t *testing.T) {
 
 func TestNewIdentityKeyReplacementEntry(t *testing.T) {
 	chainID := "e0cf1713b492e09e783d5d9f4fc6e2c71b5bdc9af4806a7937a5e935819717e9"
-	oldKey, _ := GetIdentityKey("mwkcvN2a38Uv16FXlK01csWVjqXSvF7I6l+oBPmVCRQ=")
-	newKey, _ := GetIdentityKey("TTqbfGahXE7MKJ1/kxv/HEGk0yAblehJ+tBs76goQAM=")
-	signerKey, _ := GetIdentityKey("IwlkC3xooRM2xq7N0m94InOYj9xcavQ36V3Ar3NUCW0=")
+	oldKey, _ := GetIdentityKey("idsec1jztZ7dypqtwtPPWxybZFNpvvpUh6g8oog6Mnk2gGCm1pNBTgE")
+	newKey, _ := GetIdentityKey("idsec2J3nNoqdiyboCBKDGauqN9Jb33dyFSqaJKZqTs6i5FmztsTn5f")
+	signerKey, _ := GetIdentityKey("idsec2wH72BNR9QZhTMGDbxwLWGrghZQexZvLTros2wCekkc62N9h7s")
 
 	observedEntry := NewIdentityKeyReplacementEntry(chainID, oldKey, newKey, signerKey)
 
@@ -96,7 +96,7 @@ func TestNewIdentityAttributeEntry(t *testing.T) {
 	receiverChainID := "5ef81cd345fd497a376ca5e5670ef10826d96e73c9f797b33ea46552a47834a3"
 	destinationChainID := "5a402200c5cf278e47905ce52d7d64529a0291829a7bd230072c5468be709069"
 	signerChainID := "e0cf1713b492e09e783d5d9f4fc6e2c71b5bdc9af4806a7937a5e935819717e9"
-	signerKey, _ := GetIdentityKey("IwlkC3xooRM2xq7N0m94InOYj9xcavQ36V3Ar3NUCW0=")
+	signerKey, _ := GetIdentityKey("idsec2J3nNoqdiyboCBKDGauqN9Jb33dyFSqaJKZqTs6i5FmztsTn5f")
 	attributes := `[{"key":"email","value":"abc@def.ghi"}]`
 
 	observedEntry := NewIdentityAttributeEntry(receiverChainID, destinationChainID, attributes, signerKey, signerChainID)
@@ -149,7 +149,7 @@ func TestNewIdentityAttributeEntry(t *testing.T) {
 func TestNewIdentityAttributeEndorsementEntry(t *testing.T) {
 	destinationChainID := "5a402200c5cf278e47905ce52d7d64529a0291829a7bd230072c5468be709069"
 	signerChainID := "e0cf1713b492e09e783d5d9f4fc6e2c71b5bdc9af4806a7937a5e935819717e9"
-	signerKey, _ := GetIdentityKey("IwlkC3xooRM2xq7N0m94InOYj9xcavQ36V3Ar3NUCW0=")
+	signerKey, _ := GetIdentityKey("idsec2J3nNoqdiyboCBKDGauqN9Jb33dyFSqaJKZqTs6i5FmztsTn5f")
 	entryHash := "52385948ea3ab6fd67b07664ac6a30ae5f6afa94427a547c142517beaa9054d0"
 
 	observedEntry := NewIdentityAttributeEndorsementEntry(destinationChainID, entryHash, signerKey, signerChainID)

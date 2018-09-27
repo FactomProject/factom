@@ -285,8 +285,8 @@ func FetchFactoidAddress(fctpub string) (*FactoidAddress, error) {
 }
 
 func FetchIdentityKey(pub string) (*IdentityKey, error) {
-	params := new(addressRequest)
-	params.Address = pub
+	params := new(struct{Public string `json:"public"`})
+	params.Public = pub
 
 	req := NewJSON2Request("identity-key", APICounter(), params)
 	resp, err := walletRequest(req)
