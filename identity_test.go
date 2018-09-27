@@ -13,9 +13,7 @@ func TestGetIdentityChainID(t *testing.T) {
 	observedChainID := GetIdentityChainID(name)
 	expectedChainID := "e0cf1713b492e09e783d5d9f4fc6e2c71b5bdc9af4806a7937a5e935819717e9"
 	if observedChainID != expectedChainID {
-		fmt.Println(observedChainID)
-		fmt.Println(expectedChainID)
-		t.Fail()
+		t.Errorf("got: %s but expected: %s", observedChainID, expectedChainID)
 	}
 }
 
@@ -47,13 +45,11 @@ func TestNewIdentityChain(t *testing.T) {
 		content := newChain.FirstEntry.Content
 		err := json.Unmarshal(content, &contentMap)
 		if err != nil {
-			fmt.Println("Failed to unmarshal content")
-			t.Fail()
+			t.Errorf("Failed to unmarshal content")
 		}
 		for i, v := range contentMap["keys"].([]interface{}) {
 			if keys[i].String() != v.(string) {
-				fmt.Println("Keys not properly formatted")
-				t.Fail()
+				t.Errorf("Keys not properly formatted")
 			}
 		}
 	})
@@ -75,18 +71,15 @@ func TestNewIdentityKeyReplacementEntry(t *testing.T) {
 	})
 	t.Run("ExtIDs", func(t *testing.T) {
 		if len(observedEntry.ExtIDs) != 5 {
-			fmt.Println("len(ExtIDs) != 5")
-			t.Fail()
+			t.Errorf("len(ExtIDs) != 5")
 		}
 		if string(observedEntry.ExtIDs[0]) != "ReplaceKey" {
-			fmt.Println("ReplaceKey is not first ExtID")
-			t.Fail()
+			t.Errorf("ReplaceKey is not first ExtID")
 		}
 		if  string(observedEntry.ExtIDs[1]) != oldKey.String() ||
 			string(observedEntry.ExtIDs[2]) != newKey.String() ||
 			string(observedEntry.ExtIDs[4]) != signerKey.String() {
-			fmt.Println("Keys not formatted properly")
-			t.Fail()
+			t.Errorf("Keys not formatted properly")
 		}
 	})
 	t.Run("Signature", func(t *testing.T) {
@@ -110,45 +103,37 @@ func TestNewIdentityAttributeEntry(t *testing.T) {
 
 	t.Run("ChainID", func(t *testing.T) {
 		if observedEntry.ChainID != destinationChainID {
-			fmt.Println("Incorrect Destination ChainID")
-			t.Fail()
+			t.Errorf("Incorrect Destination ChainID")
 		}
 	})
 	t.Run("ExtIDs", func(t *testing.T) {
 		if len(observedEntry.ExtIDs) != 5 {
-			fmt.Println("len(ExtIDs) != 5")
-			t.Fail()
+			t.Errorf("len(ExtIDs) != 5")
 		}
 		if string(observedEntry.ExtIDs[0]) != "IdentityAttribute" {
-			fmt.Println("IdentityAttribute is not first ExtID")
-			t.Fail()
+			t.Errorf("IdentityAttribute is not first ExtID")
 		}
 		if string(observedEntry.ExtIDs[1]) != receiverChainID {
-			fmt.Println("Receiver ChainID is not ExtID[1]")
-			t.Fail()
+			t.Errorf("Receiver ChainID is not ExtID[1]")
 		}
 		if string(observedEntry.ExtIDs[4]) != signerChainID {
-			fmt.Println("Signer ChainID is not ExtID[4]")
-			t.Fail()
+			t.Errorf("Signer ChainID is not ExtID[4]")
 		}
 		if string(observedEntry.ExtIDs[3]) != signerKey.String() {
-			fmt.Println("Signer key not properly formatted or is not ExtID[3]")
-			t.Fail()
+			t.Errorf("Signer key not properly formatted or is not ExtID[3]")
 		}
 	})
 	t.Run("Attributes accessible from Content", func(t *testing.T) {
 		var attributes []IdentityAttribute
 		err := json.Unmarshal(observedEntry.Content, &attributes)
 		if err != nil {
-			fmt.Println("Failed to unmarshal content")
+			t.Errorf("Failed to unmarshal content: %v", err)
 		}
 		if attributes[0].Key != "email" {
-			fmt.Println("Incorrect key")
-			t.Fail()
+			t.Errorf("Incorrect key")
 		}
 		if attributes[0].Value != "abc@def.ghi" {
-			fmt.Println("Incorrect value")
-			t.Fail()
+			t.Errorf("Incorrect value")
 		}
 	})
 	t.Run("Signature", func(t *testing.T) {
@@ -171,26 +156,21 @@ func TestNewIdentityAttributeEndorsementEntry(t *testing.T) {
 
 	t.Run("ChainID", func(t *testing.T) {
 		if observedEntry.ChainID != destinationChainID {
-			fmt.Println("Incorrect Destination ChainID")
-			t.Fail()
+			t.Errorf("Incorrect Destination ChainID")
 		}
 	})
 	t.Run("ExtIDs", func(t *testing.T) {
 		if len(observedEntry.ExtIDs) != 4 {
-			fmt.Println("len(ExtIDs) != 4")
-			t.Fail()
+			t.Errorf("len(ExtIDs) != 4")
 		}
 		if string(observedEntry.ExtIDs[0]) != "IdentityAttributeEndorsement" {
-			fmt.Println("IdentityAttributeEndorsement is not first ExtID")
-			t.Fail()
+			t.Errorf("IdentityAttributeEndorsement is not first ExtID")
 		}
 		if string(observedEntry.ExtIDs[3]) != signerChainID {
-			fmt.Println("Signer ChainID is not ExtID[3]")
-			t.Fail()
+			t.Errorf("Signer ChainID is not ExtID[3]")
 		}
 		if string(observedEntry.ExtIDs[2]) != signerKey.String() {
-			fmt.Println("Signer key not properly formatted or is not ExtID[2]")
-			t.Fail()
+			t.Errorf("Signer key not properly formatted or is not ExtID[2]")
 		}
 	})
 	t.Run("Signature", func(t *testing.T) {
