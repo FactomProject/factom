@@ -19,6 +19,11 @@ type Identity struct {
 	Keys    []*IdentityKey
 }
 
+type IdentityAttribute struct {
+	Key   interface{} `json:"key"`
+	Value interface{} `json:"value"`
+}
+
 // GetIdentityChainID takes an identity name and returns its corresponding ChainID
 func GetIdentityChainID(name []string) string {
 	hs := sha256.New()
@@ -43,7 +48,7 @@ func NewIdentityChain(name []string, keys []*IdentityKey) *Chain {
 	}
 	keysMap := map[string][]string{"keys": publicKeys}
 	keysJSON, _ := json.Marshal(keysMap)
-	e.Content = []byte(keysJSON)
+	e.Content = keysJSON
 	c := NewChain(e)
 	return c
 }
@@ -122,9 +127,7 @@ func (i *Identity) GetKeysAtHeight(height int64) ([]*IdentityKey, error) {
 			continue
 		}
 
-		var message []byte
-		message = append(message, oldPubString...)
-		message = append(message, newPubString...)
+		message := []byte(oldPubString + newPubString)
 		for level, key := range validKeys {
 			if level > levelToReplace {
 				// low priority key trying to replace high priority key, disregard
@@ -142,13 +145,12 @@ func (i *Identity) GetKeysAtHeight(height int64) ([]*IdentityKey, error) {
 // NewIdentityKeyReplacementEntry creates and returns a new Entry struct for the key replacement. Publish it to the
 // blockchain using the usual factom.CommitEntry(...) and factom.RevealEntry(...) calls.
 func NewIdentityKeyReplacementEntry(chainID string, oldKey *IdentityKey, newKey *IdentityKey, signerKey *IdentityKey) *Entry {
-	var message []byte
-	message = append(message, []byte(oldKey.String())...)
-	message = append(message, []byte(newKey.String())...)
+	message := []byte(oldKey.String() + newKey.String())
 	signature := signerKey.Sign(message)
+
 	e := Entry{}
 	e.ChainID = chainID
-	e.ExtIDs = [][]byte{[]byte("ReplaceKey"), []byte(oldKey.String()), []byte(newKey.String()), signature[:], []byte(signerKey.PubString())}
+	e.ExtIDs = [][]byte{[]byte("ReplaceKey"), []byte(oldKey.String()), []byte(newKey.String()), signature[:], []byte(signerKey.String())}
 	return &e
 }
 
@@ -160,7 +162,7 @@ func NewIdentityAttributeEntry(receiverChainID string, destinationChainID string
 
 	e := Entry{}
 	e.ChainID = destinationChainID
-	e.ExtIDs = [][]byte{[]byte("IdentityAttribute"), []byte(receiverChainID), signature[:], []byte(signerKey.PubString()), []byte(signerChainID)}
+	e.ExtIDs = [][]byte{[]byte("IdentityAttribute"), []byte(receiverChainID), signature[:], []byte(signerKey.String()), []byte(signerChainID)}
 	e.Content = []byte(attributesJSON)
 	return &e
 }
@@ -173,7 +175,7 @@ func NewIdentityAttributeEndorsementEntry(destinationChainID string, attributeEn
 
 	e := Entry{}
 	e.ChainID = destinationChainID
-	e.ExtIDs = [][]byte{[]byte("IdentityAttributeEndorsement"), signature[:], []byte(signerKey.PubString()), []byte(signerChainID)}
+	e.ExtIDs = [][]byte{[]byte("IdentityAttributeEndorsement"), signature[:], []byte(signerKey.String()), []byte(signerChainID)}
 	e.Content = []byte(attributeEntryHash)
 	return &e
 }
