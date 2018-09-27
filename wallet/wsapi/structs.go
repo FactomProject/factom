@@ -103,13 +103,13 @@ type identityKeyReplacementRequest struct {
 }
 
 type identityAttributeRequest struct {
-	ReceiverChainID    string      `json:"receiver-chainid"`
-	DestinationChainID string      `json:"destination-chainid"`
-	Attributes         []Attribute `json:"attributes"`
-	SignerKey          string      `json:"signerkey"`
-	SignerChainID      string      `json:"signer-chainid"`
-	ECPub              string      `json:"ecpub"`
-	Force              bool        `json:"force"`
+	ReceiverChainID    string                     `json:"receiver-chainid"`
+	DestinationChainID string                     `json:"destination-chainid"`
+	Attributes         []factom.IdentityAttribute `json:"attributes"`
+	SignerKey          string                     `json:"signerkey"`
+	SignerChainID      string                     `json:"signer-chainid"`
+	ECPub              string                     `json:"ecpub"`
+	Force              bool                       `json:"force"`
 }
 
 type identityAttributeEndorsementRequest struct {
@@ -191,9 +191,4 @@ type UnmarBody struct {
 	Jsonrpc string          `json:"jsonrps"`
 	Id      int             `json:"id"`
 	Result  balanceResponse `json:"result"`
-}
-
-type Attribute struct {
-	Key   interface{} `json:"key"`
-	Value interface{} `json:"value"`
 }
