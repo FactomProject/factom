@@ -36,8 +36,8 @@ func IdentityKeyStringType(s string) identityKeyStringType {
 	}
 
 	// verify the address checksum
-	body := p[:BodyLength]
-	check := p[AddressLength-ChecksumLength:]
+	body := p[:IDKeyBodyLength]
+	check := p[IDKeyLength-ChecksumLength:]
 	if !bytes.Equal(shad(body)[:ChecksumLength], check) {
 		return InvalidIdentityKey
 	}
