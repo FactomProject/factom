@@ -96,54 +96,28 @@ func TestNewIdentityAttributeEntry(t *testing.T) {
 	receiverChainID := "5ef81cd345fd497a376ca5e5670ef10826d96e73c9f797b33ea46552a47834a3"
 	destinationChainID := "5a402200c5cf278e47905ce52d7d64529a0291829a7bd230072c5468be709069"
 	signerChainID := "e0cf1713b492e09e783d5d9f4fc6e2c71b5bdc9af4806a7937a5e935819717e9"
-	signerKey, _ := GetIdentityKey("idsec2J3nNoqdiyboCBKDGauqN9Jb33dyFSqaJKZqTs6i5FmztsTn5f")
-	attributes := `[{"key":"email","value":"abc@def.ghi"}]`
+	signerKey, err := GetIdentityKey("idsec2J3nNoqdiyboCBKDGauqN9Jb33dyFSqaJKZqTs6i5FmztsTn5f")
+	if err != nil {
+		t.Errorf("Failed to get identity key")
+	}
+	attributesJSON := `[{"key":"email","value":"abc@def.ghi"}]`
 
-	observedEntry := NewIdentityAttributeEntry(receiverChainID, destinationChainID, attributes, signerKey, signerChainID)
+	observedEntry := NewIdentityAttributeEntry(receiverChainID, destinationChainID, attributesJSON, signerKey, signerChainID)
 
-	t.Run("ChainID", func(t *testing.T) {
-		if observedEntry.ChainID != destinationChainID {
-			t.Errorf("Incorrect Destination ChainID")
-		}
-	})
-	t.Run("ExtIDs", func(t *testing.T) {
-		if len(observedEntry.ExtIDs) != 5 {
-			t.Errorf("len(ExtIDs) != 5")
-		}
-		if string(observedEntry.ExtIDs[0]) != "IdentityAttribute" {
-			t.Errorf("IdentityAttribute is not first ExtID")
-		}
-		if string(observedEntry.ExtIDs[1]) != receiverChainID {
-			t.Errorf("Receiver ChainID is not ExtID[1]")
-		}
-		if string(observedEntry.ExtIDs[4]) != signerChainID {
-			t.Errorf("Signer ChainID is not ExtID[4]")
-		}
-		if string(observedEntry.ExtIDs[3]) != signerKey.String() {
-			t.Errorf("Signer key not properly formatted or is not ExtID[3]")
-		}
-	})
-	t.Run("Attributes accessible from Content", func(t *testing.T) {
-		var attributes []IdentityAttribute
-		err := json.Unmarshal(observedEntry.Content, &attributes)
-		if err != nil {
-			t.Errorf("Failed to unmarshal content: %v", err)
-		}
-		if attributes[0].Key != "email" {
-			t.Errorf("Incorrect key")
-		}
-		if attributes[0].Value != "abc@def.ghi" {
-			t.Errorf("Incorrect value")
-		}
-	})
-	t.Run("Signature", func(t *testing.T) {
-		var observedSignature [64]byte
-		copy(observedSignature[:], observedEntry.ExtIDs[2])
-		message := []byte(receiverChainID + destinationChainID + attributes)
-		if !ed.Verify(signerKey.Pub, message, &observedSignature) {
-			t.Fail()
-		}
-	})
+	if !IsValidAttribute(observedEntry) {
+		t.Errorf("Improperly formatted attribute")
+	}
+
+	var attributes []IdentityAttribute
+	if err = json.Unmarshal(observedEntry.Content, &attributes); err != nil {
+		t.Errorf("Failed to unmarshal content: %v", err)
+	}
+	if attributes[0].Key != "email" {
+		t.Errorf("Incorrect key")
+	}
+	if attributes[0].Value != "abc@def.ghi" {
+		t.Errorf("Incorrect value")
+	}
 }
 
 func TestNewIdentityAttributeEndorsementEntry(t *testing.T) {
@@ -154,31 +128,7 @@ func TestNewIdentityAttributeEndorsementEntry(t *testing.T) {
 
 	observedEntry := NewIdentityAttributeEndorsementEntry(destinationChainID, entryHash, signerKey, signerChainID)
 
-	t.Run("ChainID", func(t *testing.T) {
-		if observedEntry.ChainID != destinationChainID {
-			t.Errorf("Incorrect Destination ChainID")
-		}
-	})
-	t.Run("ExtIDs", func(t *testing.T) {
-		if len(observedEntry.ExtIDs) != 4 {
-			t.Errorf("len(ExtIDs) != 4")
-		}
-		if string(observedEntry.ExtIDs[0]) != "IdentityAttributeEndorsement" {
-			t.Errorf("IdentityAttributeEndorsement is not first ExtID")
-		}
-		if string(observedEntry.ExtIDs[3]) != signerChainID {
-			t.Errorf("Signer ChainID is not ExtID[3]")
-		}
-		if string(observedEntry.ExtIDs[2]) != signerKey.String() {
-			t.Errorf("Signer key not properly formatted or is not ExtID[2]")
-		}
-	})
-	t.Run("Signature", func(t *testing.T) {
-		var observedSignature [64]byte
-		copy(observedSignature[:], observedEntry.ExtIDs[1])
-		message := []byte(destinationChainID + entryHash)
-		if !ed.Verify(signerKey.Pub, message, &observedSignature) {
-			t.Fail()
-		}
-	})
+	if !IsValidEndorsement(observedEntry) {
+		t.Errorf("Improperly formatted attribute endorsement")
+	}
 }

@@ -3,13 +3,12 @@ package factom
 import (
 	"bytes"
 	"crypto/sha256"
-	"encoding/base64"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
 
-	ed "github.com/FactomProject/ed25519"
 	"github.com/FactomProject/btcutil/base58"
+	ed "github.com/FactomProject/ed25519"
 )
 
 // An Identity is an array of names and a hierarchy of keys. It can assign/receive
@@ -80,7 +79,7 @@ func (i *Identity) GetKeysAtHeight(height int64) ([]*IdentityKey, error) {
 
 	var validKeys []*IdentityKey
 	for _, pubString := range initialKeys["keys"] {
-		if !IsValidIdentityKey(pubString) {
+		if IdentityKeyStringType(pubString) != IDPub {
 			return nil, fmt.Errorf("invalid Identity Public Key string in first entry")
 		}
 		pub := base58.Decode(pubString)
@@ -99,7 +98,7 @@ func (i *Identity) GetKeysAtHeight(height int64) ([]*IdentityKey, error) {
 
 		var oldKey [32]byte
 		oldPubString := string(e.ExtIDs[1])
-		if !IsValidIdentityKey(oldPubString) {
+		if IdentityKeyStringType(oldPubString) != IDPub {
 			continue
 		}
 		b := base58.Decode(oldPubString)
@@ -107,7 +106,7 @@ func (i *Identity) GetKeysAtHeight(height int64) ([]*IdentityKey, error) {
 
 		var newKey [32]byte
 		newPubString := string(e.ExtIDs[2])
-		if !IsValidIdentityKey(newPubString) {
+		if IdentityKeyStringType(newPubString) != IDPub {
 			continue
 		}
 		b = base58.Decode(newPubString)
@@ -181,121 +180,56 @@ func NewIdentityAttributeEndorsementEntry(destinationChainID string, attributeEn
 	return &e
 }
 
-// IsValidAttribute returns true if the EntryHash points to a correctly formatted attribute entry with a signature
-// that was valid for its signer's identity at the time the attribute was published
-func IsValidAttribute(entryHash string) (bool, error) {
-	e, err := GetEntry(entryHash)
-	if err != nil {
-		return false, err
-	}
-
+// IsValidAttribute returns true if the entry is a properly formatted attribute with a verifiable signature.
+// Note: does not check that the signer key was valid for the signer identity at the time of publishing.
+func IsValidAttribute(e *Entry) bool {
 	// Check ExtIDs for valid formatting, then process them
 	if len(e.ExtIDs) < 5 || bytes.Compare(e.ExtIDs[0], []byte("IdentityAttribute")) != 0 {
-		return false, nil
+		return false
 	}
-	if len(e.ExtIDs[1]) != 64 || len(e.ExtIDs[2]) != 64 || len(e.ExtIDs[3]) != 55 || len(e.ExtIDs[4]) != 64 {
-		return false, nil
+	receiverChainID := string(e.ExtIDs[1])
+	signerChainID := string(e.ExtIDs[4])
+	if len(receiverChainID) != 64 || len(signerChainID) != 64 {
+		return false
 	}
-	receiverChainID := e.ExtIDs[1]
 	var signature [64]byte
 	copy(signature[:], e.ExtIDs[2])
 	var signerKey [32]byte
 	signerPubString := string(e.ExtIDs[3])
-	if !IsValidIdentityKey(signerPubString) {
-		// TODO: evaluate whether we should return false just because the key is in the wrong format here
-		return false, nil
+	if IdentityKeyStringType(signerPubString) != IDPub {
+		return false
 	}
 	b := base58.Decode(signerPubString)
 	copy(signerKey[:], b[IDKeyPrefixLength:IDKeyBodyLength])
-	signerChainID := string(e.ExtIDs[4])
 
 	// Message that was signed = ReceiverChainID + DestinationChainID + AttributesJSON
-	message := receiverChainID
-	message = append(message, []byte(e.ChainID)...)
-	message = append(message, e.Content...)
-	if !ed.Verify(&signerKey, message, &signature) {
-		return false, nil
-	}
-
-	// Check that public key was valid for the signer at the time of the attribute being published
-	receipt, err := GetReceipt(entryHash)
-	if err != nil {
-		return false, err
-	}
-	dblock, err := GetDBlock(receipt.DirectoryBlockKeyMR)
-	if err != nil {
-		return false, err
-	}
-
-	signer := &Identity{}
-	signer.ChainID = signerChainID
-	validKeys, err := signer.GetKeysAtHeight(dblock.Header.SequenceNumber)
-	if err != nil {
-		return false, err
-	}
-	for _, key := range validKeys {
-		if bytes.Compare(signerKey[:], key.Pub[:]) == 0 {
-			// Found provided key to be valid at time of publishing attribute
-			return true, nil
-		}
-	}
-	return false, nil
+	msg := receiverChainID + e.ChainID + string(e.Content)
+	return ed.Verify(&signerKey, []byte(msg), &signature)
 }
 
-// IsValidEndorsement returns true if the EntryHash points to a correctly formatted endorsement entry with a signature
-// that was valid for its signer's identity at the time the attribute was published
-func IsValidEndorsement(entryHash string) (bool, error) {
-	e, err := GetEntry(entryHash)
-	if err != nil {
-		return false, err
+// IsValidEndorsement returns true if the Entry is a properly formatted attribute endorsement with a verifiable signature.
+// Note: does not check that the signer key was valid for the signer identity at the time of publishing.
+func IsValidEndorsement(e *Entry) bool {
+	// Check ExtIDs for valid formatting, then process them
+	if len(e.ExtIDs) < 4 || string(e.ExtIDs[0]) != "IdentityAttributeEndorsement" {
+		return false
 	}
 
-	// Check ExtIDs for valid formatting, then process them
-	if len(e.ExtIDs) < 4 || bytes.Compare(e.ExtIDs[0], []byte("IdentityAttributeEndorsement")) != 0 {
-		return false, nil
-	}
-	if len(e.ExtIDs[1]) != 64 || len(e.ExtIDs[2]) != 55 || len(e.ExtIDs[3]) != 64 {
-		return false, nil
+	signerChainID := string(e.ExtIDs[3])
+	if len(signerChainID) != 64 {
+		return false
 	}
 	var signature [64]byte
 	copy(signature[:], e.ExtIDs[1])
 	var signerKey [32]byte
 	signerPubString := string(e.ExtIDs[2])
-	b, err := base64.StdEncoding.DecodeString(signerPubString)
-	if err != nil {
-		return false, err
+	if IdentityKeyStringType(signerPubString) != IDPub {
+		return false
 	}
-	copy(signerKey[:], b)
-	signerChainID := string(e.ExtIDs[3])
+	b := base58.Decode(signerPubString)
+	copy(signerKey[:], b[IDKeyPrefixLength:IDKeyBodyLength])
 
 	// Message that was signed = DestinationChainID + AttributeEntryHash
-	message := []byte(e.ChainID)
-	message = append(message, e.Content...)
-	if !ed.Verify(&signerKey, message, &signature) {
-		return false, nil
-	}
-
-	// Check that public key was valid for the signer at the time of the attribute being published
-	receipt, err := GetReceipt(entryHash)
-	if err != nil {
-		return false, err
-	}
-	dblock, err := GetDBlock(receipt.DirectoryBlockKeyMR)
-	if err != nil {
-		return false, err
-	}
-
-	signer := &Identity{}
-	signer.ChainID = signerChainID
-	validKeys, err := signer.GetKeysAtHeight(dblock.Header.SequenceNumber)
-	if err != nil {
-		return false, err
-	}
-	for _, key := range validKeys {
-		if bytes.Compare(signerKey[:], key.Pub[:]) == 0 {
-			// Found provided key to be valid at time of publishing attribute
-			return true, nil
-		}
-	}
-	return false, nil
+	msg := e.ChainID + string(e.Content)
+	return ed.Verify(&signerKey, []byte(msg), &signature)
 }
