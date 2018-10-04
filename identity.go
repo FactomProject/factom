@@ -157,7 +157,9 @@ func NewIdentityKeyReplacementEntry(chainID string, oldKey *IdentityKey, newKey 
 // NewIdentityAttributeEntry creates and returns an Entry struct that assigns an attribute JSON object to a given
 // identity. Publish it to the blockchain using the usual factom.CommitEntry(...) and factom.RevealEntry(...) calls.
 func NewIdentityAttributeEntry(receiverChainID string, destinationChainID string, attributesJSON string, signerKey *IdentityKey, signerChainID string) *Entry {
-	message := []byte(receiverChainID + destinationChainID + attributesJSON)
+	message := []byte(receiverChainID + destinationChainID)
+	attributeHash := sha256.Sum256([]byte(attributesJSON))
+	message = append(message, attributeHash[:]...)
 	signature := signerKey.Sign(message)
 
 	e := Entry{}
@@ -203,8 +205,10 @@ func IsValidAttribute(e *Entry) bool {
 	copy(signerKey[:], b[IDKeyPrefixLength:IDKeyBodyLength])
 
 	// Message that was signed = ReceiverChainID + DestinationChainID + AttributesJSON
-	msg := receiverChainID + e.ChainID + string(e.Content)
-	return ed.Verify(&signerKey, []byte(msg), &signature)
+	msg := []byte(receiverChainID + e.ChainID)
+	attributesHash := sha256.Sum256(e.Content)
+	msg = append(msg, attributesHash[:]...)
+	return ed.Verify(&signerKey, msg, &signature)
 }
 
 // IsValidEndorsement returns true if the Entry is a properly formatted attribute endorsement with a verifiable signature.
