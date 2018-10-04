@@ -614,6 +614,17 @@ func handleWalletBackup(params []byte) (interface{}, *factom.JSONError) {
 		resp.Addresses = append(resp.Addresses, a)
 	}
 
+	idKeys, err := fctWallet.GetAllIdentityKeys()
+	if err != nil {
+		return nil, newCustomInternalError(err.Error())
+	}
+	for _, k := range idKeys {
+		keyResp := new(identityKeyResponse)
+		keyResp.Public = k.PubString()
+		keyResp.Secret = k.SecString()
+		resp.IdentityKeys = append(resp.IdentityKeys, keyResp)
+	}
+
 	return resp, nil
 }
 

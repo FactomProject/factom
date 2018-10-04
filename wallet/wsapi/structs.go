@@ -150,8 +150,9 @@ type multiBalanceResponse struct {
 }
 
 type walletBackupResponse struct {
-	Seed      string             `json:"wallet-seed"`
-	Addresses []*addressResponse `json:"addresses"`
+	Seed         string                 `json:"wallet-seed"`
+	Addresses    []*addressResponse     `json:"addresses"`
+	IdentityKeys []*identityKeyResponse `json:"identity-keys"`
 }
 
 type multiTransactionResponse struct {
