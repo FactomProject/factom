@@ -22,6 +22,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/FactomProject/btcutil/base58"
 	"github.com/FactomProject/btcutil/certs"
 	"github.com/FactomProject/factom"
 	"github.com/FactomProject/factom/wallet"
@@ -1174,15 +1175,12 @@ func handleComposeIdentityChain(params []byte) (interface{}, *factom.JSONError) 
 
 	var keys []*factom.IdentityKey
 	for _, v := range req.PubKeys {
-		pub, err := base64.StdEncoding.DecodeString(v)
-		if err != nil {
-			return nil, newCustomInternalError(fmt.Sprintf("Failed to decode identity public key string: %s", v))
+		if factom.IdentityKeyStringType(v) != factom.IDPub {
+			return nil, newCustomInternalError(fmt.Sprintf("Invalid identity public key string: %s", v))
 		}
-		if len(pub) != 32 {
-			return nil, newCustomInternalError(fmt.Sprintf("Invalid length for identity public key string: %s", v))
-		}
+		b := base58.Decode(v)
 		k := factom.NewIdentityKey()
-		copy(k.Pub[:], pub[:32])
+		copy(k.Pub[:], b[factom.IDKeyPrefixLength:factom.IDKeyBodyLength])
 		keys = append(keys, k)
 	}
 	ecpub := req.ECPub
