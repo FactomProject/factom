@@ -46,7 +46,7 @@ func NewIdentityChain(name []string, keys []*IdentityKey) *Chain {
 	for _, key := range keys {
 		publicKeys = append(publicKeys, key.PubString())
 	}
-	keysMap := map[string][]string{"keys": publicKeys}
+	keysMap := map[string]interface{}{"identity-version":1,"keys": publicKeys}
 	keysJSON, _ := json.Marshal(keysMap)
 	e.Content = keysJSON
 	c := NewChain(e)
@@ -69,16 +69,18 @@ func (i *Identity) GetKeysAtHeight(height int64) ([]*IdentityKey, error) {
 		return nil, err
 	}
 
-	var initialKeys map[string][]string
+	var identityInfo struct {
+		Version int `json:"identity-version"`
+		InitialKeys []string `json:"keys"`
+	}
 	initialKeysJSON := entries[0].Content
-	err = json.Unmarshal(initialKeysJSON, &initialKeys)
+	err = json.Unmarshal(initialKeysJSON, &identityInfo)
 	if err != nil {
-		fmt.Println("Failed to unmarshal json from initial key declaration")
-		return nil, err
+		return nil, fmt.Errorf("failed to unmarshal json from initial key declaration: %v", err.Error())
 	}
 
 	var validKeys []*IdentityKey
-	for _, pubString := range initialKeys["keys"] {
+	for _, pubString := range identityInfo.InitialKeys {
 		if IdentityKeyStringType(pubString) != IDPub {
 			return nil, fmt.Errorf("invalid Identity Public Key string in first entry")
 		}
