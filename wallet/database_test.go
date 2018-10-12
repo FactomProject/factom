@@ -246,3 +246,107 @@ func TestGetAllAddresses(t *testing.T) {
 		t.Error(err)
 	}
 }
+
+func TestPutIdentityKey(t *testing.T) {
+	sec := "idsec2J3nNoqdiyboCBKDGauqN9Jb33dyFSqaJKZqTs6i5FmztsTn5f"
+
+	// create a new database
+	w, err := NewMapDBWallet()
+	if err != nil {
+		t.Error(err)
+	}
+
+	// write a new identity key to the db
+	k, err := factom.GetIdentityKey(sec)
+	if err != nil {
+		t.Error(err)
+	}
+	if err := w.InsertIdentityKey(k); err != nil {
+		t.Error(err)
+	}
+
+	// Check that the key was written into the db
+	if _, err := w.GetIdentityKey(k.PubString()); err != nil {
+		t.Error(err)
+	}
+
+	// close and remove the testing db
+	if err := w.Close(); err != nil {
+		t.Error(err)
+	}
+}
+
+func TestGenerateIdentityKey(t *testing.T) {
+	// create a new database
+	w, err := NewMapDBWallet()
+	if err != nil {
+		t.Error(err)
+	}
+
+	// Generate a new identity key
+	k, err := w.GenerateIdentityKey()
+	if err != nil {
+		t.Error(err)
+	}
+
+	// Check that the key was written into the db
+	if _, err := w.GetIdentityKey(k.PubString()); err != nil {
+		t.Error(err)
+	}
+
+	// close and remove the testing db
+	if err := w.Close(); err != nil {
+		t.Error(err)
+	}
+}
+
+func TestGetAllIdentityKeys(t *testing.T) {
+	sec1 := "idsec2J3nNoqdiyboCBKDGauqN9Jb33dyFSqaJKZqTs6i5FmztsTn5f"
+	sec2 := "idsec1xuUyeCCrJhsojf2wLAZqRxPzPFR8Gidd9DRRid1yGy8ncAJG3"
+
+	correctLen := 2
+
+	// create a new database
+	w, err := NewMapDBWallet()
+	if err != nil {
+		t.Error(err)
+	}
+
+	// write a new identity keys to the db
+	k1, err := factom.GetIdentityKey(sec1)
+	if err != nil {
+		t.Error(err)
+	}
+	if err := w.InsertIdentityKey(k1); err != nil {
+		t.Error(err)
+	}
+	k2, err := factom.GetIdentityKey(sec2)
+	if err != nil {
+		t.Error(err)
+	}
+	if err := w.InsertIdentityKey(k2); err != nil {
+		t.Error(err)
+	}
+
+	// get all identity keys out of db
+	ks, err := w.GetAllIdentityKeys()
+	if err != nil {
+		t.Error(err)
+	} else if ks == nil {
+		t.Errorf("No Identity key was retrived")
+	}
+	// check that all the keys are there
+	if len(ks) != correctLen {
+		t.Errorf("Wrong number of identity keys were retrived: %v", ks)
+	}
+
+	// print the keys
+	for _, k := range ks {
+		t.Logf("%s %s", k, k.SecString())
+	}
+
+	// close and remove the testing db
+	if err := w.Close(); err != nil {
+		t.Error(err)
+	}
+}
