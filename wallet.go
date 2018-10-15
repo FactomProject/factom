@@ -305,6 +305,38 @@ func FetchIdentityKey(pub string) (*IdentityKey, error) {
 	return GetIdentityKey(r.Secret)
 }
 
+func FetchIdentityKeys() ([]*IdentityKey, error) {
+	req := NewJSON2Request("all-identity-keys", APICounter(), nil)
+	resp, err := walletRequest(req)
+	if err != nil {
+		return nil, err
+	}
+	if resp.Error != nil {
+		return nil, resp.Error
+	}
+
+	keys := make([]*IdentityKey, 0)
+
+	multiKeyResp := new(multiIdentityKeyResponse)
+	if err := json.Unmarshal(resp.JSONResult(), multiKeyResp); err != nil {
+		return nil, err
+	}
+
+	for _, v := range multiKeyResp.IdentityKeys {
+		if IdentityKeyStringType(v.Public) == IDPub {
+			k, err := GetIdentityKey(v.Secret)
+			if err != nil {
+				return nil, err
+			}
+			keys = append(keys, k)
+		} else {
+			return nil, fmt.Errorf("%s is not a valid public identity key", v.Public)
+		}
+	}
+
+	return keys, nil
+}
+
 func GetWalletHeight() (uint32, error) {
 	req := NewJSON2Request("get-height", APICounter(), nil)
 	resp, err := walletRequest(req)
@@ -330,6 +362,10 @@ type addressResponse struct {
 
 type multiAddressResponse struct {
 	Addresses []*addressResponse `json:"addresses"`
+}
+
+type multiIdentityKeyResponse struct {
+	IdentityKeys []*addressResponse `json:"keys"`
 }
 
 type composeEntryRequest struct {
