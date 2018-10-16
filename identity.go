@@ -46,7 +46,7 @@ func NewIdentityChain(name []string, keys []*IdentityKey) *Chain {
 	for _, key := range keys {
 		publicKeys = append(publicKeys, key.PubString())
 	}
-	keysMap := map[string]interface{}{"identity-version":1,"keys": publicKeys}
+	keysMap := map[string]interface{}{"identity-version": 1, "keys": publicKeys}
 	keysJSON, _ := json.Marshal(keysMap)
 	e.Content = keysJSON
 	c := NewChain(e)
@@ -70,7 +70,7 @@ func (i *Identity) GetKeysAtHeight(height int64) ([]*IdentityKey, error) {
 	}
 
 	var identityInfo struct {
-		Version int `json:"identity-version"`
+		Version     int      `json:"identity-version"`
 		InitialKeys []string `json:"keys"`
 	}
 	initialKeysJSON := entries[0].Content
@@ -94,11 +94,11 @@ func (i *Identity) GetKeysAtHeight(height int64) ([]*IdentityKey, error) {
 		if len(e.ExtIDs) < 5 || bytes.Compare(e.ExtIDs[0], []byte("ReplaceKey")) != 0 {
 			continue
 		}
-		if len(e.ExtIDs[1]) != 55 || len(e.ExtIDs[2]) != 55 || len(e.ExtIDs[3]) != 64 {
+		if len(e.ExtIDs[1]) != 55 || len(e.ExtIDs[2]) != 55 || len(e.ExtIDs[3]) != ed.SignatureSize {
 			continue
 		}
 
-		var oldKey [32]byte
+		var oldKey [ed.PublicKeySize]byte
 		oldPubString := string(e.ExtIDs[1])
 		if IdentityKeyStringType(oldPubString) != IDPub {
 			continue
@@ -106,7 +106,7 @@ func (i *Identity) GetKeysAtHeight(height int64) ([]*IdentityKey, error) {
 		b := base58.Decode(oldPubString)
 		copy(oldKey[:], b[IDKeyPrefixLength:IDKeyBodyLength])
 
-		var newKey [32]byte
+		var newKey [ed.PublicKeySize]byte
 		newPubString := string(e.ExtIDs[2])
 		if IdentityKeyStringType(newPubString) != IDPub {
 			continue
@@ -114,7 +114,7 @@ func (i *Identity) GetKeysAtHeight(height int64) ([]*IdentityKey, error) {
 		b = base58.Decode(newPubString)
 		copy(newKey[:], b[IDKeyPrefixLength:IDKeyBodyLength])
 
-		var signature [64]byte
+		var signature [ed.SignatureSize]byte
 		copy(signature[:], e.ExtIDs[3])
 		signerPubString := string(e.ExtIDs[4])
 
@@ -152,7 +152,13 @@ func NewIdentityKeyReplacementEntry(chainID string, oldKey *IdentityKey, newKey 
 
 	e := Entry{}
 	e.ChainID = chainID
-	e.ExtIDs = [][]byte{[]byte("ReplaceKey"), []byte(oldKey.String()), []byte(newKey.String()), signature[:], []byte(signerKey.String())}
+	e.ExtIDs = [][]byte{
+		[]byte("ReplaceKey"),
+		[]byte(oldKey.String()),
+		[]byte(newKey.String()),
+		signature[:],
+		[]byte(signerKey.String()),
+	}
 	return &e
 }
 
@@ -166,7 +172,13 @@ func NewIdentityAttributeEntry(receiverChainID string, destinationChainID string
 
 	e := Entry{}
 	e.ChainID = destinationChainID
-	e.ExtIDs = [][]byte{[]byte("IdentityAttribute"), []byte(receiverChainID), signature[:], []byte(signerKey.String()), []byte(signerChainID)}
+	e.ExtIDs = [][]byte{
+		[]byte("IdentityAttribute"),
+		[]byte(receiverChainID),
+		signature[:],
+		[]byte(signerKey.String()),
+		[]byte(signerChainID),
+	}
 	e.Content = []byte(attributesJSON)
 	return &e
 }
@@ -179,7 +191,12 @@ func NewIdentityAttributeEndorsementEntry(destinationChainID string, attributeEn
 
 	e := Entry{}
 	e.ChainID = destinationChainID
-	e.ExtIDs = [][]byte{[]byte("IdentityAttributeEndorsement"), signature[:], []byte(signerKey.String()), []byte(signerChainID)}
+	e.ExtIDs = [][]byte{
+		[]byte("IdentityAttributeEndorsement"),
+		signature[:],
+		[]byte(signerKey.String()),
+		[]byte(signerChainID),
+	}
 	e.Content = []byte(attributeEntryHash)
 	return &e
 }
@@ -196,9 +213,9 @@ func IsValidAttribute(e *Entry) bool {
 	if len(receiverChainID) != 64 || len(signerChainID) != 64 {
 		return false
 	}
-	var signature [64]byte
+	var signature [ed.SignatureSize]byte
 	copy(signature[:], e.ExtIDs[2])
-	var signerKey [32]byte
+	var signerKey [ed.PublicKeySize]byte
 	signerPubString := string(e.ExtIDs[3])
 	if IdentityKeyStringType(signerPubString) != IDPub {
 		return false
@@ -225,9 +242,9 @@ func IsValidEndorsement(e *Entry) bool {
 	if len(signerChainID) != 64 {
 		return false
 	}
-	var signature [64]byte
+	var signature [ed.SignatureSize]byte
 	copy(signature[:], e.ExtIDs[1])
-	var signerKey [32]byte
+	var signerKey [ed.PublicKeySize]byte
 	signerPubString := string(e.ExtIDs[2])
 	if IdentityKeyStringType(signerPubString) != IDPub {
 		return false

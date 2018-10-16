@@ -285,7 +285,9 @@ func FetchFactoidAddress(fctpub string) (*FactoidAddress, error) {
 }
 
 func ImportIdentityKeys(pubs ...string) ([]*IdentityKey, error) {
-	params := new(struct{IdentityKeys []secretRequest `json:"keys"`})
+	params := new(struct {
+		IdentityKeys []secretRequest `json:"keys"`
+	})
 	for _, pub := range pubs {
 		s := secretRequest{Secret: pub}
 		params.IdentityKeys = append(params.IdentityKeys, s)
@@ -317,7 +319,9 @@ func ImportIdentityKeys(pubs ...string) ([]*IdentityKey, error) {
 }
 
 func FetchIdentityKey(pub string) (*IdentityKey, error) {
-	params := new(struct{Public string `json:"public"`})
+	params := new(struct {
+		Public string `json:"public"`
+	})
 	params.Public = pub
 
 	req := NewJSON2Request("identity-key", APICounter(), params)
@@ -370,7 +374,9 @@ func FetchIdentityKeys() ([]*IdentityKey, error) {
 }
 
 func RemoveIdentityKey(pub string) error {
-	params := new(struct{Public string `json:"public"`})
+	params := new(struct {
+		Public string `json:"public"`
+	})
 	params.Public = pub
 
 	req := NewJSON2Request("remove-identity-key", APICounter(), params)

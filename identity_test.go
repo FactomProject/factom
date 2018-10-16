@@ -1,11 +1,11 @@
 package factom
 
 import (
-	"testing"
 	"fmt"
+	"testing"
 
-	ed "github.com/FactomProject/ed25519"
 	"encoding/json"
+	ed "github.com/FactomProject/ed25519"
 )
 
 func TestGetIdentityChainID(t *testing.T) {
@@ -76,7 +76,7 @@ func TestNewIdentityKeyReplacementEntry(t *testing.T) {
 		if string(observedEntry.ExtIDs[0]) != "ReplaceKey" {
 			t.Errorf("ReplaceKey is not first ExtID")
 		}
-		if  string(observedEntry.ExtIDs[1]) != oldKey.String() ||
+		if string(observedEntry.ExtIDs[1]) != oldKey.String() ||
 			string(observedEntry.ExtIDs[2]) != newKey.String() ||
 			string(observedEntry.ExtIDs[4]) != signerKey.String() {
 			t.Errorf("Keys not formatted properly")

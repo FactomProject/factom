@@ -4,8 +4,8 @@ import (
 	"crypto/rand"
 	"testing"
 
-	ed "github.com/FactomProject/ed25519"
 	"bytes"
+	ed "github.com/FactomProject/ed25519"
 	"github.com/FactomProject/go-bip32"
 )
 

@@ -4,8 +4,8 @@ import (
 	"bytes"
 	"fmt"
 
-	ed "github.com/FactomProject/ed25519"
 	"github.com/FactomProject/btcutil/base58"
+	ed "github.com/FactomProject/ed25519"
 	"github.com/FactomProject/go-bip44"
 )
 
@@ -18,7 +18,7 @@ const (
 )
 
 const (
-	IDKeyLength         = 41
+	IDKeyLength       = 41
 	IDKeyPrefixLength = 5
 	IDKeyBodyLength   = IDKeyLength - ChecksumLength
 )
@@ -47,7 +47,7 @@ func IdentityKeyStringType(s string) identityKeyStringType {
 	case bytes.Equal(prefix, idPubPrefix):
 		return IDPub
 	case bytes.Equal(prefix, idSecPrefix):
-		return IDPub
+		return IDSec
 	default:
 		return InvalidIdentityKey
 	}
