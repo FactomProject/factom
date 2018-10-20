@@ -16,6 +16,11 @@ type TLSConfig struct {
 
 // requests
 
+type passphraseRequest struct {
+	Password string `json:"passphrase"`
+	Timeout int64 `json:"timeout"`
+}
+
 type addressRequest struct {
 	Address string `json:"address"`
 }
@@ -115,6 +120,11 @@ type propertiesResponse struct {
 
 type simpleResponse struct {
 	Success bool `json:"success"`
+}
+
+type unlockResponse struct {
+	Success bool `json:"success"`
+	UnlockedUntil int64 `json:"unlockeduntil"`
 }
 
 type entryResponse struct {
