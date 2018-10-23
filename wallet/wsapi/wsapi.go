@@ -308,6 +308,7 @@ func handleWalletBalances(params []byte) (interface{}, *factom.JSONError) {
 	jsonStrEC := []byte(`{"jsonrpc": "2.0", "id": 0, "method": "multiple-ec-balances", "params":{"addresses":["` + stringOfAccountsEC + `"]}}  `)
 	reqEC, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonStrEC))
 	reqEC.Header.Set("content-type", "text/plain;")
+	reqEC.SetBasicAuth(factom.GetFactomdRpcConfig())
 
 	clientEC := &http.Client{}
 	callRespEC, err := clientEC.Do(reqEC)
@@ -363,6 +364,7 @@ func handleWalletBalances(params []byte) (interface{}, *factom.JSONError) {
 	jsonStrFCT := []byte(`{"jsonrpc": "2.0", "id": 0, "method": "multiple-fct-balances", "params":{"addresses":["` + stringOfAccountsFCT + `"]}}  `)
 	reqFCT, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonStrFCT))
 	reqFCT.Header.Set("content-type", "text/plain;")
+	reqFCT.SetBasicAuth(factom.GetFactomdRpcConfig())
 
 	clientFCT := &http.Client{}
 	callRespFCT, errFCT := clientFCT.Do(reqFCT)
