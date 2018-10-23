@@ -20,7 +20,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/FactomProject/btcutil/base58"
+	"bytes"
 	"github.com/FactomProject/btcutil/certs"
 	"github.com/FactomProject/factom"
 	"github.com/FactomProject/factom/wallet"
@@ -28,9 +28,8 @@ import (
 	"github.com/FactomProject/factomd/common/interfaces"
 	"github.com/FactomProject/factomd/common/primitives"
 	"github.com/FactomProject/web"
-	"bytes"
 	"reflect"
-	)
+)
 
 const APIVersion string = "2.0"
 
@@ -1152,14 +1151,14 @@ func handleRemoveIdentityKey(params []byte) (interface{}, *factom.JSONError) {
 func handleIdentityKeysAtHeight(params []byte) (interface{}, *factom.JSONError) {
 	req := new(identityKeysAtHeightRequest)
 	if err := json.Unmarshal(params, req); err != nil {
-		return nil, newCustomInternalError(err.Error())
+		return nil, newInvalidParamsError()
 	}
 
 	identity := &factom.Identity{}
 	identity.ChainID = req.ChainID
 	keys, err := identity.GetKeysAtHeight(req.Height)
 	if err != nil {
-		return nil, newCustomInternalError(err.Error())
+		return nil, newCustomInternalError(fmt.Errorf("IdentityKeysAtHeight: %s", err.Error()))
 	}
 
 	resp := new(identityKeysAtHeightResponse)
@@ -1177,29 +1176,20 @@ func handleComposeIdentityChain(params []byte) (interface{}, *factom.JSONError) 
 		return nil, newInvalidParamsError()
 	}
 
-	var keys []*factom.IdentityKey
-	for _, v := range req.PubKeys {
-		if factom.IdentityKeyStringType(v) != factom.IDPub {
-			return nil, newCustomInternalError(fmt.Sprintf("Invalid identity public key string: %s", v))
-		}
-		b := base58.Decode(v)
-		k := factom.NewIdentityKey()
-		copy(k.Pub[:], b[factom.IDKeyPrefixLength:factom.IDKeyBodyLength])
-		keys = append(keys, k)
-	}
 	ecpub := req.ECPub
-	force := req.Force
-	c := factom.NewIdentityChain(req.Name, keys)
-
 	ec, err := fctWallet.GetECAddress(ecpub)
 	if err != nil {
 		return nil, newCustomInternalError(err.Error())
 	}
 	if ec == nil {
-		return nil, newCustomInternalError("Wallet: address not found")
+		return nil, newCustomInternalError("Wallet: entry credit address not found")
 	}
 
-	if !force {
+	c, err := factom.NewIdentityChain(req.Name, req.PubKeys)
+	if err != nil {
+		return nil, newCustomInternalError(err.Error())
+	}
+	if !req.Force {
 		// check ec address balance
 		balance, err := factom.GetECBalance(ecpub)
 		if err != nil {
@@ -1239,42 +1229,25 @@ func handleComposeIdentityKeyReplacement(params []byte) (interface{}, *factom.JS
 		return nil, newInvalidParamsError()
 	}
 
-	oldKey, err := fctWallet.GetIdentityKey(req.OldKey)
-	if err != nil {
-		return nil, newCustomInternalError(err.Error())
-	}
-	if oldKey == nil {
-		return nil, newCustomInternalError("Wallet: identity key not found")
-	}
-
-	newKey, err := fctWallet.GetIdentityKey(req.NewKey)
-	if err != nil {
-		return nil, newCustomInternalError(err.Error())
-	}
-	if newKey == nil {
-		return nil, newCustomInternalError("Wallet: identity key not found")
-	}
-
 	signerKey, err := fctWallet.GetIdentityKey(req.SignerKey)
-	if err != nil {
-		return nil, newCustomInternalError(err.Error())
-	}
-	if signerKey == nil {
-		return nil, newCustomInternalError("Wallet: identity key not found")
+	if err != nil || signerKey == nil {
+		return nil, newCustomInternalError("Wallet: failed to fetch signerkey from given identity public key")
 	}
 
-	e := factom.NewIdentityKeyReplacementEntry(req.ChainID, oldKey, newKey, signerKey)
 	ecpub := req.ECPub
-	force := req.Force
-
 	ec, err := fctWallet.GetECAddress(ecpub)
 	if err != nil {
 		return nil, newCustomInternalError(err.Error())
 	}
 	if ec == nil {
-		return nil, newCustomInternalError("Wallet: address not found")
+		return nil, newCustomInternalError("Wallet: entry credit address not found")
 	}
-	if !force {
+
+	e, err := factom.NewIdentityKeyReplacementEntry(req.ChainID, req.OldKey, req.NewKey, signerKey)
+	if err != nil {
+		return nil, newCustomInternalError(err.Error())
+	}
+	if !req.Force {
 		// check ec address balance
 		balance, err := factom.GetECBalance(ecpub)
 		if err != nil {
@@ -1315,11 +1288,8 @@ func handleComposeIdentityAttribute(params []byte) (interface{}, *factom.JSONErr
 	}
 
 	signerKey, err := fctWallet.GetIdentityKey(req.SignerKey)
-	if err != nil {
-		return nil, newCustomInternalError(err.Error())
-	}
-	if signerKey == nil {
-		return nil, newCustomInternalError("Wallet: identity key not found")
+	if err != nil || signerKey == nil {
+		return nil, newCustomInternalError("Wallet: failed to fetch signerkey from given identity public key")
 	}
 
 	for _, attribute := range req.Attributes {
@@ -1387,11 +1357,8 @@ func handleComposeIdentityAttributeEndorsement(params []byte) (interface{}, *fac
 	}
 
 	signerKey, err := fctWallet.GetIdentityKey(req.SignerKey)
-	if err != nil {
-		return nil, newCustomInternalError(err.Error())
-	}
-	if signerKey == nil {
-		return nil, newCustomInternalError("Wallet: identity key not found")
+	if err != nil || signerKey == nil {
+		return nil, newCustomInternalError("Wallet: failed to fetch signerkey from given identity public key")
 	}
 
 	e := factom.NewIdentityAttributeEndorsementEntry(req.DestinationChainID, req.EntryHash, signerKey, req.SignerChainID)

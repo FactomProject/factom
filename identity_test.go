@@ -25,13 +25,16 @@ func TestNewIdentityChain(t *testing.T) {
 		"idsec2J3nNoqdiyboCBKDGauqN9Jb33dyFSqaJKZqTs6i5FmztsTn5f",
 		"idsec1jztZ7dypqtwtPPWxybZFNpvvpUh6g8oog6Mnk2gGCm1pNBTgE",
 	}
-	var keys []*IdentityKey
+	var keys []string
 	for _, v := range secretKeys {
 		k, _ := GetIdentityKey(v)
-		keys = append(keys, k)
+		keys = append(keys, k.PubString())
 	}
 
-	newChain := NewIdentityChain(name, keys)
+	newChain, err := NewIdentityChain(name, keys)
+	if err != nil {
+		t.Errorf("Failed to compose identity chain struct %s", err.Error())
+	}
 	expectedChainID := "e0cf1713b492e09e783d5d9f4fc6e2c71b5bdc9af4806a7937a5e935819717e9"
 	t.Run("ChainID", func(t *testing.T) {
 		if newChain.ChainID != expectedChainID {
@@ -48,7 +51,7 @@ func TestNewIdentityChain(t *testing.T) {
 			t.Errorf("Failed to unmarshal content")
 		}
 		for i, v := range contentMap["keys"].([]interface{}) {
-			if keys[i].String() != v.(string) {
+			if keys[i] != v.(string) {
 				t.Errorf("Keys not properly formatted")
 			}
 		}
@@ -62,7 +65,10 @@ func TestNewIdentityKeyReplacementEntry(t *testing.T) {
 	newKey, _ := GetIdentityKey("idsec2J3nNoqdiyboCBKDGauqN9Jb33dyFSqaJKZqTs6i5FmztsTn5f")
 	signerKey, _ := GetIdentityKey("idsec2wH72BNR9QZhTMGDbxwLWGrghZQexZvLTros2wCekkc62N9h7s")
 
-	observedEntry := NewIdentityKeyReplacementEntry(chainID, oldKey, newKey, signerKey)
+	observedEntry, err := NewIdentityKeyReplacementEntry(chainID, oldKey.PubString(), newKey.PubString(), signerKey)
+	if err != nil {
+		t.Errorf("Failed to compose key replacement entry struct %s", err.Error())
+	}
 
 	t.Run("ChainID", func(t *testing.T) {
 		if observedEntry.ChainID != chainID {

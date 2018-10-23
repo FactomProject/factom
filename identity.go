@@ -36,7 +36,7 @@ func GetIdentityChainID(name []string) string {
 
 // NewIdentityChain creates an returns a Chain struct for a new identity. Publish it to the
 // blockchain using the usual factom.CommitChain(...) and factom.RevealChain(...) calls.
-func NewIdentityChain(name []string, keys []*IdentityKey) *Chain {
+func NewIdentityChain(name []string, keys []string) (*Chain, error) {
 	e := &Entry{}
 	for _, part := range name {
 		e.ExtIDs = append(e.ExtIDs, []byte(part))
@@ -44,13 +44,16 @@ func NewIdentityChain(name []string, keys []*IdentityKey) *Chain {
 
 	var publicKeys []string
 	for _, key := range keys {
-		publicKeys = append(publicKeys, key.PubString())
+		if IdentityKeyStringType(key) != IDPub {
+			return nil, fmt.Errorf("provided key %s is not a valid identity public key", key)
+		}
+		publicKeys = append(publicKeys, key)
 	}
 	keysMap := map[string]interface{}{"identity-version": 1, "keys": publicKeys}
 	keysJSON, _ := json.Marshal(keysMap)
 	e.Content = keysJSON
 	c := NewChain(e)
-	return c
+	return c, nil
 }
 
 // GetKeysAtHeight returns the identity's public keys that were/are valid at the highest saved block height
@@ -67,6 +70,8 @@ func (i *Identity) GetKeysAtHeight(height int64) ([]*IdentityKey, error) {
 	entries, err := GetAllChainEntriesAtHeight(i.ChainID, height)
 	if err != nil {
 		return nil, err
+	} else if len(entries) == 0 {
+		return nil, fmt.Errorf("chain did not yet exist at height %d", height)
 	}
 
 	var identityInfo struct {
@@ -76,13 +81,13 @@ func (i *Identity) GetKeysAtHeight(height int64) ([]*IdentityKey, error) {
 	initialKeysJSON := entries[0].Content
 	err = json.Unmarshal(initialKeysJSON, &identityInfo)
 	if err != nil {
-		return nil, fmt.Errorf("failed to unmarshal json from initial key declaration: %v", err.Error())
+		return nil, fmt.Errorf("failed to construct identity object from first entry in chain: %v", err.Error())
 	}
 
 	var validKeys []*IdentityKey
 	for _, pubString := range identityInfo.InitialKeys {
 		if IdentityKeyStringType(pubString) != IDPub {
-			return nil, fmt.Errorf("invalid Identity Public Key string in first entry")
+			return nil, fmt.Errorf("invalid identity public key string in first entry: %s", pubString)
 		}
 		pub := base58.Decode(pubString)
 		k := NewIdentityKey()
@@ -146,20 +151,26 @@ func (i *Identity) GetKeysAtHeight(height int64) ([]*IdentityKey, error) {
 
 // NewIdentityKeyReplacementEntry creates and returns a new Entry struct for the key replacement. Publish it to the
 // blockchain using the usual factom.CommitEntry(...) and factom.RevealEntry(...) calls.
-func NewIdentityKeyReplacementEntry(chainID string, oldKey *IdentityKey, newKey *IdentityKey, signerKey *IdentityKey) *Entry {
-	message := []byte(oldKey.String() + newKey.String())
+func NewIdentityKeyReplacementEntry(chainID string, oldKey string, newKey string, signerKey *IdentityKey) (*Entry, error) {
+	if IdentityKeyStringType(oldKey) != IDPub {
+		return nil, fmt.Errorf("provided key %s is not a valid identity public key", oldKey)
+	}
+	if IdentityKeyStringType(newKey) != IDPub {
+		return nil, fmt.Errorf("provided key %s is not a valid identity public key", newKey)
+	}
+	message := []byte(oldKey + newKey)
 	signature := signerKey.Sign(message)
 
 	e := Entry{}
 	e.ChainID = chainID
 	e.ExtIDs = [][]byte{
 		[]byte("ReplaceKey"),
-		[]byte(oldKey.String()),
-		[]byte(newKey.String()),
+		[]byte(oldKey),
+		[]byte(newKey),
 		signature[:],
 		[]byte(signerKey.String()),
 	}
-	return &e
+	return &e, nil
 }
 
 // NewIdentityAttributeEntry creates and returns an Entry struct that assigns an attribute JSON object to a given
