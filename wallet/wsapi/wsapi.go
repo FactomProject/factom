@@ -29,6 +29,7 @@ import (
 	"github.com/FactomProject/factomd/common/interfaces"
 	"github.com/FactomProject/factomd/common/primitives"
 	"github.com/FactomProject/web"
+	"github.com/FactomProject/factomd/database/securedb"
 )
 
 const APIVersion string = "2.0"
@@ -254,6 +255,8 @@ func handleV2Request(j *factom.JSON2Request) (*factom.JSON2Response, *factom.JSO
 		resp, jsonError = handleGetHeight(params)
 	case "wallet-balances":
 		resp, jsonError = handleWalletBalances(params)
+	case "wallet-passphrase":
+		resp, jsonError = handleWalletPassphrase(params)
 	default:
 		jsonError = newMethodNotFoundError()
 	}
@@ -1024,6 +1027,30 @@ func handleGetHeight(params []byte) (interface{}, *factom.JSONError) {
 
 	resp.Height = int64(block.GetDBHeight())
 	return resp, nil
+}
+
+func handleWalletPassphrase(params []byte) (interface{}, *factom.JSONError) {
+	req := new(passphraseRequest)
+	if err := json.Unmarshal(params, req); err != nil {
+		return nil, newInvalidParamsError()
+	}
+
+	// If timeout is > 2^30, set to 2^30
+	if req.Timeout > 1073741824 {
+		req.Timeout = 1073741824
+	}
+
+	encdb, ok := fctWallet.DBO.DB.(*securedb.EncryptedDB)
+	if !ok {
+		return nil, newCustomInternalError("Cannot unlock non-encrypted wallet. This database is always unlocked")
+	}
+
+	err := encdb.UnlockFor(req.Password, time.Second * time.Duration( req.Timeout))
+	if err != nil {
+		return nil, newIncorrectPassphraseError()
+	}
+
+	return &unlockResponse{Success:true, UnlockedUntil:encdb.UnlockedUntil.Unix()}, nil
 }
 
 // utility functions
