@@ -68,7 +68,6 @@ func newIncorrectPassphraseError() *factom.JSONError {
 	return factom.NewJSONError(-32003, "Incorrect passphrase", nil)
 }
 
-
 // Custom Errors
 
 func newCustomInternalError(data interface{}) *factom.JSONError {

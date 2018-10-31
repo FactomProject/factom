@@ -281,7 +281,7 @@ func GetWalletHeight() (uint32, error) {
 }
 
 func UnlockWallet(passphrase string, seconds int64) (int64, error) {
-	req := NewJSON2Request("wallet-passphrase", APICounter(), &passphraseRequest{Password:passphrase, Timeout:seconds})
+	req := NewJSON2Request("wallet-passphrase", APICounter(), &passphraseRequest{Password: passphrase, Timeout: seconds})
 	resp, err := walletRequest(req)
 	if err != nil {
 		return 0, err
