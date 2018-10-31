@@ -264,7 +264,12 @@ func handleV2Request(j *factom.JSON2Request) (*factom.JSON2Response, *factom.JSO
 		return nil, jsonError
 	}
 
-	fmt.Printf("API V2 method: <%v>  parameters: %s\n", j.Method, params)
+	switch j.Method {
+	case "import-addresses", "import-koinify", "wallet-passphrase":
+		fmt.Printf("API V2 method: <%v>\n", j.Method)
+	default:
+		fmt.Printf("API V2 method: <%v>  parameters: %s\n", j.Method, params)
+	}
 
 	jsonResp := factom.NewJSON2Response()
 	jsonResp.ID = j.ID
