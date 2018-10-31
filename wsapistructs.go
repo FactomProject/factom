@@ -24,14 +24,13 @@ type addressRequest struct {
 
 type passphraseRequest struct {
 	Password string `json:"passphrase"`
-	Timeout int64 `json:"timeout"`
+	Timeout  int64  `json:"timeout"`
 }
 
 type unlockResponse struct {
-	Success bool `json:"success"`
+	Success       bool  `json:"success"`
 	UnlockedUntil int64 `json:"unlockeduntil"`
 }
-
 
 type chainIDRequest struct {
 	ChainID string `json:"chainid"`

@@ -28,8 +28,8 @@ import (
 	"github.com/FactomProject/factomd/common/factoid"
 	"github.com/FactomProject/factomd/common/interfaces"
 	"github.com/FactomProject/factomd/common/primitives"
-	"github.com/FactomProject/web"
 	"github.com/FactomProject/factomd/database/securedb"
+	"github.com/FactomProject/web"
 )
 
 const APIVersion string = "2.0"
@@ -264,7 +264,12 @@ func handleV2Request(j *factom.JSON2Request) (*factom.JSON2Response, *factom.JSO
 		return nil, jsonError
 	}
 
-	fmt.Printf("API V2 method: <%v>  parameters: %s\n", j.Method, params)
+	switch j.Method {
+	case "import-addresses", "import-koinify", "wallet-passphrase":
+		fmt.Printf("API V2 method: <%v>\n", j.Method)
+	default:
+		fmt.Printf("API V2 method: <%v>  parameters: %s\n", j.Method, params)
+	}
 
 	jsonResp := factom.NewJSON2Response()
 	jsonResp.ID = j.ID
@@ -1045,12 +1050,12 @@ func handleWalletPassphrase(params []byte) (interface{}, *factom.JSONError) {
 		return nil, newCustomInternalError("Cannot unlock non-encrypted wallet. This database is always unlocked")
 	}
 
-	err := encdb.UnlockFor(req.Password, time.Second * time.Duration( req.Timeout))
+	err := encdb.UnlockFor(req.Password, time.Second*time.Duration(req.Timeout))
 	if err != nil {
 		return nil, newIncorrectPassphraseError()
 	}
 
-	return &unlockResponse{Success:true, UnlockedUntil:encdb.UnlockedUntil.Unix()}, nil
+	return &unlockResponse{Success: true, UnlockedUntil: encdb.UnlockedUntil.Unix()}, nil
 }
 
 // utility functions
