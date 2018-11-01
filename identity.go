@@ -67,6 +67,10 @@ func (i *Identity) GetKeysAtCurrentHeight() ([]*IdentityKey, error) {
 
 // GetKeysAtHeight returns the identity's public keys that were valid at the specified block height
 func (i *Identity) GetKeysAtHeight(height int64) ([]*IdentityKey, error) {
+	if !ChainExists(i.ChainID) {
+		return nil, fmt.Errorf("chain does not exist")
+	}
+
 	entries, err := GetAllChainEntriesAtHeight(i.ChainID, height)
 	if err != nil {
 		return nil, err

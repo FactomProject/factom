@@ -1158,7 +1158,7 @@ func handleIdentityKeysAtHeight(params []byte) (interface{}, *factom.JSONError) 
 	identity.ChainID = req.ChainID
 	keys, err := identity.GetKeysAtHeight(req.Height)
 	if err != nil {
-		return nil, newCustomInternalError(fmt.Errorf("IdentityKeysAtHeight: %s", err.Error()))
+		return nil, newCustomInternalError(fmt.Sprintf("IdentityKeysAtHeight: %s", err.Error()))
 	}
 
 	resp := new(identityKeysAtHeightResponse)
