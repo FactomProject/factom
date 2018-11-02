@@ -94,11 +94,23 @@ func NewBoltDB(boltPath string) (*WalletDatabaseOverlay, error) {
 }
 
 func NewEncryptedBoltDB(boltPath, password string) (*WalletDatabaseOverlay, error) {
+	err := CreateEncryptedBoltDB(boltPath)
+	if err != nil {
+		return nil, err
+	}
+	wOverlay, err := OpenEncryptedBoltDB(boltPath, password)
+	if err != nil {
+		return nil, err
+	}
+	return wOverlay, nil
+}
+
+func CreateEncryptedBoltDB(boltPath string) (error) {
 	// check if the file exists or if it is a directory
 	fileInfo, err := os.Stat(boltPath)
 	if err == nil {
 		if fileInfo.IsDir() {
-			return nil, fmt.Errorf("The path %s is a directory.  Please specify a file name.", boltPath)
+			return fmt.Errorf("The path %s is a directory.  Please specify a file name.", boltPath)
 		}
 	}
 
@@ -111,9 +123,12 @@ func NewEncryptedBoltDB(boltPath, password string) (*WalletDatabaseOverlay, erro
 
 	if err != nil && !os.IsNotExist(err) { //some other error, besides the file not existing
 		fmt.Printf("database error %s\n", err)
-		return nil, err
+		return err
 	}
+	return nil
+}
 
+func OpenEncryptedBoltDB(boltPath, password string) (*WalletDatabaseOverlay, error) {
 	defer func() {
 		if r := recover(); r != nil {
 			fmt.Printf("Could not use wallet file \"%s\"\n%v\n", boltPath, r)

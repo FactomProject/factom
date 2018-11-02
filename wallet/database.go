@@ -89,6 +89,15 @@ func NewEncryptedBoltDBWallet(path, password string) (*Wallet, error) {
 	return w, nil
 }
 
+func CreateEncryptedBoltDBWallet(path string) (error) {
+	err := CreateEncryptedBoltDB(path)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 // Close closes a Factom Wallet Database
 func (w *Wallet) Close() error {
 	return w.DBO.Close()
