@@ -1154,9 +1154,7 @@ func handleIdentityKeysAtHeight(params []byte) (interface{}, *factom.JSONError) 
 		return nil, newInvalidParamsError()
 	}
 
-	identity := &factom.Identity{}
-	identity.ChainID = req.ChainID
-	keys, err := identity.GetKeysAtHeight(req.Height)
+	keys, err := factom.GetIdentityKeysAtHeight(req.ChainID, req.Height)
 	if err != nil {
 		return nil, newCustomInternalError(fmt.Sprintf("IdentityKeysAtHeight: %s", err.Error()))
 	}
@@ -1164,9 +1162,7 @@ func handleIdentityKeysAtHeight(params []byte) (interface{}, *factom.JSONError) 
 	resp := new(identityKeysAtHeightResponse)
 	resp.ChainID = req.ChainID
 	resp.Height = req.Height
-	for _, key := range keys {
-		resp.Keys = append(resp.Keys, key.PubString())
-	}
+	resp.Keys = keys
 	return resp, nil
 }
 

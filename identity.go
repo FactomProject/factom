@@ -56,22 +56,22 @@ func NewIdentityChain(name []string, keys []string) (*Chain, error) {
 	return c, nil
 }
 
-// GetKeysAtHeight returns the identity's public keys that were/are valid at the highest saved block height
-func (i *Identity) GetKeysAtCurrentHeight() ([]*IdentityKey, error) {
+// GetIdentityKeysAtCurrentHeight returns the identity's public keys that were/are valid at the highest saved block height
+func GetIdentityKeysAtCurrentHeight(chainID string) ([]string, error) {
 	heights, err := GetHeights()
 	if err != nil {
 		return nil, err
 	}
-	return i.GetKeysAtHeight(heights.DirectoryBlockHeight)
+	return GetIdentityKeysAtHeight(chainID, heights.DirectoryBlockHeight)
 }
 
-// GetKeysAtHeight returns the identity's public keys that were valid at the specified block height
-func (i *Identity) GetKeysAtHeight(height int64) ([]*IdentityKey, error) {
-	if !ChainExists(i.ChainID) {
+// GetIdentityKeysAtHeight returns the identity's public keys that were valid at the specified block height
+func GetIdentityKeysAtHeight(chainID string, height int64) ([]string, error) {
+	if !ChainExists(chainID) {
 		return nil, fmt.Errorf("chain does not exist")
 	}
 
-	entries, err := GetAllChainEntriesAtHeight(i.ChainID, height)
+	entries, err := GetAllChainEntriesAtHeight(chainID, height)
 	if err != nil {
 		return nil, err
 	} else if len(entries) == 0 {
@@ -85,7 +85,7 @@ func (i *Identity) GetKeysAtHeight(height int64) ([]*IdentityKey, error) {
 	initialKeysJSON := entries[0].Content
 	err = json.Unmarshal(initialKeysJSON, &identityInfo)
 	if err != nil {
-		return nil, fmt.Errorf("failed to construct identity object from first entry in chain: %v", err.Error())
+		return nil, fmt.Errorf("no identity found at chain ID: %s", chainID)
 	}
 
 	var validKeys []*IdentityKey
@@ -150,7 +150,12 @@ func (i *Identity) GetKeysAtHeight(height int64) ([]*IdentityKey, error) {
 			}
 		}
 	}
-	return validKeys, nil
+
+	var resp []string
+	for _, k := range validKeys {
+		resp = append(resp, k.PubString())
+	}
+	return resp, nil
 }
 
 // NewIdentityKeyReplacementEntry creates and returns a new Entry struct for the key replacement. Publish it to the
