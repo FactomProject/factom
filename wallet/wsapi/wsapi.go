@@ -40,6 +40,7 @@ var (
 	rpcUser   string
 	rpcPass   string
 	authsha   []byte
+	WaitForPassphrase chan string
 )
 
 // httpBasicAuth returns the UTF-8 bytes of the HTTP Basic authentication
@@ -105,9 +106,18 @@ func fileExists(name string) bool {
 }
 
 func Start(w *wallet.Wallet, net string, c factom.RPCConfig) {
-	webServer = web.NewServer()
 	fctWallet = w
+	StartServer(net, c, handleV2)
+}
 
+func StartWithoutPassphrase(net string, c factom.RPCConfig, handler func() {
+	StartServer(net, c, func(ctx *web.Context) {
+		authV2(ctx, handleV2RequestUnlockOnly)
+	})
+}
+
+func StartServer(net string, c factom.RPCConfig, handler func (ctx *web.Context) {
+	webServer = web.NewServer()
 	rpcUser = c.WalletRPCUser
 	rpcPass = c.WalletRPCPassword
 
@@ -115,8 +125,8 @@ func Start(w *wallet.Wallet, net string, c factom.RPCConfig) {
 	h.Write(httpBasicAuth(rpcUser, rpcPass))
 	authsha = h.Sum(nil) //set this in the beginning to prevent timing attacks
 
-	webServer.Post("/v2", handleV2)
-	webServer.Get("/v2", handleV2)
+	webServer.Post("/v2", handler)
+	webServer.Get("/v2", handler)
 
 	if c.WalletTLSEnable == false {
 		webServer.Run(net)
@@ -167,8 +177,11 @@ func checkAuthHeader(r *http.Request) error {
 	}
 	return nil
 }
-
 func handleV2(ctx *web.Context) {
+	authV2(ctx, handleV2Request)
+}
+
+func authV2(ctx *web.Context, requestHandler func (*factom.JSON2Request) (*factom.JSON2Response, *factom.JSONError)) {
 	if err := checkAuthHeader(ctx.Request); err != nil {
 		remoteIP := ""
 		remoteIP += strings.Split(ctx.Request.RemoteAddr, ":")[0]
@@ -189,7 +202,7 @@ func handleV2(ctx *web.Context) {
 		return
 	}
 
-	jsonResp, jsonError := handleV2Request(j)
+	jsonResp, jsonError := requestHandler(j)
 
 	if jsonError != nil {
 		handleV2Error(ctx, j, jsonError)
@@ -197,6 +210,35 @@ func handleV2(ctx *web.Context) {
 	}
 
 	ctx.Write([]byte(jsonResp.String()))
+}
+
+func handleV2RequestUnlockOnly(j *factom.JSON2Request) (*factom.JSON2Response, *factom.JSONError) {
+	// REVIEW: should we pass in a wallet constructor
+	// or send the newly unlocked wallet back over gochannel?
+	var resp interface{}
+	var jsonError *factom.JSONError
+	params := []byte(j.Params)
+
+	switch j.Method {
+	case "wallet-passphrase":
+		resp, jsonError = handleWalletPassphrase(params) // FIXME
+	default:
+		jsonError = newWalletIsLockedError()
+	}
+
+	if jsonError != nil {
+		return nil, jsonError
+	}
+
+	jsonResp := factom.NewJSON2Response()
+	jsonResp.ID = j.ID
+	if b, err := json.Marshal(resp); err != nil {
+		return nil, newCustomInternalError(err.Error())
+	} else {
+		jsonResp.Result = b
+	}
+
+	return jsonResp, nil
 }
 
 func handleV2Request(j *factom.JSON2Request) (*factom.JSON2Response, *factom.JSONError) {
