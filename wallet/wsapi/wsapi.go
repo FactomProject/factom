@@ -204,7 +204,7 @@ func handleV2Request(j *factom.JSON2Request) (*factom.JSON2Response, *factom.JSO
 	params := []byte(j.Params)
 
 	// Only expose a subset of endpoints if the wallet is still waiting to be unlocked
-	if fctWallet.WalletDatabaseOverlay == nil || fctWallet.DBO.DB.(*securedb.EncryptedDB).UnlockedUntil.Unix() < time.Now().Unix() {
+	if fctWallet.Encrypted && (fctWallet.WalletDatabaseOverlay == nil || fctWallet.DBO.DB.(*securedb.EncryptedDB).UnlockedUntil.Unix() < time.Now().Unix()) {
 		switch j.Method {
 		case "get-height":
 			resp, jsonError = handleGetHeight(params)
@@ -212,7 +212,7 @@ func handleV2Request(j *factom.JSON2Request) (*factom.JSON2Response, *factom.JSO
 			resp, jsonError = handleProperties(params)
 		case "transactions":
 			resp, jsonError = handleAllTransactions(params)
-		case "wallet-passphrase":
+		case "unlock-wallet":
 			resp, jsonError = handleWalletPassphrase(params)
 		default:
 			jsonError = newWalletIsLockedError()
@@ -269,7 +269,7 @@ func handleV2Request(j *factom.JSON2Request) (*factom.JSON2Response, *factom.JSO
 			resp, jsonError = handleGetHeight(params)
 		case "wallet-balances":
 			resp, jsonError = handleWalletBalances(params)
-		case "wallet-passphrase":
+		case "unlock-wallet":
 			resp, jsonError = handleWalletPassphrase(params)
 		default:
 			jsonError = newMethodNotFoundError()
@@ -280,7 +280,12 @@ func handleV2Request(j *factom.JSON2Request) (*factom.JSON2Response, *factom.JSO
 		return nil, jsonError
 	}
 
-	fmt.Printf("API V2 method: <%v>  parameters: %s\n", j.Method, params)
+	// don't print password attempts to output
+	if j.Method == "unlock-wallet" {
+		fmt.Println("API V2 method: <unlock-wallet>")
+	} else {
+		fmt.Printf("API V2 method: <%v>  parameters: %s\n", j.Method, params)
+	}
 
 	jsonResp := factom.NewJSON2Response()
 	jsonResp.ID = j.ID

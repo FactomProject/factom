@@ -15,6 +15,7 @@ import (
 // Wallet is a connection to a Factom Wallet Database
 type Wallet struct {
 	*WalletDatabaseOverlay
+	Encrypted    bool
 	DBPath       string
 	txlock       sync.Mutex
 	transactions map[string]*factoid.Transaction
@@ -86,12 +87,15 @@ func NewEncryptedBoltDBWallet(path, password string) (*Wallet, error) {
 	if err != nil {
 		return nil, err
 	}
+	w.Encrypted = true
+	w.DBPath = path
 	return w, nil
 }
 
 func NewEncryptedBoltDBWalletAwaitingPassphrase(path string) (*Wallet, error) {
 	w := new(Wallet)
 	w.transactions = make(map[string]*factoid.Transaction)
+	w.Encrypted = true
 	w.DBPath = path
 	return w, nil
 }
