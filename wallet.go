@@ -13,8 +13,9 @@ import (
 // keys for all of the wallet addresses.
 func BackupWallet() (string, error) {
 	type walletBackupResponse struct {
-		Seed      string             `json:"wallet-seed"`
-		Addresses []*addressResponse `json:"addresses"`
+		Seed         string             `json:"wallet-seed"`
+		Addresses    []*addressResponse `json:"addresses"`
+		IdentityKeys []*addressResponse `json:"identity-keys"`
 	}
 
 	req := NewJSON2Request("wallet-backup", APICounter(), nil)
@@ -36,6 +37,11 @@ func BackupWallet() (string, error) {
 	for _, adr := range w.Addresses {
 		s += fmt.Sprintln(adr.Public)
 		s += fmt.Sprintln(adr.Secret)
+		s += fmt.Sprintln()
+	}
+	for _, k := range w.IdentityKeys {
+		s += fmt.Sprintln(k.Public)
+		s += fmt.Sprintln(k.Secret)
 		s += fmt.Sprintln()
 	}
 	return s, nil
