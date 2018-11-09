@@ -280,10 +280,11 @@ func handleV2Request(j *factom.JSON2Request) (*factom.JSON2Response, *factom.JSO
 		return nil, jsonError
 	}
 
-	// don't print password attempts to output
-	if j.Method == "unlock-wallet" {
-		fmt.Println("API V2 method: <unlock-wallet>")
-	} else {
+	// don't print password attempts or private keys to output
+	switch j.Method {
+	case "import-addresses", "import-koinify", "unlock-wallet":
+		fmt.Printf("API V2 method: <%v>\n", j.Method)
+	default:
 		fmt.Printf("API V2 method: <%v>  parameters: %s\n", j.Method, params)
 	}
 
