@@ -37,7 +37,7 @@ imports:
   subpackages:
   - controlpanel
 - name: github.com/FactomProject/factomd
-  version: 035968eaf15a6cb86748de876a9ce695c2e41228
+  version: e8403d3e9cee2fb5aabb96899260a4497cfea4fe
   subpackages:
   - Utilities/CorrectChainHeads/correctChainHeads
   - Utilities/tools

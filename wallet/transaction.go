@@ -18,12 +18,13 @@ import (
 )
 
 var (
-	ErrFeeTooLow     = errors.New("wallet: Insufficient Fee")
-	ErrNoSuchAddress = errors.New("wallet: No such address")
-	ErrTXExists      = errors.New("wallet: Transaction name already exists")
-	ErrTXNotExists   = errors.New("wallet: Transaction name was not found")
-	ErrTXNoInputs    = errors.New("wallet: Transaction has no inputs")
-	ErrTXInvalidName = errors.New("wallet: Transaction name is not valid")
+	ErrFeeTooLow         = errors.New("wallet: Insufficient Fee")
+	ErrNoSuchAddress     = errors.New("wallet: No such address")
+	ErrNoSuchIdentityKey = errors.New("wallet: No such identity key")
+	ErrTXExists          = errors.New("wallet: Transaction name already exists")
+	ErrTXNotExists       = errors.New("wallet: Transaction name was not found")
+	ErrTXNoInputs        = errors.New("wallet: Transaction has no inputs")
+	ErrTXInvalidName     = errors.New("wallet: Transaction name is not valid")
 )
 
 func (w *Wallet) NewTransaction(name string) error {

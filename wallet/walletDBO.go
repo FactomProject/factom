@@ -26,6 +26,7 @@ var (
 	fcDBPrefix = []byte("Factoids")
 	ecDBPrefix = []byte("Entry Credits")
 	seedDBKey  = []byte("DB Seed")
+	identityDBPrefix = []byte("Identities")
 )
 
 type WalletDatabaseOverlay struct {
@@ -148,6 +149,7 @@ type DBSeedBase struct {
 	MnemonicSeed            string
 	NextFactoidAddressIndex uint32
 	NextECAddressIndex      uint32
+	NextIdentityKeyIndex    uint32
 }
 
 type DBSeed struct {
@@ -221,6 +223,20 @@ func (e *DBSeed) NextECAddress() (*factom.ECAddress, error) {
 		bip32.FirstHardenedChild,
 		0,
 		e.NextECAddressIndex,
+	)
+	if err != nil {
+		return nil, err
+	}
+	e.NextECAddressIndex++
+	return add, nil
+}
+
+func (e *DBSeed) NextIdentityKey() (*factom.IdentityKey, error) {
+	add, err := factom.MakeBIP44IdentityKey(
+		e.MnemonicSeed,
+		bip32.FirstHardenedChild,
+		0,
+		e.NextIdentityKeyIndex,
 	)
 	if err != nil {
 		return nil, err
@@ -497,5 +513,112 @@ var _ interfaces.BinaryMarshallableAndCopyable = (*FA)(nil)
 func (t *FA) New() interfaces.BinaryMarshallableAndCopyable {
 	e := new(FA)
 	e.FactoidAddress = factom.NewFactoidAddress()
+	return e
+}
+
+func (db *WalletDatabaseOverlay) GetNextIdentityKey() (*factom.IdentityKey, error) {
+	seed, err := db.GetOrCreateDBSeed()
+	if err != nil {
+		return nil, err
+	}
+	add, err := seed.NextIdentityKey()
+	if err != nil {
+		return nil, err
+	}
+	err = db.InsertDBSeed(seed)
+	if err != nil {
+		return nil, err
+	}
+	err = db.InsertIdentityKey(add)
+	if err != nil {
+		return nil, err
+	}
+	return add, nil
+}
+
+func (db *WalletDatabaseOverlay) InsertIdentityKey(e *factom.IdentityKey) error {
+	if e == nil {
+		return nil
+	}
+
+	batch := []interfaces.Record{}
+	batch = append(batch, interfaces.Record{identityDBPrefix, []byte(e.String()), e})
+
+	return db.DBO.PutInBatch(batch)
+}
+
+func (db *WalletDatabaseOverlay) GetIdentityKey(str string) (*factom.IdentityKey, error) {
+	data, err := db.DBO.Get(identityDBPrefix, []byte(str), new(factom.IdentityKey))
+	if err != nil {
+		return nil, err
+	}
+	if data == nil {
+		return nil, ErrNoSuchIdentityKey
+	}
+	return data.(*factom.IdentityKey), nil
+}
+
+func (db *WalletDatabaseOverlay) GetAllIdentityKeys() ([]*factom.IdentityKey, error) {
+	list, err := db.DBO.FetchAllBlocksFromBucket(identityDBPrefix, new(ID))
+	if err != nil {
+		return nil, err
+	}
+	return toIdentityKeyList(list), nil
+}
+
+func toIdentityKeyList(source []interfaces.BinaryMarshallableAndCopyable) []*factom.IdentityKey {
+	answer := make([]*factom.IdentityKey, len(source))
+	for i, v := range source {
+		answer[i] = v.(*ID).IdentityKey
+	}
+	sort.Sort(byKeyName(answer))
+	return answer
+}
+
+func (db *WalletDatabaseOverlay) RemoveIdentityKey(pubString string) error {
+	if len(pubString) == 0 {
+		return nil
+	}
+
+	data, err := db.DBO.Get(identityDBPrefix, []byte(pubString), new(factom.IdentityKey))
+	if err != nil {
+		return err
+	}
+	if data == nil {
+		return ErrNoSuchIdentityKey
+	}
+	err = db.DBO.Delete(identityDBPrefix, []byte(pubString))
+	if err == nil {
+		err := db.DBO.Delete(identityDBPrefix, []byte(pubString)) //delete twice to flush the db file
+		return err
+	} else {
+		return err
+	}
+
+	return nil
+}
+
+type byKeyName []*factom.IdentityKey
+
+func (f byKeyName) Len() int {
+	return len(f)
+}
+func (f byKeyName) Less(i, j int) bool {
+	a := strings.Compare(f[i].String(), f[j].String())
+	return a < 0
+}
+func (f byKeyName) Swap(i, j int) {
+	f[i], f[j] = f[j], f[i]
+}
+
+type ID struct {
+	*factom.IdentityKey
+}
+
+var _ interfaces.BinaryMarshallableAndCopyable = (*ID)(nil)
+
+func (t *ID) New() interfaces.BinaryMarshallableAndCopyable {
+	e := new(ID)
+	e.IdentityKey = factom.NewIdentityKey()
 	return e
 }

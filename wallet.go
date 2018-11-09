@@ -85,6 +85,28 @@ func GenerateECAddress() (*ECAddress, error) {
 	return e, nil
 }
 
+func GenerateIdentityKey() (*IdentityKey, error) {
+	req := NewJSON2Request("generate-identity-key", APICounter(), nil)
+	resp, err := walletRequest(req)
+	if err != nil {
+		return nil, err
+	}
+	if resp.Error != nil {
+		return nil, resp.Error
+	}
+
+	k := new(addressResponse)
+	if err := json.Unmarshal(resp.JSONResult(), k); err != nil {
+		return nil, err
+	}
+	e, err := GetIdentityKey(k.Secret)
+	if err != nil {
+		return nil, err
+	}
+
+	return e, nil
+}
+
 func ImportAddresses(addrs ...string) (
 	[]*FactoidAddress,
 	[]*ECAddress,
@@ -262,6 +284,113 @@ func FetchFactoidAddress(fctpub string) (*FactoidAddress, error) {
 	return GetFactoidAddress(r.Secret)
 }
 
+func ImportIdentityKeys(pubs ...string) ([]*IdentityKey, error) {
+	params := new(struct {
+		IdentityKeys []secretRequest `json:"keys"`
+	})
+	for _, pub := range pubs {
+		s := secretRequest{Secret: pub}
+		params.IdentityKeys = append(params.IdentityKeys, s)
+	}
+
+	req := NewJSON2Request("import-identity-keys", APICounter(), params)
+	resp, err := walletRequest(req)
+	if err != nil {
+		return nil, err
+	}
+	if resp.Error != nil {
+		return nil, resp.Error
+	}
+
+	r := new(multiIdentityKeyResponse)
+	if err := json.Unmarshal(resp.JSONResult(), r); err != nil {
+		return nil, err
+	}
+	keys := make([]*IdentityKey, 0)
+	for _, v := range r.IdentityKeys {
+		k, err := GetIdentityKey(v.Secret)
+		if err != nil {
+			return nil, err
+		}
+		keys = append(keys, k)
+	}
+
+	return keys, nil
+}
+
+func FetchIdentityKey(pub string) (*IdentityKey, error) {
+	params := new(struct {
+		Public string `json:"public"`
+	})
+	params.Public = pub
+
+	req := NewJSON2Request("identity-key", APICounter(), params)
+	resp, err := walletRequest(req)
+	if err != nil {
+		return nil, err
+	}
+	if resp.Error != nil {
+		return nil, resp.Error
+	}
+
+	r := new(addressResponse)
+	if err := json.Unmarshal(resp.JSONResult(), r); err != nil {
+		return nil, err
+	}
+
+	return GetIdentityKey(r.Secret)
+}
+
+func FetchIdentityKeys() ([]*IdentityKey, error) {
+	req := NewJSON2Request("all-identity-keys", APICounter(), nil)
+	resp, err := walletRequest(req)
+	if err != nil {
+		return nil, err
+	}
+	if resp.Error != nil {
+		return nil, resp.Error
+	}
+
+	keys := make([]*IdentityKey, 0)
+
+	multiKeyResp := new(multiIdentityKeyResponse)
+	if err := json.Unmarshal(resp.JSONResult(), multiKeyResp); err != nil {
+		return nil, err
+	}
+
+	for _, v := range multiKeyResp.IdentityKeys {
+		if IdentityKeyStringType(v.Public) == IDPub {
+			k, err := GetIdentityKey(v.Secret)
+			if err != nil {
+				return nil, err
+			}
+			keys = append(keys, k)
+		} else {
+			return nil, fmt.Errorf("%s is not a valid public identity key", v.Public)
+		}
+	}
+
+	return keys, nil
+}
+
+func RemoveIdentityKey(pub string) error {
+	params := new(struct {
+		Public string `json:"public"`
+	})
+	params.Public = pub
+
+	req := NewJSON2Request("remove-identity-key", APICounter(), params)
+	resp, err := walletRequest(req)
+	if err != nil {
+		return err
+	}
+	if resp.Error != nil {
+		return resp.Error
+	}
+
+	return nil
+}
+
 func GetWalletHeight() (uint32, error) {
 	req := NewJSON2Request("get-height", APICounter(), nil)
 	resp, err := walletRequest(req)
@@ -305,6 +434,10 @@ type addressResponse struct {
 
 type multiAddressResponse struct {
 	Addresses []*addressResponse `json:"addresses"`
+}
+
+type multiIdentityKeyResponse struct {
+	IdentityKeys []*addressResponse `json:"keys"`
 }
 
 type composeEntryRequest struct {
