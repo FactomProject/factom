@@ -204,68 +204,86 @@ func handleV2Request(j *factom.JSON2Request) (*factom.JSON2Response, *factom.JSO
 	var jsonError *factom.JSONError
 	params := []byte(j.Params)
 
-	switch j.Method {
-	case "address":
-		resp, jsonError = handleAddress(params)
-	case "all-addresses":
-		resp, jsonError = handleAllAddresses(params)
-	case "generate-ec-address":
-		resp, jsonError = handleGenerateECAddress(params)
-	case "generate-factoid-address":
-		resp, jsonError = handleGenerateFactoidAddress(params)
-	case "import-addresses":
-		resp, jsonError = handleImportAddresses(params)
-	case "import-koinify":
-		resp, jsonError = handleImportKoinify(params)
-	case "wallet-backup":
-		resp, jsonError = handleWalletBackup(params)
-	case "transactions":
-		resp, jsonError = handleAllTransactions(params)
-	case "new-transaction":
-		resp, jsonError = handleNewTransaction(params)
-	case "delete-transaction":
-		resp, jsonError = handleDeleteTransaction(params)
-	case "tmp-transactions":
-		resp, jsonError = handleTmpTransactions(params)
-	case "transaction-hash":
-		resp, jsonError = handleTransactionHash(params)
-	case "add-input":
-		resp, jsonError = handleAddInput(params)
-	case "add-output":
-		resp, jsonError = handleAddOutput(params)
-	case "add-ec-output":
-		resp, jsonError = handleAddECOutput(params)
-	case "add-fee":
-		resp, jsonError = handleAddFee(params)
-	case "sub-fee":
-		resp, jsonError = handleSubFee(params)
-	case "sign-transaction":
-		resp, jsonError = handleSignTransaction(params)
-	case "compose-transaction":
-		resp, jsonError = handleComposeTransaction(params)
-	case "remove-address":
-		resp, jsonError = handleRemoveAddress(params)
-	case "properties":
-		resp, jsonError = handleProperties(params)
-	case "compose-chain":
-		resp, jsonError = handleComposeChain(params)
-	case "compose-entry":
-		resp, jsonError = handleComposeEntry(params)
-	case "get-height":
-		resp, jsonError = handleGetHeight(params)
-	case "wallet-balances":
-		resp, jsonError = handleWalletBalances(params)
-	case "wallet-passphrase":
-		resp, jsonError = handleWalletPassphrase(params)
-	default:
-		jsonError = newMethodNotFoundError()
+	// Only expose a subset of endpoints if the wallet is still waiting to be unlocked
+	if fctWallet.Encrypted && (fctWallet.WalletDatabaseOverlay == nil || fctWallet.DBO.DB.(*securedb.EncryptedDB).UnlockedUntil.Unix() < time.Now().Unix()) {
+		switch j.Method {
+		case "get-height":
+			resp, jsonError = handleGetHeight(params)
+		case "properties":
+			resp, jsonError = handleProperties(params)
+		case "transactions":
+			resp, jsonError = handleAllTransactions(params)
+		case "unlock-wallet":
+			resp, jsonError = handleWalletPassphrase(params)
+		default:
+			jsonError = newWalletIsLockedError()
+		}
+	} else {
+		switch j.Method {
+		case "address":
+			resp, jsonError = handleAddress(params)
+		case "all-addresses":
+			resp, jsonError = handleAllAddresses(params)
+		case "generate-ec-address":
+			resp, jsonError = handleGenerateECAddress(params)
+		case "generate-factoid-address":
+			resp, jsonError = handleGenerateFactoidAddress(params)
+		case "import-addresses":
+			resp, jsonError = handleImportAddresses(params)
+		case "import-koinify":
+			resp, jsonError = handleImportKoinify(params)
+		case "wallet-backup":
+			resp, jsonError = handleWalletBackup(params)
+		case "transactions":
+			resp, jsonError = handleAllTransactions(params)
+		case "new-transaction":
+			resp, jsonError = handleNewTransaction(params)
+		case "delete-transaction":
+			resp, jsonError = handleDeleteTransaction(params)
+		case "tmp-transactions":
+			resp, jsonError = handleTmpTransactions(params)
+		case "transaction-hash":
+			resp, jsonError = handleTransactionHash(params)
+		case "add-input":
+			resp, jsonError = handleAddInput(params)
+		case "add-output":
+			resp, jsonError = handleAddOutput(params)
+		case "add-ec-output":
+			resp, jsonError = handleAddECOutput(params)
+		case "add-fee":
+			resp, jsonError = handleAddFee(params)
+		case "sub-fee":
+			resp, jsonError = handleSubFee(params)
+		case "sign-transaction":
+			resp, jsonError = handleSignTransaction(params)
+		case "compose-transaction":
+			resp, jsonError = handleComposeTransaction(params)
+		case "remove-address":
+			resp, jsonError = handleRemoveAddress(params)
+		case "properties":
+			resp, jsonError = handleProperties(params)
+		case "compose-chain":
+			resp, jsonError = handleComposeChain(params)
+		case "compose-entry":
+			resp, jsonError = handleComposeEntry(params)
+		case "get-height":
+			resp, jsonError = handleGetHeight(params)
+		case "wallet-balances":
+			resp, jsonError = handleWalletBalances(params)
+		case "unlock-wallet":
+			resp, jsonError = handleWalletPassphrase(params)
+		default:
+			jsonError = newMethodNotFoundError()
+		}
 	}
+
 	if jsonError != nil {
 		return nil, jsonError
 	}
 
+	// don't print password attempts or private keys to output
 	switch j.Method {
-	case "import-addresses", "import-koinify", "wallet-passphrase":
+	case "import-addresses", "import-koinify", "unlock-wallet":
 		fmt.Printf("API V2 method: <%v>\n", j.Method)
 	default:
 		fmt.Printf("API V2 method: <%v>  parameters: %s\n", j.Method, params)
@@ -1045,12 +1063,27 @@ func handleWalletPassphrase(params []byte) (interface{}, *factom.JSONError) {
 		req.Timeout = 1073741824
 	}
 
+	// If this isn't the first time booting an encrypted wallet, we postpone creating the database until now
+	if fctWallet.WalletDatabaseOverlay == nil {
+		db, err := wallet.NewEncryptedBoltDB(fctWallet.DBPath, req.Password)
+		if err != nil {
+			return nil, newCustomInternalError(err.Error())
+		}
+		fctWallet.WalletDatabaseOverlay = db
+
+		err = fctWallet.InitWallet()
+		if err != nil {
+			return nil, newCustomInternalError(err.Error())
+		}
+		fctWallet.DBO.DB.(*securedb.EncryptedDB).Lock()
+	}
+
 	encdb, ok := fctWallet.DBO.DB.(*securedb.EncryptedDB)
 	if !ok {
 		return nil, newCustomInternalError("Cannot unlock non-encrypted wallet. This database is always unlocked")
 	}
 
-	err := encdb.UnlockFor(req.Password, time.Second*time.Duration(req.Timeout))
+	err := encdb.UnlockFor(req.Password, time.Second * time.Duration(req.Timeout))
 	if err != nil {
 		return nil, newIncorrectPassphraseError()
 	}
