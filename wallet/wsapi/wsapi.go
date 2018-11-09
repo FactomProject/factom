@@ -167,6 +167,7 @@ func checkAuthHeader(r *http.Request) error {
 	}
 	return nil
 }
+
 func handleV2(ctx *web.Context) {
 	if err := checkAuthHeader(ctx.Request); err != nil {
 		remoteIP := ""
