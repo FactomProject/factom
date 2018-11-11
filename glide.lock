@@ -148,6 +148,8 @@ imports:
   - internal/util
   - nfs
   - xfs
+- name: github.com/rs/cors
+  version: a3460e445dd310dbefee993fe449f2ff9c08ae71
 - name: github.com/sirupsen/logrus
   version: 566a5f690849162ff53cf98f3c42135389d63f95
 - name: golang.org/x/crypto
