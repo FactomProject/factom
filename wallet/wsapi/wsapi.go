@@ -137,6 +137,14 @@ func Start(w *wallet.Wallet, net string, c factom.RPCConfig) {
 		}
 		webServer.RunTLS(net, tlsConfig)
 	}
+	if len(c.WalletCORSDomains) > 0 {
+		domains := strings.Split(c.WalletCORSDomains, ",")
+		cors := make([]string, len(domains))
+		for _, domain := range domains {
+			cors = append(cors, strings.Trim(domain, " "))
+		}
+		webServer.Config.CorsDomains = cors
+	}
 }
 
 func Stop() {
