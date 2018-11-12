@@ -108,6 +108,15 @@ func Start(w *wallet.Wallet, net string, c factom.RPCConfig) {
 	webServer = web.NewServer()
 	fctWallet = w
 
+	if len(c.WalletCORSDomains) > 0 {
+		domains := strings.Split(c.WalletCORSDomains, ",")
+		var cors []string
+		for _, domain := range domains {
+			cors = append(cors, strings.Trim(domain, " "))
+		}
+		webServer.Config.CorsDomains = cors
+	}
+
 	rpcUser = c.WalletRPCUser
 	rpcPass = c.WalletRPCPassword
 
@@ -136,14 +145,6 @@ func Start(w *wallet.Wallet, net string, c factom.RPCConfig) {
 			MinVersion:   tls.VersionTLS12,
 		}
 		webServer.RunTLS(net, tlsConfig)
-	}
-	if len(c.WalletCORSDomains) > 0 {
-		domains := strings.Split(c.WalletCORSDomains, ",")
-		cors := make([]string, len(domains))
-		for _, domain := range domains {
-			cors = append(cors, strings.Trim(domain, " "))
-		}
-		webServer.Config.CorsDomains = cors
 	}
 }
 
