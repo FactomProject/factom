@@ -226,7 +226,7 @@ func (e *DBSeed) NextIdentityKey() (*factom.IdentityKey, error) {
 	if err != nil {
 		return nil, err
 	}
-	e.NextECAddressIndex++
+	e.NextIdentityKeyIndex++
 	return add, nil
 }
 
