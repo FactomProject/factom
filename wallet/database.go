@@ -10,8 +10,6 @@ import (
 
 	"github.com/FactomProject/factom"
 	"github.com/FactomProject/factomd/common/factoid"
-	"github.com/FactomProject/factomd/common/primitives/random"
-	ed "github.com/FactomProject/ed25519"
 )
 
 // Wallet is a connection to a Factom Wallet Database
@@ -118,19 +116,8 @@ func (w *Wallet) GenerateFCTAddress() (*factom.FactoidAddress, error) {
 }
 
 // GenerateIdentityKey creates and stores a new Identity Key in the Wallet.
-// TODO: allow the address to be reproduced in the future using the wallet seed
 func (w *Wallet) GenerateIdentityKey() (*factom.IdentityKey, error) {
-	randomSecret := random.RandByteSliceOfLen(32)
-
-	k := factom.NewIdentityKey()
-	copy(k.Sec[:32], randomSecret[:])
-	k.Pub = ed.GetPublicKey(k.Sec)
-
-	err := w.InsertIdentityKey(k)
-	if err != nil {
-		return nil, err
-	}
-	return k, nil
+	return w.GetNextIdentityKey()
 }
 
 // GetAllAddresses retrieves all Entry Credit and Factoid Addresses from the
