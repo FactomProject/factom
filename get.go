@@ -63,7 +63,7 @@ func GetFactoidBalance(addr string) (int64, error) {
 // GetBalanceTotals return the total value of Factoids and Entry Credits in the
 // wallet according to the the server acknowledgement and the value saved in the
 // blockchain.
-func GetBalanceTotals() (fs, fa, es, ea int64, err error) {
+func GetBalanceTotals() (fSaved, fAcknowledged, eSaved, eAcknowledged int64, err error) {
 	type multiBalanceResponse struct {
 		FactoidAccountBalances struct {
 			Ack   int64 `json:"ack"`
@@ -79,6 +79,9 @@ func GetBalanceTotals() (fs, fa, es, ea int64, err error) {
 	resp, err := walletRequest(req)
 	if err != nil {
 		return
+	} else if resp.Error != nil {
+		err = resp.Error
+		return
 	}
 
 	balances := new(multiBalanceResponse)
@@ -87,10 +90,10 @@ func GetBalanceTotals() (fs, fa, es, ea int64, err error) {
 		return
 	}
 
-	fs = balances.FactoidAccountBalances.Saved
-	fa = balances.FactoidAccountBalances.Ack
-	es = balances.EntryCreditAccountBalances.Saved
-	ea = balances.EntryCreditAccountBalances.Ack
+	fSaved = balances.FactoidAccountBalances.Saved
+	fAcknowledged = balances.FactoidAccountBalances.Ack
+	eSaved = balances.EntryCreditAccountBalances.Saved
+	eAcknowledged = balances.EntryCreditAccountBalances.Ack
 
 	return
 }
