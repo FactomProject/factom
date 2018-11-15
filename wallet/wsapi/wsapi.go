@@ -1441,7 +1441,7 @@ func handleWalletPassphrase(params []byte) (interface{}, *factom.JSONError) {
 	if fctWallet.WalletDatabaseOverlay == nil {
 		db, err := wallet.NewEncryptedBoltDB(fctWallet.DBPath, req.Password)
 		if err != nil {
-			return nil, newCustomInternalError(err.Error())
+			return nil, newIncorrectPassphraseError()
 		}
 		fctWallet.WalletDatabaseOverlay = db
 
