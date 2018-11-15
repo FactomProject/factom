@@ -102,6 +102,9 @@ func NewEncryptedBoltDBWalletAwaitingPassphrase(path string) (*Wallet, error) {
 
 // Close closes a Factom Wallet Database
 func (w *Wallet) Close() error {
+	if w.WalletDatabaseOverlay == nil {
+		return nil
+	}
 	return w.DBO.Close()
 }
 
