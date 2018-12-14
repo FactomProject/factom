@@ -86,9 +86,9 @@ type importIdentityKeysRequest struct {
 	} `json:keys`
 }
 
-type identityKeysAtHeightRequest struct {
+type activeIdentityKeysRequest struct {
 	ChainID string `json:"chainid"`
-	Height  int64  `json:"height"`
+	Height  *int64 `json:"height"`
 }
 
 type identityChainRequest struct {
@@ -196,7 +196,7 @@ type multiIdentityKeyResponse struct {
 	Keys []*identityKeyResponse `json:"keys"`
 }
 
-type identityKeysAtHeightResponse struct {
+type activeIdentityKeysResponse struct {
 	ChainID string   `json:"chainid"`
 	Height  int64    `json:"height"`
 	Keys    []string `json:"keys"`

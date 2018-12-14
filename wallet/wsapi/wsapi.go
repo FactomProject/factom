@@ -280,8 +280,8 @@ func handleV2Request(j *factom.JSON2Request) (*factom.JSON2Response, *factom.JSO
 			resp, jsonError = handleGenerateIdentityKey(params)
 		case "remove-identity-key":
 			resp, jsonError = handleRemoveIdentityKey(params)
-		case "identity-keys-at-height":
-			resp, jsonError = handleIdentityKeysAtHeight(params)
+		case "active-identity-keys":
+			resp, jsonError = handleActiveIdentityKeys(params)
 		case "compose-identity-chain":
 			resp, jsonError = handleComposeIdentityChain(params)
 		case "compose-identity-key-replacement":
@@ -1172,21 +1172,31 @@ func handleRemoveIdentityKey(params []byte) (interface{}, *factom.JSONError) {
 	return resp, nil
 }
 
-func handleIdentityKeysAtHeight(params []byte) (interface{}, *factom.JSONError) {
-	req := new(identityKeysAtHeightRequest)
+func handleActiveIdentityKeys(params []byte) (interface{}, *factom.JSONError) {
+	req := new(activeIdentityKeysRequest)
 	if err := json.Unmarshal(params, req); err != nil {
 		return nil, newInvalidParamsError()
 	}
 
-	keys, err := factom.GetIdentityKeysAtHeight(req.ChainID, req.Height)
-	if err != nil {
-		return nil, newCustomInternalError(fmt.Sprintf("IdentityKeysAtHeight: %s", err.Error()))
+	resp := new(activeIdentityKeysResponse)
+	resp.ChainID = req.ChainID
+
+	if req.Height == nil {
+		keys, currentHeight, err := factom.GetActiveIdentityKeys(req.ChainID)
+		if err != nil {
+			return nil, newCustomInternalError(fmt.Sprintf("ActiveIdentityKeys: %s", err.Error()))
+		}
+		resp.Keys = keys
+		resp.Height = currentHeight
+		return resp, nil
 	}
 
-	resp := new(identityKeysAtHeightResponse)
-	resp.ChainID = req.ChainID
-	resp.Height = req.Height
+	keys, err := factom.GetActiveIdentityKeysAtHeight(req.ChainID, *req.Height)
+	if err != nil {
+		return nil, newCustomInternalError(fmt.Sprintf("ActiveIdentityKeys: %s", err.Error()))
+	}
 	resp.Keys = keys
+	resp.Height = *req.Height
 	return resp, nil
 }
 

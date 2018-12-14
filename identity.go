@@ -57,17 +57,19 @@ func NewIdentityChain(name []string, keys []string) (*Chain, error) {
 	return c, nil
 }
 
-// GetIdentityKeysAtCurrentHeight returns the identity's public keys that were/are valid at the highest saved block height
-func GetIdentityKeysAtCurrentHeight(chainID string) ([]string, error) {
+// GetActiveIdentityKeys returns the identity's public keys that were/are active at the highest saved block height,
+// along with that blockheight
+func GetActiveIdentityKeys(chainID string) ([]string, int64, error) {
 	heights, err := GetHeights()
 	if err != nil {
-		return nil, err
+		return nil, -1, err
 	}
-	return GetIdentityKeysAtHeight(chainID, heights.DirectoryBlockHeight)
+	keys, err := GetActiveIdentityKeysAtHeight(chainID, heights.DirectoryBlockHeight)
+	return keys, heights.DirectoryBlockHeight, err
 }
 
-// GetIdentityKeysAtHeight returns the identity's public keys that were valid at the specified block height
-func GetIdentityKeysAtHeight(chainID string, height int64) ([]string, error) {
+// GetActiveIdentityKeysAtHeight returns the identity's public keys that were active at the specified block height
+func GetActiveIdentityKeysAtHeight(chainID string, height int64) ([]string, error) {
 	if !ChainExists(chainID) {
 		return nil, fmt.Errorf("chain does not exist")
 	}
