@@ -38,6 +38,7 @@ func GetIdentityChainID(name []string) string {
 // blockchain using the usual factom.CommitChain(...) and factom.RevealChain(...) calls.
 func NewIdentityChain(name []string, keys []string) (*Chain, error) {
 	e := &Entry{}
+	e.ExtIDs = append(e.ExtIDs, []byte("IdentityChain"))
 	for _, part := range name {
 		e.ExtIDs = append(e.ExtIDs, []byte(part))
 	}
@@ -76,6 +77,8 @@ func GetIdentityKeysAtHeight(chainID string, height int64) ([]string, error) {
 		return nil, err
 	} else if len(entries) == 0 {
 		return nil, fmt.Errorf("chain did not yet exist at height %d", height)
+	} else if len(entries[0].ExtIDs) == 0 || bytes.Compare(entries[0].ExtIDs[0], []byte("IdentityChain")) != 0 {
+		return nil, fmt.Errorf("no identity found at chain ID: %s", chainID)
 	}
 
 	var identityInfo struct {
