@@ -21,6 +21,7 @@ type RPCConfig struct {
 	WalletTLSCertFile  string
 	WalletRPCUser      string
 	WalletRPCPassword  string
+	WalletCORSDomains  string
 	FactomdTLSEnable   bool
 	FactomdTLSCertFile string
 	FactomdRPCUser     string
