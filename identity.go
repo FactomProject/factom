@@ -93,7 +93,8 @@ func GetActiveIdentityKeysAtHeight(chainID string, height int64) ([]string, erro
 		return nil, fmt.Errorf("no identity found at chain ID: %s", chainID)
 	}
 
-	var validKeys []*IdentityKey
+	var activeKeys []*IdentityKey
+	retiredKeys := make(map[[32]byte]bool)
 	for _, pubString := range identityInfo.InitialKeys {
 		if IdentityKeyStringType(pubString) != IDPub {
 			return nil, fmt.Errorf("invalid identity public key string in first entry: %s", pubString)
@@ -101,7 +102,7 @@ func GetActiveIdentityKeysAtHeight(chainID string, height int64) ([]string, erro
 		pub := base58.Decode(pubString)
 		k := NewIdentityKey()
 		copy(k.Pub[:], pub[IDKeyPrefixLength:IDKeyBodyLength])
-		validKeys = append(validKeys, k)
+		activeKeys = append(activeKeys, k)
 	}
 
 	for _, e := range entries {
@@ -128,12 +129,17 @@ func GetActiveIdentityKeysAtHeight(chainID string, height int64) ([]string, erro
 		b = base58.Decode(newPubString)
 		copy(newKey[:], b[IDKeyPrefixLength:IDKeyBodyLength])
 
+		// Disallow putting old keys back into rotation
+		if _, present := retiredKeys[newKey]; present {
+			continue
+		}
+
 		var signature [ed.SignatureSize]byte
 		copy(signature[:], e.ExtIDs[3])
 		signerPubString := string(e.ExtIDs[4])
 
 		levelToReplace := -1
-		for level, key := range validKeys {
+		for level, key := range activeKeys {
 			if bytes.Compare(oldKey[:], key.PubBytes()) == 0 {
 				levelToReplace = level
 			}
@@ -144,20 +150,21 @@ func GetActiveIdentityKeysAtHeight(chainID string, height int64) ([]string, erro
 		}
 
 		message := []byte(oldPubString + newPubString)
-		for level, key := range validKeys {
+		for level, key := range activeKeys {
 			if level > levelToReplace {
 				// low priority key trying to replace high priority key, disregard
 				break
 			}
 			if key.PubString() == signerPubString && ed.Verify(key.Pub, message, &signature) {
-				validKeys[levelToReplace].Pub = &newKey
+				activeKeys[levelToReplace].Pub = &newKey
+				retiredKeys[oldKey] = true
 				break
 			}
 		}
 	}
 
 	var resp []string
-	for _, k := range validKeys {
+	for _, k := range activeKeys {
 		resp = append(resp, k.PubString())
 	}
 	return resp, nil
