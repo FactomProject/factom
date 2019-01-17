@@ -149,7 +149,7 @@ func GetActiveIdentityKeysAtHeight(chainID string, height int64) ([]string, erro
 			continue
 		}
 
-		message := []byte(oldPubString + newPubString)
+		message := []byte(chainID + oldPubString + newPubString)
 		for level, key := range activeKeys {
 			if level > levelToReplace {
 				// low priority key trying to replace high priority key, disregard
@@ -179,7 +179,7 @@ func NewIdentityKeyReplacementEntry(chainID string, oldKey string, newKey string
 	if IdentityKeyStringType(newKey) != IDPub {
 		return nil, fmt.Errorf("provided key %s is not a valid identity public key", newKey)
 	}
-	message := []byte(oldKey + newKey)
+	message := []byte(chainID + oldKey + newKey)
 	signature := signerKey.Sign(message)
 
 	e := Entry{}
