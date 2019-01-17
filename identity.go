@@ -50,7 +50,7 @@ func NewIdentityChain(name []string, keys []string) (*Chain, error) {
 		}
 		publicKeys = append(publicKeys, key)
 	}
-	keysMap := map[string]interface{}{"identity-version": 1, "keys": publicKeys}
+	keysMap := map[string]interface{}{"version": 1, "keys": publicKeys}
 	keysJSON, _ := json.Marshal(keysMap)
 	e.Content = keysJSON
 	c := NewChain(e)
@@ -84,7 +84,7 @@ func GetActiveIdentityKeysAtHeight(chainID string, height int64) ([]string, erro
 	}
 
 	var identityInfo struct {
-		Version     int      `json:"identity-version"`
+		Version     int      `json:"version"`
 		InitialKeys []string `json:"keys"`
 	}
 	initialKeysJSON := entries[0].Content
