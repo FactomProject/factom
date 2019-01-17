@@ -94,15 +94,18 @@ func GetActiveIdentityKeysAtHeight(chainID string, height int64) ([]string, erro
 	}
 
 	var activeKeys []*IdentityKey
-	retiredKeys := make(map[[32]byte]bool)
+	allKeys := make(map[string]bool)
 	for _, pubString := range identityInfo.InitialKeys {
 		if IdentityKeyStringType(pubString) != IDPub {
 			return nil, fmt.Errorf("invalid identity public key string in first entry: %s", pubString)
+		} else if _, present := allKeys[pubString]; present {
+			continue
 		}
 		pub := base58.Decode(pubString)
 		k := NewIdentityKey()
 		copy(k.Pub[:], pub[IDKeyPrefixLength:IDKeyBodyLength])
 		activeKeys = append(activeKeys, k)
+		allKeys[pubString] = true
 	}
 
 	for _, e := range entries {
@@ -129,8 +132,8 @@ func GetActiveIdentityKeysAtHeight(chainID string, height int64) ([]string, erro
 		b = base58.Decode(newPubString)
 		copy(newKey[:], b[IDKeyPrefixLength:IDKeyBodyLength])
 
-		// Disallow putting old keys back into rotation
-		if _, present := retiredKeys[newKey]; present {
+		// Disallow re-adding retired or currently active keys
+		if _, present := allKeys[newPubString]; present {
 			continue
 		}
 
@@ -157,7 +160,7 @@ func GetActiveIdentityKeysAtHeight(chainID string, height int64) ([]string, erro
 			}
 			if key.PubString() == signerPubString && ed.Verify(key.Pub, message, &signature) {
 				activeKeys[levelToReplace].Pub = &newKey
-				retiredKeys[oldKey] = true
+				allKeys[newPubString] = true
 				break
 			}
 		}
