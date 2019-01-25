@@ -50,7 +50,7 @@ func NewIdentityChain(name []string, keys []string) (*Chain, error) {
 		}
 		publicKeys = append(publicKeys, key)
 	}
-	keysMap := map[string]interface{}{"identity-version": 1, "keys": publicKeys}
+	keysMap := map[string]interface{}{"version": 1, "keys": publicKeys}
 	keysJSON, _ := json.Marshal(keysMap)
 	e.Content = keysJSON
 	c := NewChain(e)
@@ -84,7 +84,7 @@ func GetActiveIdentityKeysAtHeight(chainID string, height int64) ([]string, erro
 	}
 
 	var identityInfo struct {
-		Version     int      `json:"identity-version"`
+		Version     int      `json:"version"`
 		InitialKeys []string `json:"keys"`
 	}
 	initialKeysJSON := entries[0].Content
@@ -94,15 +94,18 @@ func GetActiveIdentityKeysAtHeight(chainID string, height int64) ([]string, erro
 	}
 
 	var activeKeys []*IdentityKey
-	retiredKeys := make(map[[32]byte]bool)
+	allKeys := make(map[string]bool)
 	for _, pubString := range identityInfo.InitialKeys {
 		if IdentityKeyStringType(pubString) != IDPub {
 			return nil, fmt.Errorf("invalid identity public key string in first entry: %s", pubString)
+		} else if _, present := allKeys[pubString]; present {
+			continue
 		}
 		pub := base58.Decode(pubString)
 		k := NewIdentityKey()
 		copy(k.Pub[:], pub[IDKeyPrefixLength:IDKeyBodyLength])
 		activeKeys = append(activeKeys, k)
+		allKeys[pubString] = true
 	}
 
 	for _, e := range entries {
@@ -129,8 +132,8 @@ func GetActiveIdentityKeysAtHeight(chainID string, height int64) ([]string, erro
 		b = base58.Decode(newPubString)
 		copy(newKey[:], b[IDKeyPrefixLength:IDKeyBodyLength])
 
-		// Disallow putting old keys back into rotation
-		if _, present := retiredKeys[newKey]; present {
+		// Disallow re-adding retired or currently active keys
+		if _, present := allKeys[newPubString]; present {
 			continue
 		}
 
@@ -149,7 +152,7 @@ func GetActiveIdentityKeysAtHeight(chainID string, height int64) ([]string, erro
 			continue
 		}
 
-		message := []byte(oldPubString + newPubString)
+		message := []byte(chainID + oldPubString + newPubString)
 		for level, key := range activeKeys {
 			if level > levelToReplace {
 				// low priority key trying to replace high priority key, disregard
@@ -157,7 +160,7 @@ func GetActiveIdentityKeysAtHeight(chainID string, height int64) ([]string, erro
 			}
 			if key.PubString() == signerPubString && ed.Verify(key.Pub, message, &signature) {
 				activeKeys[levelToReplace].Pub = &newKey
-				retiredKeys[oldKey] = true
+				allKeys[newPubString] = true
 				break
 			}
 		}
@@ -179,7 +182,7 @@ func NewIdentityKeyReplacementEntry(chainID string, oldKey string, newKey string
 	if IdentityKeyStringType(newKey) != IDPub {
 		return nil, fmt.Errorf("provided key %s is not a valid identity public key", newKey)
 	}
-	message := []byte(oldKey + newKey)
+	message := []byte(chainID + oldKey + newKey)
 	signature := signerKey.Sign(message)
 
 	e := Entry{}
