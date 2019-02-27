@@ -293,7 +293,17 @@ func (db *TXDatabaseOverlay) update() (string, error) {
 	// If the newest block in the tx cashe has a greater height than the newest
 	// fblock then clear the cashe and start from 0.
 	if start >= newestHeight {
+		fmt.Printf("DEBUG: tx cache has height of %d, higher than block height of %d\n", start, newestHeight)
 		return newestFBlock.GetKeyMR().String(), nil
+	}
+
+	// If the latest block from the database is not available from the blockchain
+	// then clear the cashe and start from 0.
+	if f, err := getfblockbyheight(start); err != nil {
+		fmt.Println("DEBUG: fblock was not found in the blockchain", err)
+		return f.GetKeyMR().String(), err
+	} else {
+		fmt.Println("DEBUG: got fblock from factomd: ", f.GetKeyMR().String())
 	}
 
 	db.DBO.StartMultiBatch()

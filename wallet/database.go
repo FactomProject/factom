@@ -34,14 +34,17 @@ func (w *Wallet) InitWallet() error {
 func NewOrOpenLevelDBWallet(path string) (*Wallet, error) {
 	w := new(Wallet)
 	w.transactions = make(map[string]*factoid.Transaction)
+
 	db, err := NewLevelDB(path)
 	if err != nil {
 		return nil, err
 	}
 	w.WalletDatabaseOverlay = db
+
 	if err = w.InitWallet(); err != nil {
 		return nil, err
 	}
+
 	return w, nil
 }
 
