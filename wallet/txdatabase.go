@@ -92,7 +92,7 @@ func (db *TXDatabaseOverlay) Close() error {
 // local database is used to cache the factoid blocks.
 func (db *TXDatabaseOverlay) GetAllTXs() ([]interfaces.ITransaction, error) {
 	// update the database and get the newest fblock
-	_, err := db.update()
+	_, err := db.Update()
 	if err != nil {
 		return nil, err
 	}
@@ -249,7 +249,7 @@ func (db *TXDatabaseOverlay) InsertFBlockHead(fblock interfaces.IFBlock) error {
 
 // update gets all fblocks written since the database was last updated, and
 // returns the most recent fblock keymr.
-func (db *TXDatabaseOverlay) update() (string, error) {
+func (db *TXDatabaseOverlay) Update() (string, error) {
 	newestFBlock, err := fblockHead()
 	if err != nil {
 		return "", err
