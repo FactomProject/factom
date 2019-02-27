@@ -290,6 +290,7 @@ func (db *TXDatabaseOverlay) update() (string, error) {
 
 	newestHeight := newestFBlock.GetDatabaseHeight()
 
+	fmt.Println("DEBUG: checking tx cache")
 	// If the newest block in the tx cashe has a greater height than the newest
 	// fblock then clear the cashe and start from 0.
 	if start >= newestHeight {
