@@ -247,7 +247,7 @@ func (db *TXDatabaseOverlay) InsertFBlockHead(fblock interfaces.IFBlock) error {
 	return db.DBO.SaveFactoidBlockHead(fblock)
 }
 
-// update gets all fblocks written since the database was last updated, and
+// Update gets all fblocks written since the database was last updated, and
 // returns the most recent fblock keymr.
 func (db *TXDatabaseOverlay) Update() (string, error) {
 	newestFBlock, err := fblockHead()
