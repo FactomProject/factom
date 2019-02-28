@@ -13,6 +13,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"strings"
+	"time"
 )
 
 type RPCConfig struct {
@@ -202,7 +203,7 @@ func factomdRequest(req *JSON2Request) (*JSON2Response, error) {
 	factomdTls, factomdCertPath := GetFactomdEncryption()
 
 	var client *http.Client
-	var httpx string
+	var scheme, host string
 
 	if factomdTls == true {
 		caCert, err := ioutil.ReadFile(factomdCertPath)
@@ -213,15 +214,22 @@ func factomdRequest(req *JSON2Request) (*JSON2Response, error) {
 		caCertPool.AppendCertsFromPEM(caCert)
 		tr := &http.Transport{TLSClientConfig: &tls.Config{RootCAs: caCertPool}}
 
-		client = &http.Client{Transport: tr}
-		httpx = "https"
+		client = &http.Client{Transport: tr, Timeout: time.Second * 30}
+		scheme = "https"
+		host = RpcConfig.FactomdServer
 
 	} else {
-		client = &http.Client{}
-		httpx = "http"
+		client = &http.Client{Timeout: time.Second * 30}
+		if index := strings.Index(RpcConfig.FactomdServer, "://"); index != -1 {
+			scheme = RpcConfig.FactomdServer[0:index]
+			host = RpcConfig.FactomdServer[index+3:]
+		} else {
+			scheme = "http"
+			host = RpcConfig.FactomdServer
+		}
 	}
 	re, err := http.NewRequest("POST",
-		fmt.Sprintf("%s://%s/v2", httpx, RpcConfig.FactomdServer),
+		fmt.Sprintf("%s://%s/v2", scheme, host),
 		bytes.NewBuffer(j))
 	if err != nil {
 		return nil, err
