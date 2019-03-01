@@ -92,7 +92,7 @@ func (db *TXDatabaseOverlay) Close() error {
 // local database is used to cache the factoid blocks.
 func (db *TXDatabaseOverlay) GetAllTXs() ([]interfaces.ITransaction, error) {
 	// update the database and get the newest fblock
-	_, err := db.update()
+	_, err := db.Update()
 	if err != nil {
 		return nil, err
 	}
@@ -247,9 +247,9 @@ func (db *TXDatabaseOverlay) InsertFBlockHead(fblock interfaces.IFBlock) error {
 	return db.DBO.SaveFactoidBlockHead(fblock)
 }
 
-// update gets all fblocks written since the database was last updated, and
+// Update gets all fblocks written since the database was last updated, and
 // returns the most recent fblock keymr.
-func (db *TXDatabaseOverlay) update() (string, error) {
+func (db *TXDatabaseOverlay) Update() (string, error) {
 	newestFBlock, err := fblockHead()
 	if err != nil {
 		return "", err
@@ -293,7 +293,15 @@ func (db *TXDatabaseOverlay) update() (string, error) {
 	// If the newest block in the tx cashe has a greater height than the newest
 	// fblock then clear the cashe and start from 0.
 	if start >= newestHeight {
+		db.DBO.Clear(databaseOverlay.FACTOIDBLOCK)
 		return newestFBlock.GetKeyMR().String(), nil
+	}
+
+	// If the latest block from the database is not available from the blockchain
+	// then clear the cashe and start from 0.
+	if f, err := getfblockbyheight(start); err != nil {
+		db.DBO.Clear(databaseOverlay.FACTOIDBLOCK)
+		return f.GetKeyMR().String(), err
 	}
 
 	db.DBO.StartMultiBatch()
