@@ -151,7 +151,7 @@ func MakeBIP44IdentityKey(mnemonic string, account, chain, address uint32) (*Ide
 		return nil, err
 	}
 
-	child, err := bip44.NewKeyFromMnemonic(mnemonic, 0x88888888, account, chain, address)
+	child, err := bip44.NewKeyFromMnemonic(mnemonic, 0x80000119, account, chain, address)
 	if err != nil {
 		return nil, err
 	}
