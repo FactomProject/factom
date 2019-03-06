@@ -23,9 +23,9 @@ import (
 
 // Database keys and key prefixes
 var (
-	fcDBPrefix = []byte("Factoids")
-	ecDBPrefix = []byte("Entry Credits")
-	seedDBKey  = []byte("DB Seed")
+	fcDBPrefix       = []byte("Factoids")
+	ecDBPrefix       = []byte("Entry Credits")
+	seedDBKey        = []byte("DB Seed")
 	identityDBPrefix = []byte("Identities")
 )
 
@@ -106,7 +106,7 @@ func NewEncryptedBoltDB(boltPath, password string) (*WalletDatabaseOverlay, erro
 	return wOverlay, nil
 }
 
-func CreateEncryptedBoltDB(boltPath string) (error) {
+func CreateEncryptedBoltDB(boltPath string) error {
 	// check if the file exists or if it is a directory
 	fileInfo, err := os.Stat(boltPath)
 	if err == nil {

@@ -1476,7 +1476,7 @@ func handleWalletPassphrase(params []byte) (interface{}, *factom.JSONError) {
 		return nil, newCustomInternalError("Cannot unlock non-encrypted wallet. This database is always unlocked")
 	}
 
-	err := encdb.UnlockFor(req.Password, time.Second * time.Duration(req.Timeout))
+	err := encdb.UnlockFor(req.Password, time.Second*time.Duration(req.Timeout))
 	if err != nil {
 		return nil, newIncorrectPassphraseError()
 	}
