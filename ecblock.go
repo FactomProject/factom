@@ -184,7 +184,7 @@ func (e *EntryCommit) UnmarshalJSON(js []byte) error {
 
 func GetECBlock(keymr string) (*ECBlock, error) {
 	params := keyMRRequest{KeyMR: keymr}
-	req := NewJSON2Request(entrycredit-block, APICounter(), params)
+	req := NewJSON2Request("entrycredit-block", APICounter(), params)
 	resp, err := factomdRequest(req)
 	if err != nil {
 		return nil, err
