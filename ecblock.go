@@ -181,3 +181,22 @@ func (e *EntryCommit) UnmarshalJSON(js []byte) error {
 	}
 	return nil
 }
+
+func GetECBlock(hash string) (*ECBlock, error) {
+	params := hashRequest{Hash: hash}
+	req := NewJSON2Request(entrycredit-block, APICounter(), params)
+	resp, err := factomdRequest(req)
+	if err != nil {
+		return nil, err
+	}
+	if resp.Error != nil {
+		return nil, resp.Error
+	}
+
+	eb := new(ECBlock)
+	if err := json.Unmarshal(resp.JSONResult(), eb); err != nil {
+		return nil, err
+	}
+
+	return eb, nil
+}
