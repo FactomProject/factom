@@ -62,7 +62,6 @@ func GetAuthorites() ([]*Authority, error) {
 		Authorities []*Authority `json:"authorities"`
 	})
 
-	// a := new(authorities)
 	if err := json.Unmarshal(resp.JSONResult(), a); err != nil {
 		return nil, err
 	}
