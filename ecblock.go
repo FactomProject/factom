@@ -63,6 +63,7 @@ type ECBEntry interface {
 
 func (e *ECBlock) String() string {
 	var s string
+
 	s += fmt.Sprintln("PrevHeaderHash:", e.Header.PrevHeaderHash)
 	s += fmt.Sprintln("PrevFullHash:", e.Header.PrevFullHash)
 	s += fmt.Sprintln("DBHeight:", e.Header.DBHeight)
@@ -71,6 +72,7 @@ func (e *ECBlock) String() string {
 		s += fmt.Sprintln(v)
 		s += fmt.Sprintln("}")
 	}
+
 	return s
 }
 
@@ -129,6 +131,7 @@ func (c *ChainCommit) Type() ECID {
 
 func (c *ChainCommit) String() string {
 	var s string
+
 	s += fmt.Sprintln("ChainCommit {")
 	s += fmt.Sprintln("	Version:", c.Version)
 	s += fmt.Sprintln("	Millitime:", c.MilliTime)
@@ -139,6 +142,7 @@ func (c *ChainCommit) String() string {
 	s += fmt.Sprintln("	ECPubKey:", c.ECPubKey)
 	s += fmt.Sprintln("	Signature:", c.Sig)
 	s += fmt.Sprintln("}")
+
 	return s
 }
 
@@ -164,6 +168,7 @@ func (e *EntryCommit) Type() ECID {
 
 func (e *EntryCommit) String() string {
 	var s string
+
 	s += fmt.Sprintln("EntryCommit {")
 	s += fmt.Sprintln("	Version:", e.Version)
 	s += fmt.Sprintln("	Millitime:", e.MilliTime)
@@ -172,6 +177,7 @@ func (e *EntryCommit) String() string {
 	s += fmt.Sprintln("	ECPubKey:", e.ECPubKey)
 	s += fmt.Sprintln("	Signature:", e.Sig)
 	s += fmt.Sprintln("}")
+
 	return s
 }
 
