@@ -18,6 +18,7 @@ type Authority struct {
 	Efficiency        int      `json:"efficiency"`
 	CoinbaseAddress   string   `json:"coinbase_address"`
 	AnchorKeys        []string `json:"anchor_keys"`
+	// TODO: should keyhistory be part of the api return for an Authority?
 	// KeyHistory []string `json:"-"`
 }
 
