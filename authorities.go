@@ -18,7 +18,9 @@ type Authority struct {
 	Efficiency        int      `json:"efficiency"`
 	CoinbaseAddress   string   `json:"coinbase_address"`
 	AnchorKeys        []string `json:"anchor_keys"`
-	KeyHistory        []string `json:"-"`
+	// TODO: find out the correct json field name for KeyHistory it is listed as
+	// "-" in the factomd datastructure.
+	KeyHistory []string `json:"-"`
 }
 
 func (a *Authority) String() string {
