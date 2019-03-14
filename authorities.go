@@ -18,9 +18,7 @@ type Authority struct {
 	Efficiency        int      `json:"efficiency"`
 	CoinbaseAddress   string   `json:"coinbase_address"`
 	AnchorKeys        []string `json:"anchor_keys"`
-	// TODO: find out the correct json field name for KeyHistory it is listed as
-	// "-" in the factomd datastructure.
-	KeyHistory []string `json:"-"`
+	// KeyHistory []string `json:"-"`
 }
 
 func (a *Authority) String() string {
@@ -40,15 +38,16 @@ func (a *Authority) String() string {
 	}
 	s += fmt.Sprintln("}")
 
-	s += fmt.Sprintln("KeyHisory {")
-	for _, k := range a.KeyHistory {
-		s += fmt.Sprintln(" ", k)
-	}
-	s += fmt.Sprintln("}")
+	// s += fmt.Sprintln("KeyHisory {")
+	// for _, k := range a.KeyHistory {
+	// 	s += fmt.Sprintln(" ", k)
+	// }
+	// s += fmt.Sprintln("}")
 
 	return s
 }
 
+// GetAuthorites retrieves a list of the known athorities from factomd
 func GetAuthorites() ([]*Authority, error) {
 	req := NewJSON2Request("authorities", APICounter(), nil)
 	resp, err := factomdRequest(req)
