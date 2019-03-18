@@ -9,6 +9,8 @@ import (
 	"fmt"
 )
 
+// Diagnostics represents a set of diagnostic/debugging information about
+// factomd and the Factom Network.
 type Diagnostics struct {
 	Name                  string `json:"name"`
 	ID                    string `json:"id,omitempty"`
@@ -100,6 +102,7 @@ func (d *Diagnostics) String() string {
 	return s
 }
 
+// GetDiagnostics reads diagnostic information from factomd.
 func GetDiagnostics() (*Diagnostics, error) {
 	req := NewJSON2Request("diagnostics", APICounter(), nil)
 	resp, err := factomdRequest(req)
