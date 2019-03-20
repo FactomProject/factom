@@ -8,7 +8,10 @@ import (
 	"encoding/json"
 )
 
-func GetFactoidSubmit(tx string) (message, txid string, err error) {
+// FactoidSubmit sends a transaction to factomd to be included in the network.
+// (See ComposeTransaction for more details on how to build the binary
+// transaction for the network).
+func FactoidSubmit(tx string) (message, txid string, err error) {
 	type txreq struct {
 		Transaction string
 	}
