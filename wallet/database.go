@@ -15,6 +15,8 @@ import (
 // Wallet is a connection to a Factom Wallet Database
 type Wallet struct {
 	*WalletDatabaseOverlay
+	Encrypted    bool
+	DBPath       string
 	txlock       sync.Mutex
 	transactions map[string]*factoid.Transaction
 	txdb         *TXDatabaseOverlay
@@ -80,17 +82,29 @@ func NewEncryptedBoltDBWallet(path, password string) (*Wallet, error) {
 	if err != nil {
 		return nil, err
 	}
-
 	w.WalletDatabaseOverlay = db
 	err = w.InitWallet()
 	if err != nil {
 		return nil, err
 	}
+	w.Encrypted = true
+	w.DBPath = path
+	return w, nil
+}
+
+func NewEncryptedBoltDBWalletAwaitingPassphrase(path string) (*Wallet, error) {
+	w := new(Wallet)
+	w.transactions = make(map[string]*factoid.Transaction)
+	w.Encrypted = true
+	w.DBPath = path
 	return w, nil
 }
 
 // Close closes a Factom Wallet Database
 func (w *Wallet) Close() error {
+	if w.WalletDatabaseOverlay == nil {
+		return nil
+	}
 	return w.DBO.Close()
 }
 
@@ -113,6 +127,11 @@ func (w *Wallet) GenerateECAddress() (*factom.ECAddress, error) {
 // The address can be reproduced in the future using the Wallet Seed.
 func (w *Wallet) GenerateFCTAddress() (*factom.FactoidAddress, error) {
 	return w.GetNextFCTAddress()
+}
+
+// GenerateIdentityKey creates and stores a new Identity Key in the Wallet.
+func (w *Wallet) GenerateIdentityKey() (*factom.IdentityKey, error) {
+	return w.GetNextIdentityKey()
 }
 
 // GetAllAddresses retrieves all Entry Credit and Factoid Addresses from the
