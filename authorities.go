@@ -14,7 +14,7 @@ type Authority struct {
 	ManagementChainID string   `json:"management_chaind"`
 	MatryoshkaHash    string   `json:"matryoshka_hash"`
 	SigningKey        string   `json:"signing_key"`
-	Status            int      `json:"status"`
+	Status            string   `json:"status"`
 	Efficiency        int      `json:"efficiency"`
 	CoinbaseAddress   string   `json:"coinbase_address"`
 	AnchorKeys        []string `json:"anchor_keys"`
@@ -49,7 +49,7 @@ func (a *Authority) String() string {
 }
 
 // GetAuthorites retrieves a list of the known athorities from factomd
-func GetAuthorites() ([]*Authority, error) {
+func GetAuthorities() ([]*Authority, error) {
 	req := NewJSON2Request("authorities", APICounter(), nil)
 	resp, err := factomdRequest(req)
 	if err != nil {
@@ -59,6 +59,8 @@ func GetAuthorites() ([]*Authority, error) {
 		return nil, resp.Error
 	}
 
+	js, err := resp.JSONString()
+	fmt.Println("DEBUG: JSON:", js)
 	// create a temporary type to unmarshal the json object
 	a := new(struct {
 		Authorities []*Authority `json:"authorities"`
