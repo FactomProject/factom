@@ -23,7 +23,10 @@ const (
 )
 
 var (
-	RpcConfig = &RPCConfig{}
+	RpcConfig = &RPCConfig{
+		FactomdServer: "localhost:8088",
+		WalletServer:  "localhost:8089",
+	}
 )
 
 func EntryCost(e *Entry) (int8, error) {
