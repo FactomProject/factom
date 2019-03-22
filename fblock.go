@@ -58,10 +58,16 @@ func GetFBlock(keymr string) (*FBlock, error) {
 		return nil, resp.Error
 	}
 
-	f := NewFBlock()
+	// Create temporary struct to unmarshal json object
+	f := &struct {
+		FBlock *FBlock `json:"fblock"`
+	}{
+		FBlock: NewFBlock(),
+	}
+
 	if err := json.Unmarshal(resp.JSONResult(), f); err != nil {
 		return nil, err
 	}
 
-	return f, nil
+	return f.FBlock, nil
 }
