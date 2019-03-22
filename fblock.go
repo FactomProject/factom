@@ -22,12 +22,6 @@ type FBlock struct {
 	Transactions []Transaction `json:"transactions"`
 }
 
-func NewFBlock() *FBlock {
-	f := new(FBlock)
-	f.Transactions = make([]Transaction, 0)
-	return f
-}
-
 func (f *FBlock) String() string {
 	var s string
 
@@ -59,11 +53,9 @@ func GetFBlock(keymr string) (*FBlock, error) {
 	}
 
 	// Create temporary struct to unmarshal json object
-	f := &struct {
+	f := new(struct {
 		FBlock *FBlock `json:"fblock"`
-	}{
-		FBlock: NewFBlock(),
-	}
+	})
 
 	if err := json.Unmarshal(resp.JSONResult(), f); err != nil {
 		return nil, err
