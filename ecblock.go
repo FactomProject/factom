@@ -47,11 +47,63 @@ func (id ECID) String() string {
 // Entries, and fund Entry Credit Addresses.
 type ECBlock struct {
 	Header struct {
+		BodyHash       string `json:"bodyhash"`
 		PrevHeaderHash string `json:"prevheaderhash"`
 		PrevFullHash   string `json:"prevfullhash"`
 		DBHeight       int64  `json:"dbheight"`
 	} `json:"header"`
-	Entries []ECBEntry `json:"entries"`
+	HeaderHash string            `json:"headerhash"`
+	FullHash   string            `json:"fullhash"`
+	Entries    []json.RawMessage `json:"body"`
+}
+
+func (e *ECBlock) String() string {
+	var s string
+
+	s += fmt.Sprintln("HeaderHash:", e.HeaderHash)
+	s += fmt.Sprintln("PrevHeaderHash:", e.Header.PrevHeaderHash)
+	s += fmt.Sprintln("FullHash:", e.FullHash)
+	s += fmt.Sprintln("PrevFullHash:", e.Header.PrevFullHash)
+	s += fmt.Sprintln("BodyHash:", e.Header.BodyHash)
+	s += fmt.Sprintln("DBHeight:", e.Header.DBHeight)
+
+	s += fmt.Sprintln("Entries:")
+	for _, v := range e.Entries {
+		s += fmt.Sprintln(string(v))
+	}
+
+	return s
+}
+
+func (e *ECBlock) UnmarshalJSON(js []byte) error {
+	tmp := new(struct {
+		Header struct {
+			BodyHash       string `json:"bodyhash"`
+			PrevHeaderHash string `json:"prevheaderhash"`
+			PrevFullHash   string `json:"prevfullhash"`
+			DBHeight       int64  `json:"dbheight"`
+		} `json:"header"`
+		HeaderHash string `json:"headerhash"`
+		FullHash   string `json:"fullhash"`
+		Body       struct {
+			Entries []json.RawMessage `json:"entries"`
+		} `json:"body"`
+	})
+
+	err := json.Unmarshal(js, tmp)
+	if err != nil {
+		return err
+	}
+
+	e.Header.BodyHash = tmp.Header.BodyHash
+	e.Header.PrevHeaderHash = tmp.Header.PrevHeaderHash
+	e.Header.PrevFullHash = tmp.Header.PrevFullHash
+	e.Header.DBHeight = tmp.Header.DBHeight
+	e.HeaderHash = tmp.HeaderHash
+	e.FullHash = tmp.FullHash
+	e.Entries = tmp.Body.Entries
+
+	return nil
 }
 
 // Entry Credit Block Entries are individual members of the Entry Credit Block.
@@ -59,21 +111,6 @@ type ECBEntry interface {
 	Type() ECID
 	String() string
 	UnmarshalJSON([]byte) error
-}
-
-func (e *ECBlock) String() string {
-	var s string
-
-	s += fmt.Sprintln("PrevHeaderHash:", e.Header.PrevHeaderHash)
-	s += fmt.Sprintln("PrevFullHash:", e.Header.PrevFullHash)
-	s += fmt.Sprintln("DBHeight:", e.Header.DBHeight)
-	for _, v := range e.Entries {
-		s += fmt.Sprintln(v.Type(), " {")
-		s += fmt.Sprintln(v)
-		s += fmt.Sprintln("}")
-	}
-
-	return s
 }
 
 type ServerIndexNumber struct {
@@ -199,10 +236,13 @@ func GetECBlock(keymr string) (*ECBlock, error) {
 		return nil, resp.Error
 	}
 
-	eb := new(ECBlock)
-	if err := json.Unmarshal(resp.JSONResult(), eb); err != nil {
+	// create a wraper construct for the ECBlock API return
+	wrap := new(struct {
+		ECBlock *ECBlock `json:"ecblock"`
+	})
+	if err := json.Unmarshal(resp.JSONResult(), wrap); err != nil {
 		return nil, err
 	}
 
-	return eb, nil
+	return wrap.ECBlock, nil
 }
