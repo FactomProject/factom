@@ -185,7 +185,43 @@ type ChainCommit struct {
 	Sig         string `json:"sig"`
 }
 
-// TODO: func (c *ChainCommit) UnmarshalJSON(js []byte) error {
+func (c *ChainCommit) UnmarshalJSON(js []byte) error {
+	tmp := new(struct {
+		Version     int    `json:"version"`
+		MilliTime   string `json:"millitime"`
+		ChainIDHash string `json:"chainidhash"`
+		Weld        string `json:"weld"`
+		EntryHash   string `json:"entryhash"`
+		Credits     int    `json:"credits"`
+		ECPubKey    string `json:"ecpubkey"`
+		Sig         string `json:"sig"`
+	})
+
+	err := json.Unmarshal(js, tmp)
+	if err != nil {
+		return err
+	}
+
+	// convert 6 byte MilliTime into int64
+	m := make([]byte, 8)
+	if p, err := hex.DecodeString(tmp.MilliTime); err != nil {
+		return err
+	} else {
+		// copy p into the last 6 bytes
+		copy(m[2:], p)
+	}
+	c.MilliTime = int64(binary.BigEndian.Uint64(m))
+
+	c.Version = tmp.Version
+	c.ChainIDHash = tmp.ChainIDHash
+	c.Weld = tmp.Weld
+	c.EntryHash = tmp.EntryHash
+	c.Credits = tmp.Credits
+	c.ECPubKey = tmp.ECPubKey
+	c.Sig = tmp.Sig
+
+	return nil
+}
 
 func (c *ChainCommit) Type() ECID {
 	return ECIDChainCommit
@@ -240,7 +276,6 @@ func (e *EntryCommit) UnmarshalJSON(js []byte) error {
 		// copy p into the last 6 bytes
 		copy(m[2:], p)
 	}
-	fmt.Printf("DEBUG: converting millitime %x\n", m)
 	e.MilliTime = int64(binary.BigEndian.Uint64(m))
 
 	e.Version = tmp.Version
