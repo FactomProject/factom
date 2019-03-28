@@ -14,7 +14,8 @@ import (
 )
 
 var (
-	ErrECIDUndefined = errors.New("ECID type undefined")
+	ErrECIDUndefined   = errors.New("ECID type undefined")
+	ErrUnknownECBEntry = errors.New("Unknown Entry Credit Block Entry type")
 )
 
 // ECID defines the type of an Entry Credit Block Entry
@@ -104,6 +105,9 @@ func (e *ECBlock) UnmarshalJSON(js []byte) error {
 	e.Header.DBHeight = tmp.Header.DBHeight
 	e.HeaderHash = tmp.HeaderHash
 	e.FullHash = tmp.FullHash
+
+	// the entry block entry type is not specified in the json data, so detect
+	// the entry type by regex and umarshal into the correct type.
 	for _, v := range tmp.Body.Entries {
 		switch {
 		case regexp.MustCompile(`"number":`).MatchString(string(v)):
@@ -138,6 +142,7 @@ func (e *ECBlock) UnmarshalJSON(js []byte) error {
 				e.Entries = append(e.Entries, a)
 			}
 		default:
+			return ErrUnknownECBEntry
 		}
 	}
 
