@@ -232,12 +232,15 @@ func (e *EntryCommit) UnmarshalJSON(js []byte) error {
 		return err
 	}
 
+	// convert 6 byte MilliTime into int64
 	m := make([]byte, 8)
 	if p, err := hex.DecodeString(tmp.MilliTime); err != nil {
 		return err
 	} else {
-		copy(m, p)
+		// copy p into the last 6 bytes
+		copy(m[2:], p)
 	}
+	fmt.Printf("DEBUG: converting millitime %x\n", m)
 	e.MilliTime = int64(binary.BigEndian.Uint64(m))
 
 	e.Version = tmp.Version
