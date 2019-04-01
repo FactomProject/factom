@@ -10,16 +10,12 @@ import (
 )
 
 type Authority struct {
-	AuthorityChainID  string   `json:"identity_chainid"`
-	ManagementChainID string   `json:"management_chaind"`
-	MatryoshkaHash    string   `json:"matryoshka_hash"`
-	SigningKey        string   `json:"signing_key"`
-	Status            string   `json:"status"`
-	Efficiency        int      `json:"efficiency"`
-	CoinbaseAddress   string   `json:"coinbase_address"`
-	AnchorKeys        []string `json:"anchor_keys"`
-	// TODO: should keyhistory be part of the api return for an Authority?
-	// KeyHistory []string `json:"-"`
+	AuthorityChainID  string             `json:"chainid"`
+	ManagementChainID string             `json:"manageid"`
+	MatryoshkaHash    string             `json:"matroyshka"` // [sic]
+	SigningKey        string             `json:"signingkey"`
+	Status            string             `json:"status"`
+	AnchorKeys        []AnchorSigningKey `json:"anchorkeys"`
 }
 
 func (a *Authority) String() string {
@@ -30,12 +26,10 @@ func (a *Authority) String() string {
 	s += fmt.Sprintln("MatryoshkaHash:", a.MatryoshkaHash)
 	s += fmt.Sprintln("SigningKey:", a.SigningKey)
 	s += fmt.Sprintln("Status:", a.Status)
-	s += fmt.Sprintln("Efficiency:", a.Efficiency)
-	s += fmt.Sprintln("CoinbaseAddress:", a.CoinbaseAddress)
 
 	s += fmt.Sprintln("AnchorKeys {")
 	for _, k := range a.AnchorKeys {
-		s += fmt.Sprintln(" ", k)
+		s += k.String()
 	}
 	s += fmt.Sprintln("}")
 
@@ -44,6 +38,25 @@ func (a *Authority) String() string {
 	// 	s += fmt.Sprintln(" ", k)
 	// }
 	// s += fmt.Sprintln("}")
+
+	return s
+}
+
+type AnchorSigningKey struct {
+	BlockChain string `json:"blockchain"`
+	KeyLevel   byte   `json:"level"`
+	KeyType    byte   `json:"keytype"`
+	SigningKey string `json:"key"` //if bytes, it is hex
+
+}
+
+func (k *AnchorSigningKey) String() string {
+	var s string
+
+	s += fmt.Sprintln("BlockChain:", k.BlockChain)
+	s += fmt.Sprintln("KeyLevel:", k.KeyLevel)
+	s += fmt.Sprintln("KeyType:", k.KeyType)
+	s += fmt.Sprintln("SigningKey:", k.SigningKey)
 
 	return s
 }
