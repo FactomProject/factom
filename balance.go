@@ -8,6 +8,16 @@ import (
 	"encoding/json"
 )
 
+type MultiBalanceResponse struct {
+	CurrentHeight   int `json:"currentheight"`
+	LastSavedHeight int `json:"lastsavedheight"`
+	Balances        []struct {
+		Ack   int    `json:"ack"`
+		Saved int    `json:"saved"`
+		Err   string `json:"err"`
+	} `json:"balances"`
+}
+
 // GetECBalance returns the balance in factoshi (factoid * 1e8) of a given Entry
 // Credit Public Address.
 func GetECBalance(addr string) (int64, error) {
@@ -91,4 +101,27 @@ func GetBalanceTotals() (fs, fa, es, ea int64, err error) {
 	ea = balances.EntryCreditAccountBalances.Ack
 
 	return
+}
+
+// GetMultipleFCTBalances returns balances for multiple Factoid Addresses from
+// factomd.
+func GetMultipleFCTBalances(fas ...string) (*MultiBalanceResponse, error) {
+	type multiAddressRequest struct {
+		Addresses []string `json:"addresses"`
+	}
+
+	params := multiAddressRequest{fas}
+	req := NewJSON2Request("multiple-fct-balances", APICounter(), params)
+	resp, err := factomdRequest(req)
+	if err != nil {
+		return nil, err
+	}
+
+	balances := new(MultiBalanceResponse)
+	err = json.Unmarshal(resp.JSONResult(), balances)
+	if err != nil {
+		return nil, err
+	}
+
+	return balances, nil
 }
