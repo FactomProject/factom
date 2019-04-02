@@ -125,3 +125,26 @@ func GetMultipleFCTBalances(fas ...string) (*MultiBalanceResponse, error) {
 
 	return balances, nil
 }
+
+// GetMultipleFCTBalances returns balances for multiple Factoid Addresses from
+// factomd.
+func GetMultipleECBalances(ecs ...string) (*MultiBalanceResponse, error) {
+	type multiAddressRequest struct {
+		Addresses []string `json:"addresses"`
+	}
+
+	params := multiAddressRequest{ecs}
+	req := NewJSON2Request("multiple-ec-balances", APICounter(), params)
+	resp, err := factomdRequest(req)
+	if err != nil {
+		return nil, err
+	}
+
+	balances := new(MultiBalanceResponse)
+	err = json.Unmarshal(resp.JSONResult(), balances)
+	if err != nil {
+		return nil, err
+	}
+
+	return balances, nil
+}

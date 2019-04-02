@@ -28,3 +28,22 @@ func TestGetMultipleFCTBalances(t *testing.T) {
 	}
 	t.Log(bs)
 }
+
+func TestGetMultipleECBalances(t *testing.T) {
+	badec := "abcdef"
+	if bs, err := GetMultipleECBalances(badec); err != nil {
+		t.Error(err)
+	} else if bs.Balances[0].Err != "Error decoding address" {
+		t.Error("should have recieved error for bad address instead got", err)
+	}
+	ecs := []string{
+		"EC1m9mouvUQeEidmqpUYpYtXg8fvTYi6GNHaKg8KMLbdMBrFfmUa",
+		"EC1m9mouvUQeEidmqpUYpYtXg8fvTYi6GNHaKg8KMLbdMBrFfmUa",
+		"EC3htx3MxKqKTrTMYj4ApWD8T3nYBCQw99veRvH1FLFdjgN6GuNK",
+	}
+	bs, err := GetMultipleECBalances(ecs...)
+	if err != nil {
+		t.Error(err)
+	}
+	t.Log(bs)
+}
