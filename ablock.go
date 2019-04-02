@@ -87,91 +87,97 @@ func (a *ABlock) UnmarshalJSON(js []byte) error {
 				return err
 			}
 			a.ABEntries = append(a.ABEntries, e)
-		case regexp.MustCompile(`"adminidtype":1`).MatchString(string(v)):
+		case regexp.MustCompile(`"adminidtype":1,`).MatchString(string(v)):
 			e := new(AdminDBSignature)
 			err := json.Unmarshal(v, e)
 			if err != nil {
 				return err
 			}
 			a.ABEntries = append(a.ABEntries, e)
-		case regexp.MustCompile(`"adminidtype":2`).MatchString(string(v)):
+		case regexp.MustCompile(`"adminidtype":2,`).MatchString(string(v)):
 			e := new(AdminRevealHash)
 			err := json.Unmarshal(v, e)
 			if err != nil {
 				return err
 			}
 			a.ABEntries = append(a.ABEntries, e)
-		case regexp.MustCompile(`"adminidtype":3`).MatchString(string(v)):
+		case regexp.MustCompile(`"adminidtype":3,`).MatchString(string(v)):
 			e := new(AdminAddHash)
 			err := json.Unmarshal(v, e)
 			if err != nil {
 				return err
 			}
 			a.ABEntries = append(a.ABEntries, e)
-		case regexp.MustCompile(`"adminidtype":4`).MatchString(string(v)):
+		case regexp.MustCompile(`"adminidtype":4,`).MatchString(string(v)):
 			e := new(AdminIncreaseServerCount)
 			err := json.Unmarshal(v, e)
 			if err != nil {
 				return err
 			}
 			a.ABEntries = append(a.ABEntries, e)
-		case regexp.MustCompile(`"adminidtype":5`).MatchString(string(v)):
+		case regexp.MustCompile(`"adminidtype":5,`).MatchString(string(v)):
 			e := new(AdminAddFederatedServer)
 			err := json.Unmarshal(v, e)
 			if err != nil {
 				return err
 			}
 			a.ABEntries = append(a.ABEntries, e)
-		case regexp.MustCompile(`"adminidtype":6`).MatchString(string(v)):
+		case regexp.MustCompile(`"adminidtype":6,`).MatchString(string(v)):
 			e := new(AdminAddAuditServer)
 			err := json.Unmarshal(v, e)
 			if err != nil {
 				return err
 			}
 			a.ABEntries = append(a.ABEntries, e)
-		case regexp.MustCompile(`"adminidtype":7`).MatchString(string(v)):
+		case regexp.MustCompile(`"adminidtype":7,`).MatchString(string(v)):
 			e := new(AdminRemoveFederatedServer)
 			err := json.Unmarshal(v, e)
 			if err != nil {
 				return err
 			}
 			a.ABEntries = append(a.ABEntries, e)
-		case regexp.MustCompile(`"adminidtype":8`).MatchString(string(v)):
+		case regexp.MustCompile(`"adminidtype":8,`).MatchString(string(v)):
 			e := new(AdminAddFederatedServerKey)
 			err := json.Unmarshal(v, e)
 			if err != nil {
 				return err
 			}
 			a.ABEntries = append(a.ABEntries, e)
-		case regexp.MustCompile(`"adminidtype":9`).MatchString(string(v)):
+		case regexp.MustCompile(`"adminidtype":9,`).MatchString(string(v)):
 			e := new(AdminAddFederatedServerBTCKey)
 			err := json.Unmarshal(v, e)
 			if err != nil {
 				return err
 			}
 			a.ABEntries = append(a.ABEntries, e)
-		case regexp.MustCompile(`"adminidtype":10`).MatchString(string(v)):
+		case regexp.MustCompile(`"adminidtype":10,`).MatchString(string(v)):
 			e := new(AdminServerFault)
 			err := json.Unmarshal(v, e)
 			if err != nil {
 				return err
 			}
 			a.ABEntries = append(a.ABEntries, e)
-		case regexp.MustCompile(`"adminidtype":11`).MatchString(string(v)):
+		case regexp.MustCompile(`"adminidtype":11,`).MatchString(string(v)):
 			e := new(AdminCoinbaseDescriptor)
 			err := json.Unmarshal(v, e)
 			if err != nil {
 				return err
 			}
 			a.ABEntries = append(a.ABEntries, e)
-		case regexp.MustCompile(`"adminidtype":12`).MatchString(string(v)):
+		case regexp.MustCompile(`"adminidtype":12,`).MatchString(string(v)):
 			e := new(AdminCoinbaseDescriptorCancel)
 			err := json.Unmarshal(v, e)
 			if err != nil {
 				return err
 			}
 			a.ABEntries = append(a.ABEntries, e)
-		case regexp.MustCompile(`"adminidtype":13`).MatchString(string(v)):
+		case regexp.MustCompile(`"adminidtype":13,`).MatchString(string(v)):
+			e := new(AdminAddAuthorityAddress)
+			err := json.Unmarshal(v, e)
+			if err != nil {
+				return err
+			}
+			a.ABEntries = append(a.ABEntries, e)
 		default:
 		}
 	}
@@ -454,6 +460,26 @@ func (a *AdminCoinbaseDescriptorCancel) String() string {
 	s += fmt.Sprintln("CoinbaseDescriptorCancel {")
 	s += fmt.Sprintln("	DescriptorHeight:", a.DescriptorHeight)
 	s += fmt.Sprintln("	DescriptorIndex:", a.DescriptorIndex)
+	s += fmt.Sprintln("}")
+
+	return s
+}
+
+type AdminAddAuthorityAddress struct {
+	IdentityChainID string `json:"identitychainid"`
+	FactoidAddress  string `json:"factoidaddress"`
+}
+
+func (a *AdminAddAuthorityAddress) Type() AdminID {
+	return AIDAddAuthorityAddress
+}
+
+func (a *AdminAddAuthorityAddress) String() string {
+	var s string
+
+	s += fmt.Sprintln("AddAuthorityAddress {")
+	s += fmt.Sprintln("	IdentityChainID:", a.IdentityChainID)
+	s += fmt.Sprintln("	FactoidAddress:", a.FactoidAddress)
 	s += fmt.Sprintln("}")
 
 	return s
