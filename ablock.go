@@ -6,6 +6,7 @@ package factom
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"regexp"
 )
@@ -28,6 +29,10 @@ const (
 	AIDCoinbaseDescriptorCancel                // 12
 	AIDAddAuthorityAddress                     // 13
 	AIDAddAuthorityEfficiency                  // 14
+)
+
+var (
+	ErrAIDUnknown = errors.New("unknown ABlock Entry type")
 )
 
 type ABlock struct {
@@ -178,7 +183,15 @@ func (a *ABlock) UnmarshalJSON(js []byte) error {
 				return err
 			}
 			a.ABEntries = append(a.ABEntries, e)
+		case regexp.MustCompile(`"adminidtype":14,`).MatchString(string(v)):
+			e := new(AdminAddAuthorityEfficiency)
+			err := json.Unmarshal(v, e)
+			if err != nil {
+				return err
+			}
+			a.ABEntries = append(a.ABEntries, e)
 		default:
+			return ErrAIDUnknown
 		}
 	}
 
@@ -480,6 +493,26 @@ func (a *AdminAddAuthorityAddress) String() string {
 	s += fmt.Sprintln("AddAuthorityAddress {")
 	s += fmt.Sprintln("	IdentityChainID:", a.IdentityChainID)
 	s += fmt.Sprintln("	FactoidAddress:", a.FactoidAddress)
+	s += fmt.Sprintln("}")
+
+	return s
+}
+
+type AdminAddAuthorityEfficiency struct {
+	IdentityChainID string `json:"identitychainid"`
+	Efficiency      int    `json:"efficiency"`
+}
+
+func (a *AdminAddAuthorityEfficiency) Type() AdminID {
+	return AIDAddAuthorityEfficiency
+}
+
+func (a *AdminAddAuthorityEfficiency) String() string {
+	var s string
+
+	s += fmt.Sprintln("AddAuthorityEfficiency {")
+	s += fmt.Sprintln("	IdentityChainID:", a.IdentityChainID)
+	s += fmt.Sprintln("	Efficiency:", a.Efficiency)
 	s += fmt.Sprintln("}")
 
 	return s
