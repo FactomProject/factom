@@ -529,12 +529,6 @@ func GetABlock(keymr string) (*ABlock, error) {
 		return nil, resp.Error
 	}
 
-	js, err := resp.JSONString()
-	if err != nil {
-		fmt.Println("DEBUG: ERROR:", err)
-	}
-	fmt.Println("DEBUG: ablock:", js)
-
 	// create a wraper construct for the ECBlock API return
 	wrap := new(struct {
 		ABlock *ABlock `json:"ablock"`
