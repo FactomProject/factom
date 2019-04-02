@@ -111,14 +111,14 @@ func (e *ECBlock) UnmarshalJSON(js []byte) error {
 	for _, v := range tmp.Body.Entries {
 		switch {
 		case regexp.MustCompile(`"number":`).MatchString(string(v)):
-			a := new(MinuteNumber)
+			a := new(ECMinuteNumber)
 			err := json.Unmarshal(v, a)
 			if err != nil {
 				return err
 			}
 			e.Entries = append(e.Entries, a)
 		case regexp.MustCompile(`"serverindexnumber":`).MatchString(string(v)):
-			a := new(ServerIndexNumber)
+			a := new(ECServerIndexNumber)
 			err := json.Unmarshal(v, a)
 			if err != nil {
 				return err
@@ -126,7 +126,7 @@ func (e *ECBlock) UnmarshalJSON(js []byte) error {
 			e.Entries = append(e.Entries, a)
 		case regexp.MustCompile(`"entryhash":`).MatchString(string(v)):
 			if regexp.MustCompile(`"chainidhash":`).MatchString(string(v)) {
-				a := new(ChainCommit)
+				a := new(ECChainCommit)
 				err := json.Unmarshal(v, a)
 				if err != nil {
 					return err
@@ -134,7 +134,7 @@ func (e *ECBlock) UnmarshalJSON(js []byte) error {
 				e.Entries = append(e.Entries, a)
 
 			} else {
-				a := new(EntryCommit)
+				a := new(ECEntryCommit)
 				err := json.Unmarshal(v, a)
 				if err != nil {
 					return err
@@ -155,31 +155,31 @@ type ECBEntry interface {
 	String() string
 }
 
-type ServerIndexNumber struct {
+type ECServerIndexNumber struct {
 	ServerIndexNumber int `json:"serverindexnumber"`
 }
 
-func (i *ServerIndexNumber) Type() ECID {
+func (i *ECServerIndexNumber) Type() ECID {
 	return ECIDServerIndexNumber
 }
 
-func (i *ServerIndexNumber) String() string {
+func (i *ECServerIndexNumber) String() string {
 	return fmt.Sprintln("ServerIndexNumber:", i.ServerIndexNumber)
 }
 
-type MinuteNumber struct {
+type ECMinuteNumber struct {
 	Number int `json:"number"`
 }
 
-func (m *MinuteNumber) Type() ECID {
+func (m *ECMinuteNumber) Type() ECID {
 	return ECIDMinuteNumber
 }
 
-func (m *MinuteNumber) String() string {
+func (m *ECMinuteNumber) String() string {
 	return fmt.Sprintln("MinuteNumber:", m.Number)
 }
 
-type ChainCommit struct {
+type ECChainCommit struct {
 	Version     int    `json:"version"`
 	MilliTime   int64  `json:"millitime"`
 	ChainIDHash string `json:"chainidhash"`
@@ -190,7 +190,7 @@ type ChainCommit struct {
 	Sig         string `json:"sig"`
 }
 
-func (c *ChainCommit) UnmarshalJSON(js []byte) error {
+func (c *ECChainCommit) UnmarshalJSON(js []byte) error {
 	tmp := new(struct {
 		Version     int    `json:"version"`
 		MilliTime   string `json:"millitime"`
@@ -228,11 +228,11 @@ func (c *ChainCommit) UnmarshalJSON(js []byte) error {
 	return nil
 }
 
-func (c *ChainCommit) Type() ECID {
+func (c *ECChainCommit) Type() ECID {
 	return ECIDChainCommit
 }
 
-func (c *ChainCommit) String() string {
+func (c *ECChainCommit) String() string {
 	var s string
 
 	s += fmt.Sprintln("ChainCommit {")
@@ -249,7 +249,7 @@ func (c *ChainCommit) String() string {
 	return s
 }
 
-type EntryCommit struct {
+type ECEntryCommit struct {
 	Version   int    `json:"version"`
 	MilliTime int64  `json:"millitime"`
 	EntryHash string `json:"entryhash"`
@@ -258,7 +258,7 @@ type EntryCommit struct {
 	Sig       string `json:"sig"`
 }
 
-func (e *EntryCommit) UnmarshalJSON(js []byte) error {
+func (e *ECEntryCommit) UnmarshalJSON(js []byte) error {
 	tmp := new(struct {
 		Version   int    `json:"version"`
 		MilliTime string `json:"millitime"`
@@ -292,11 +292,11 @@ func (e *EntryCommit) UnmarshalJSON(js []byte) error {
 	return nil
 }
 
-func (e *EntryCommit) Type() ECID {
+func (e *ECEntryCommit) Type() ECID {
 	return ECIDEntryCommit
 }
 
-func (e *EntryCommit) String() string {
+func (e *ECEntryCommit) String() string {
 	var s string
 
 	s += fmt.Sprintln("EntryCommit {")
