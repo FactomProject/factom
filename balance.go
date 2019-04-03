@@ -104,7 +104,7 @@ func GetBalanceTotals() (fs, fa, es, ea int64, err error) {
 }
 
 // GetMultipleFCTBalances returns balances for multiple Factoid Addresses from
-// factomd.
+// the factomd API.
 func GetMultipleFCTBalances(fas ...string) (*MultiBalanceResponse, error) {
 	type multiAddressRequest struct {
 		Addresses []string `json:"addresses"`
@@ -126,8 +126,8 @@ func GetMultipleFCTBalances(fas ...string) (*MultiBalanceResponse, error) {
 	return balances, nil
 }
 
-// GetMultipleFCTBalances returns balances for multiple Factoid Addresses from
-// factomd.
+// GetMultipleECBalances returns balances for multiple Entry Credit Addresses
+// from the factomd API.
 func GetMultipleECBalances(ecs ...string) (*MultiBalanceResponse, error) {
 	type multiAddressRequest struct {
 		Addresses []string `json:"addresses"`
