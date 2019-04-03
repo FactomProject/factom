@@ -15,5 +15,5 @@ func TestGetTPS(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	t.Logf("Instant: %f, Total %f\n", instant, total)
+	t.Logf("Instant: %f, Total: %f\n", instant, total)
 }
