@@ -318,24 +318,31 @@ func (e *ECEntryCommit) String() string {
 }
 
 // GetECBlock requests a specified Entry Credit Block from the factomd API.
-func GetECBlock(keymr string) (*ECBlock, error) {
+func GetECBlock(keymr string) (ecblock *ECBlock, raw []byte, err error) {
 	params := keyMRRequest{KeyMR: keymr}
 	req := NewJSON2Request("entrycredit-block", APICounter(), params)
 	resp, err := factomdRequest(req)
 	if err != nil {
-		return nil, err
+		return
 	}
 	if resp.Error != nil {
-		return nil, resp.Error
+		return nil, nil, resp.Error
 	}
 
 	// create a wraper construct for the ECBlock API return
 	wrap := new(struct {
 		ECBlock *ECBlock `json:"ecblock"`
+		RawData string   `json:"rawdata"`
 	})
-	if err := json.Unmarshal(resp.JSONResult(), wrap); err != nil {
-		return nil, err
+	err = json.Unmarshal(resp.JSONResult(), wrap)
+	if err != nil {
+		return
 	}
 
-	return wrap.ECBlock, nil
+	raw, err = hex.DecodeString(wrap.RawData)
+	if err != nil {
+		return
+	}
+
+	return wrap.ECBlock, raw, nil
 }

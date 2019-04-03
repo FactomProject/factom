@@ -5,29 +5,29 @@
 package factom_test
 
 import (
+	"fmt"
 	"testing"
 
 	"encoding/json"
 
-	"github.com/FactomProject/factom"
+	. "github.com/FactomProject/factom"
 )
 
 func TestGetECBlock(t *testing.T) {
 	// Check for a missing blockHash
-	_, err := factom.GetECBlock("baadbaadbaadbaadbaadbaadbaadbaadbaadbaadbaadbaadbaadbaadbaadbaad")
+	_, _, err := GetECBlock("baadbaadbaadbaadbaadbaadbaadbaadbaadbaadbaadbaadbaadbaadbaadbaad")
 	if err == nil {
 		t.Error("expected error for missing block")
 	} else {
 		t.Log("Missing Block Error:", err)
 	}
 
-	// LATE: ecb, err := factom.GetECBlock("639995e66788ca01709a97684062b466fdce7b840b12861adbe39392f50f6bd3")
-	// UDHR: ecb, err := factom.GetECBlock("43fb68e2a6113598285c02fdd4e6914361ece64c677451048e94ac21538b2de6")
-	ecb, err := factom.GetECBlock("a7baaa24e477a0acef165461d70ec94ff3f33ad15562ecbe937967a761929a17")
+	ecb, raw, err := GetECBlock("a7baaa24e477a0acef165461d70ec94ff3f33ad15562ecbe937967a761929a17")
 	if err != nil {
 		t.Error(err)
 	}
 	t.Log(ecb)
+	t.Log(fmt.Printf("%x\n", raw))
 }
 
 func TestUnmarshalECBlock(t *testing.T) {
@@ -35,7 +35,8 @@ func TestUnmarshalECBlock(t *testing.T) {
 
 	jsbadentry := []byte(`{"ecblock":{"header":{"bodyhash":"541338744c8254641e0df2776dc7af07915c5da009e72e764da2bcbaa29a1bc6","prevheaderhash":"86aa9a8ef0cdb5e7b525fb7f9dd05f8188471cfbea6cf1c7ebab482ec408b6e9","prevfullhash":"af8a96d6e4ce0bd81c327bc49ab96c7e190c08c5ea0257d95a88c0806abf4266","dbheight":10199,"headerexpansionarea":"","objectcount":14,"bodysize":561,"chainid":"000000000000000000000000000000000000000000000000000000000000000c","ecchainid":"000000000000000000000000000000000000000000000000000000000000000c"},"body":{"entries":[{"badentry":"bad"},{"serverindexnumber":0},{"number":5},{"number":6},{"number":7},{"number":8},{"number":9},{"number":10}]},"headerhash":"a7baaa24e477a0acef165461d70ec94ff3f33ad15562ecbe937967a761929a17","fullhash":"84339a4a849c3616c7c1a5011f2fe14d000efd3a98309afaabbd2d7c0122094c"},"rawdata":"000000000000000000000000000000000000000000000000000000000000000c541338744c8254641e0df2776dc7af07915c5da009e72e764da2bcbaa29a1bc686aa9a8ef0cdb5e7b525fb7f9dd05f8188471cfbea6cf1c7ebab482ec408b6e9af8a96d6e4ce0bd81c327bc49ab96c7e190c08c5ea0257d95a88c0806abf4266000027d700000000000000000e0000000000000231000002000150f7d966a9e5f6f7cd369ef90a9872532af2d9755edfcd78124ea140f3417f54949b169aea1aa415bfaa978342ef396d7203cde3ad45cf92dab89ec6b34128234cae42ef6f7b4bc033547fd3ac1055d500752e99048d83ae9e580cc1fa4dcead10db868c730b79a1ad273d890287e5d4f16d2669c06c523b9e48673de1bfde3ea2fda309ac9234cab18fbc270bc51e9d68adc8cb9c65da5d7021bcc34370598ac6370fb7edde9b5c1a0164055bef53a83fbb1ddeb61a6942491fd8f9a56eb264c1abcc7c390503000150f7d8f870ac43f66ddf733981ce33a15bff872e125fff1a2b640cf99ee7e44b6ca2e96fb6014bcbc1c5ab90e432bd407a51eaa513b4050eecda1fd42bbf6b7050a1d96f94b7d06dedddf728f55a011eb6c133bfeebe1669823afd109158f9c6cbeaf012d358e9bc0055850ca639bb78838418465e48aa1f9e03874c948e8520d9064adb9c06010101020103010402000150f7dcfb531962219a271a272ff432fb8635ce07269d6f4a974871bbfde9d5ac7ab429a6822b5088c89e158f94802459c01a9eb170eca3487f4de26ff8a331a5b5f5dbde4e8c138dfb419a2c118c58a7ac0e791c3c6c2a67cec732325c2465ce911af41a4e0b79a1ad273d890287e5d4f16d2669c06c523b9e48673de1bfde3ea2fda309ac92ff2a6878ab59da88bd15b94545fbdecbab29fd14f64e7d7cf5fe3eb7f2f08a169aa1cfea415bd5d86d934ff925dfd8567491bdc7d9dff2a38d28bed72936410101050106010701080109010a"}`)
 	wrap := new(struct {
-		ECBlock factom.ECBlock `json:"ecblock"`
+		ECBlock ECBlock `json:"ecblock"`
+		RawData string  `json:"rawdata"`
 	})
 
 	err := json.Unmarshal(js, wrap)
@@ -44,9 +45,10 @@ func TestUnmarshalECBlock(t *testing.T) {
 	}
 
 	err = json.Unmarshal(jsbadentry, wrap)
-	if err != factom.ErrUnknownECBEntry {
+	if err != ErrUnknownECBEntry {
 		t.Error(err)
 	}
 
-	t.Log(wrap.ECBlock.String())
+	t.Log("ECBlock:", wrap.ECBlock)
+	t.Log("RawData:", wrap.RawData)
 }
