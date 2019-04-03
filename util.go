@@ -30,6 +30,8 @@ var (
 	}
 )
 
+// ChainIDFromFields computes a ChainID based on the binary External IDs of that
+// Chain's First Entry.
 func ChainIDFromFields(fields [][]byte) string {
 	hs := sha256.New()
 	for _, id := range fields {
@@ -40,6 +42,8 @@ func ChainIDFromFields(fields [][]byte) string {
 	return hex.EncodeToString(cid)
 }
 
+// ChainIDFromStrings computes the ChainID of a Chain Created with External IDs
+// that would match the given string (in order).
 func ChainIDFromStrings(fields []string) string {
 	var bin [][]byte
 	for _, str := range fields {
