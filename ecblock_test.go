@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"encoding/json"
+
 	"github.com/FactomProject/factom"
 )
 

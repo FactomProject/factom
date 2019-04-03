@@ -110,15 +110,15 @@ func (e *ECBlock) UnmarshalJSON(js []byte) error {
 	// the entry type by regex and umarshal into the correct type.
 	for _, v := range tmp.Body.Entries {
 		switch {
-		case regexp.MustCompile(`"number":`).MatchString(string(v)):
-			a := new(ECMinuteNumber)
+		case regexp.MustCompile(`"serverindexnumber":`).MatchString(string(v)):
+			a := new(ECServerIndexNumber)
 			err := json.Unmarshal(v, a)
 			if err != nil {
 				return err
 			}
 			e.Entries = append(e.Entries, a)
-		case regexp.MustCompile(`"serverindexnumber":`).MatchString(string(v)):
-			a := new(ECServerIndexNumber)
+		case regexp.MustCompile(`"number":`).MatchString(string(v)):
+			a := new(ECMinuteNumber)
 			err := json.Unmarshal(v, a)
 			if err != nil {
 				return err
@@ -155,6 +155,8 @@ type ECBEntry interface {
 	String() string
 }
 
+// ECServerIndexNumber shows the index of the server that acknowledged the
+// following ECBEntries.
 type ECServerIndexNumber struct {
 	ServerIndexNumber int `json:"serverindexnumber"`
 }
@@ -167,6 +169,8 @@ func (i *ECServerIndexNumber) String() string {
 	return fmt.Sprintln("ServerIndexNumber:", i.ServerIndexNumber)
 }
 
+// ECMinuteNumber represents the end of a minute minute [1-10] in the order of
+// the ECBEntries.
 type ECMinuteNumber struct {
 	Number int `json:"number"`
 }
@@ -179,6 +183,7 @@ func (m *ECMinuteNumber) String() string {
 	return fmt.Sprintln("MinuteNumber:", m.Number)
 }
 
+// ECChainCommit pays for and reserves a new chain in Factom.
 type ECChainCommit struct {
 	Version     int    `json:"version"`
 	MilliTime   int64  `json:"millitime"`
@@ -249,6 +254,7 @@ func (c *ECChainCommit) String() string {
 	return s
 }
 
+// ECEntryCommit pays for and reserves a new entry in Factom.
 type ECEntryCommit struct {
 	Version   int    `json:"version"`
 	MilliTime int64  `json:"millitime"`
@@ -311,6 +317,7 @@ func (e *ECEntryCommit) String() string {
 	return s
 }
 
+// GetECBlock requests a specified Entry Credit Block from the factomd API.
 func GetECBlock(keymr string) (*ECBlock, error) {
 	params := keyMRRequest{KeyMR: keymr}
 	req := NewJSON2Request("entrycredit-block", APICounter(), params)
