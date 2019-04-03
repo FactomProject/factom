@@ -5,6 +5,7 @@
 package factom
 
 import (
+	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -518,24 +519,33 @@ func (a *AdminAddAuthorityEfficiency) String() string {
 	return s
 }
 
-func GetABlock(keymr string) (*ABlock, error) {
+// GetABlock requests a specified ABlock from the factomd API.
+func GetABlock(keymr string) (ablock *ABlock, raw []byte, err error) {
 	params := keyMRRequest{KeyMR: keymr}
 	req := NewJSON2Request("admin-block", APICounter(), params)
 	resp, err := factomdRequest(req)
 	if err != nil {
-		return nil, err
+		return
 	}
 	if resp.Error != nil {
-		return nil, resp.Error
+		return nil, nil, resp.Error
 	}
 
 	// create a wraper construct for the ECBlock API return
 	wrap := new(struct {
-		ABlock *ABlock `json:"ablock"`
+		ABlock  *ABlock `json:"ablock"`
+		RawData string  `json:"rawdata"`
 	})
-	if err := json.Unmarshal(resp.JSONResult(), wrap); err != nil {
-		return nil, err
+
+	err = json.Unmarshal(resp.JSONResult(), wrap)
+	if err != nil {
+		return
 	}
 
-	return wrap.ABlock, nil
+	raw, err = hex.DecodeString(wrap.RawData)
+	if err != nil {
+		return
+	}
+
+	return wrap.ABlock, raw, nil
 }
