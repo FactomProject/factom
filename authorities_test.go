@@ -8,7 +8,7 @@ import (
 	"testing"
 
 	"encoding/json"
-	"fmt"
+
 	"github.com/FactomProject/factom"
 )
 
@@ -31,6 +31,6 @@ func TestUnmarshalAuthorities(t *testing.T) {
 		t.Error(err)
 	}
 	for _, a := range ret.Authorities {
-		t.Log(fmt.Sprint(a))
+		t.Log(a)
 	}
 }

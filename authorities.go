@@ -29,15 +29,9 @@ func (a *Authority) String() string {
 
 	s += fmt.Sprintln("AnchorKeys {")
 	for _, k := range a.AnchorKeys {
-		s += k.String()
+		s += fmt.Sprintln(k)
 	}
 	s += fmt.Sprintln("}")
-
-	// s += fmt.Sprintln("KeyHisory {")
-	// for _, k := range a.KeyHistory {
-	// 	s += fmt.Sprintln(" ", k)
-	// }
-	// s += fmt.Sprintln("}")
 
 	return s
 }
