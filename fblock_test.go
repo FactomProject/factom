@@ -26,7 +26,6 @@ func TestUnmarshalFBlock(t *testing.T) {
 		t.Error(err)
 	}
 	t.Log(wrap.FBlock)
-	fmt.Printf("DEBUG: rawdata: %x\n", wrap.RawData)
 }
 
 func TestGetFBlock(t *testing.T) {
