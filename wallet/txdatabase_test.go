@@ -5,7 +5,6 @@
 package wallet_test
 
 import (
-	//"fmt" // DEBUG
 	"testing"
 
 	. "github.com/FactomProject/factom/wallet"
@@ -35,7 +34,6 @@ func TestGetAllTXs(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	fmt.Println("DEBUG", txs)
 	t.Logf("got %d txs", len(txs))
 }
 
@@ -62,7 +60,6 @@ func TestGetTXAddress(t *testing.T) {
 //	errs := make(chan error)
 //	output := make(chan string)
 //
-//	fmt.Println("DEBUG: running getalltxs")
 //	go db1.GetAllTXs(txs, errs)
 //
 //	go func() {
@@ -91,7 +88,6 @@ func TestGetTXAddress(t *testing.T) {
 ////				txs = nil
 ////			}
 ////		case err, ok := <-errs:
-////			fmt.Println("DEBUG: got error:", err)
 ////			if !ok {
 ////				errs = nil
 ////			}
