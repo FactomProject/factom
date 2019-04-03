@@ -49,7 +49,7 @@ func ChainIDFromStrings(fields []string) string {
 	for _, str := range fields {
 		bin = append(bin, []byte(str))
 	}
-	return ChainIDFromFields(binary)
+	return ChainIDFromFields(bin)
 }
 
 func EntryCost(e *Entry) (int8, error) {
