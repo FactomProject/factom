@@ -9,6 +9,7 @@ import (
 	"crypto/sha256"
 	"crypto/sha512"
 	"encoding/binary"
+	"encoding/hex"
 	"fmt"
 	"math"
 	"regexp"
@@ -28,6 +29,24 @@ var (
 		WalletServer:  "localhost:8089",
 	}
 )
+
+func ChainIDFromFields(fields [][]byte) string {
+	hs := sha256.New()
+	for _, id := range fields {
+		h := sha256.Sum256(id)
+		hs.Write(h[:])
+	}
+	cid := hs.Sum(nil)
+	return hex.EncodeToString(cid)
+}
+
+func ChainIDFromStrings(fields []string) string {
+	var bin [][]byte
+	for _, str := range fields {
+		bin = append(bin, []byte(str))
+	}
+	return ChainIDFromFields(binary)
+}
 
 func EntryCost(e *Entry) (int8, error) {
 	p, err := e.MarshalBinary()
