@@ -5,6 +5,7 @@
 package factom
 
 import (
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 )
@@ -40,26 +41,33 @@ func (f *FBlock) String() string {
 	return s
 }
 
-// GetFblock requests a specified Factoid Block from factomd.
-func GetFBlock(keymr string) (*FBlock, error) {
+// GetFblock requests a specified Factoid Block from factomd. It returns the
+// FBlock struct, the raw binary FBlock, and an error if present.
+func GetFBlock(keymr string) (fblock *FBlock, raw []byte, err error) {
 	params := keyMRRequest{KeyMR: keymr}
 	req := NewJSON2Request("factoid-block", APICounter(), params)
 	resp, err := factomdRequest(req)
 	if err != nil {
-		return nil, err
+		return
 	}
 	if resp.Error != nil {
-		return nil, resp.Error
+		return nil, nil, resp.Error
 	}
 
 	// Create temporary struct to unmarshal json object
 	wrap := new(struct {
-		FBlock *FBlock `json:"fblock"`
+		FBlock  *FBlock `json:"fblock"`
+		RawData string  `json:"rawdata"`
 	})
 
-	if err := json.Unmarshal(resp.JSONResult(), wrap); err != nil {
-		return nil, err
+	if err = json.Unmarshal(resp.JSONResult(), wrap); err != nil {
+		return
 	}
 
-	return wrap.FBlock, nil
+	raw, err = hex.DecodeString(wrap.RawData)
+	if err != nil {
+		return
+	}
+
+	return wrap.FBlock, raw, nil
 }
