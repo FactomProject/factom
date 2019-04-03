@@ -12,6 +12,7 @@ import (
 	"github.com/FactomProject/factom"
 )
 
+// There must be a local factomd server running for the test to pass!
 func TestGetAuthorities(t *testing.T) {
 	as, err := factom.GetAuthorities()
 	if err != nil {
