@@ -9,8 +9,8 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/FactomProject/633/common/directoryBlock"
 	"github.com/FactomProject/factom"
-	"github.com/FactomProject/factomd/common/directoryBlock"
 	"github.com/FactomProject/factomd/common/factoid"
 	"github.com/FactomProject/factomd/common/interfaces"
 	"github.com/FactomProject/factomd/common/primitives"
@@ -350,13 +350,13 @@ func fblockHead() (interfaces.IFBlock, error) {
 	if err != nil {
 		return nil, err
 	}
-	dblock, err := factom.GetDBlock(dbhead)
+	dblock, _, err := factom.GetDBlock(dbhead)
 	if err != nil {
 		return nil, err
 	}
 
 	var fblockmr string
-	for _, eblock := range dblock.EntryBlockList {
+	for _, eblock := range dblock.DBEntries {
 		if eblock.ChainID == fblockID {
 			fblockmr = eblock.KeyMR
 		}
@@ -389,13 +389,9 @@ func getfblockbyheight(height uint32) (interfaces.IFBlock, error) {
 }
 
 func getdblockbyheight(height uint32) (interfaces.IDirectoryBlock, error) {
-	p, err := factom.GetDBlockByHeight(int64(height))
+	_, raw, err := factom.GetDBlockByHeight(int64(height))
 	if err != nil {
 		return nil, err
 	}
-	h, err := hex.DecodeString(p.RawData)
-	if err != nil {
-		return nil, err
-	}
-	return directoryBlock.UnmarshalDBlock(h)
+	return directoryBlock.UnmarshalDBlock(raw)
 }

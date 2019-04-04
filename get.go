@@ -118,44 +118,6 @@ func GetRate() (uint64, error) {
 	return rate.Rate, nil
 }
 
-// GetDBlock requests a Directory Block from factomd by its Key Merkle Root
-func GetDBlock(keymr string) (*DBlock, error) {
-	params := keyMRRequest{KeyMR: keymr}
-	req := NewJSON2Request("directory-block", APICounter(), params)
-	resp, err := factomdRequest(req)
-	if err != nil {
-		return nil, err
-	}
-	if resp.Error != nil {
-		return nil, resp.Error
-	}
-
-	db := new(DBlock)
-	if err := json.Unmarshal(resp.JSONResult(), db); err != nil {
-		return nil, err
-	}
-
-	return db, nil
-}
-
-func GetDBlockHead() (string, error) {
-	req := NewJSON2Request("directory-block-head", APICounter(), nil)
-	resp, err := factomdRequest(req)
-	if err != nil {
-		return "", err
-	}
-	if resp.Error != nil {
-		return "", resp.Error
-	}
-
-	head := new(DBHead)
-	if err := json.Unmarshal(resp.JSONResult(), head); err != nil {
-		return "", err
-	}
-
-	return head.KeyMR, nil
-}
-
 func GetHeights() (*HeightsResponse, error) {
 	req := NewJSON2Request("heights", APICounter(), nil)
 	resp, err := factomdRequest(req)

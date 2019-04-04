@@ -5,43 +5,14 @@
 package factom_test
 
 import (
-	"fmt"
 	"testing"
+
+	"fmt"
 
 	. "github.com/FactomProject/factom"
 )
 
 var ()
-
-type doubleString struct {
-	ChainID string `json:"chainid"`
-	KeyMR   string `json:"keymr"`
-}
-
-func TestDblockString(t *testing.T) {
-	d := new(DBlock)
-
-	d.Header.PrevBlockKeyMR = "fc01feda95f64a697431de6283593012a299cee7e834061a62b4addf0756dc2d"
-	d.Header.Timestamp = 1487615370
-	d.Header.SequenceNumber = 76802
-
-	e := doubleString{ChainID: "6909765ff072c322c56a7c4bfa8911ee4fdefacca711d30a9ad2a8672a3cc959", KeyMR: "3241ef7e4122a5f8c9df4536370e0a8919d5d20593fee0d49459e67586e56742"}
-	d.EntryBlockList = append(d.EntryBlockList, e)
-	//fmt.Println(d)
-	expectedEntryString := `PrevBlockKeyMR: fc01feda95f64a697431de6283593012a299cee7e834061a62b4addf0756dc2d
-Timestamp: 1487615370
-SequenceNumber: 76802
-EntryBlock {
-	ChainID 6909765ff072c322c56a7c4bfa8911ee4fdefacca711d30a9ad2a8672a3cc959
-	KeyMR 3241ef7e4122a5f8c9df4536370e0a8919d5d20593fee0d49459e67586e56742
-}
-`
-	if d.String() != expectedEntryString {
-		fmt.Println(d.String())
-		fmt.Println(expectedEntryString)
-		t.Fail()
-	}
-}
 
 func TestEblockString(t *testing.T) {
 	b := new(EBlock)

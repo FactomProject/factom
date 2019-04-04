@@ -106,74 +106,11 @@ func TestGetRate(t *testing.T) {
 	}
 }
 
-func TestGetDBlock(t *testing.T) {
-	simlatedFactomdResponse := `{  
-   "jsonrpc":"2.0",
-   "id":0,
-   "result":{  
-      "header":{  
-         "prevblockkeymr":"7d15d82e70201e960655ce3e7cf475c9da593dfb82c6dca6377349bd148bf001",
-         "sequencenumber":72497,
-         "timestamp":1484858820
-      },
-      "entryblocklist":[  
-         {  
-            "chainid":"000000000000000000000000000000000000000000000000000000000000000a",
-            "keymr":"3faa880a97ef6ce1feca643cffa015dd6be6a597b3f9260e408c5ac9351d1f8d"
-         },
-         {  
-            "chainid":"000000000000000000000000000000000000000000000000000000000000000c",
-            "keymr":"5f8c98930a1874a46b47b65b9376a02fbff65b760f6866519799d69e2bc019ee"
-         },
-         {  
-            "chainid":"000000000000000000000000000000000000000000000000000000000000000f",
-            "keymr":"8c6fed0f41317cc45201b5b170a9ac5bc045029e39a90b6061211be2c0678718"
-         }
-      ]
-   }
-}`
-
-	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "application/json")
-		fmt.Fprintln(w, simlatedFactomdResponse)
-	}))
-	defer ts.Close()
-
-	url := ts.URL[7:]
-	SetFactomdServer(url)
-
-	response, _ := GetDBlock("36c360817761e0d92af464f7c2e94a7495104d6b0a6051218cc53e52d3d519b6")
-
-	//fmt.Println(response)
-	expectedResponse := `PrevBlockKeyMR: 7d15d82e70201e960655ce3e7cf475c9da593dfb82c6dca6377349bd148bf001
-Timestamp: 1484858820
-SequenceNumber: 72497
-EntryBlock {
-	ChainID 000000000000000000000000000000000000000000000000000000000000000a
-	KeyMR 3faa880a97ef6ce1feca643cffa015dd6be6a597b3f9260e408c5ac9351d1f8d
-}
-EntryBlock {
-	ChainID 000000000000000000000000000000000000000000000000000000000000000c
-	KeyMR 5f8c98930a1874a46b47b65b9376a02fbff65b760f6866519799d69e2bc019ee
-}
-EntryBlock {
-	ChainID 000000000000000000000000000000000000000000000000000000000000000f
-	KeyMR 8c6fed0f41317cc45201b5b170a9ac5bc045029e39a90b6061211be2c0678718
-}
-`
-
-	if expectedResponse != response.String() {
-		fmt.Println(response)
-		fmt.Println(expectedResponse)
-		t.Fail()
-	}
-}
-
 func TestGetDBlockHead(t *testing.T) {
-	simlatedFactomdResponse := `{  
+	simlatedFactomdResponse := `{
    "jsonrpc":"2.0",
    "id":0,
-   "result":{  
+   "result":{
       "keymr":"7ed5d5b240973676c4a8a71c08c0cedb9e0ea335eaef22995911bcdc0fe9b26b"
    }
 }`
@@ -200,10 +137,10 @@ func TestGetDBlockHead(t *testing.T) {
 }
 
 func TestGetHeights(t *testing.T) {
-	simlatedFactomdResponse := `{  
+	simlatedFactomdResponse := `{
    "jsonrpc":"2.0",
    "id":0,
-   "result":{  
+   "result":{
       "directoryblockheight":72498,
       "leaderheight":72498,
       "entryblockheight":72498,
@@ -237,13 +174,13 @@ EntryHeight: 72498
 }
 
 func TestGetEntry(t *testing.T) {
-	simlatedFactomdResponse := `{  
+	simlatedFactomdResponse := `{
  "jsonrpc":"2.0",
  "id":0,
- "result":{  
+ "result":{
   "chainid":"df3ade9eec4b08d5379cc64270c30ea7315d8a8a1a69efe2b98a60ecdd69e604",
   "content":"68656C6C6F20776F726C64",
-  "extids":[  
+  "extids":[
      "466163746f6d416e63686f72436861696e"
   ]
  }
