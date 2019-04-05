@@ -346,3 +346,30 @@ func GetECBlock(keymr string) (ecblock *ECBlock, raw []byte, err error) {
 
 	return wrap.ECBlock, raw, nil
 }
+
+func GetECBlockByHeight(height int64) (ecblock *ECBlock, raw []byte, err error) {
+	params := heightRequest{Height: height}
+	req := NewJSON2Request("ecblock-by-height", APICounter(), params)
+	resp, err := factomdRequest(req)
+	if err != nil {
+		return
+	}
+	if resp.Error != nil {
+		return nil, nil, resp.Error
+	}
+
+	wrap := new(struct {
+		ECBlock *ECBlock `json:"ecblock"`
+		RawData string   `json:"rawdata"`
+	})
+	if err = json.Unmarshal(resp.JSONResult(), wrap); err != nil {
+		return
+	}
+
+	raw, err = hex.DecodeString(wrap.RawData)
+	if err != nil {
+		return
+	}
+
+	return wrap.ECBlock, raw, nil
+}
