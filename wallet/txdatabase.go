@@ -377,15 +377,11 @@ func getfblock(keymr string) (interfaces.IFBlock, error) {
 }
 
 func getfblockbyheight(height uint32) (interfaces.IFBlock, error) {
-	p, err := factom.GetFBlockByHeight(int64(height))
+	_, raw, err := factom.GetFBlockByHeight(int64(height))
 	if err != nil {
 		return nil, err
 	}
-	h, err := hex.DecodeString(p.RawData)
-	if err != nil {
-		return nil, err
-	}
-	return factoid.UnmarshalFBlock(h)
+	return factoid.UnmarshalFBlock(raw)
 }
 
 func getdblockbyheight(height uint32) (interfaces.IDirectoryBlock, error) {
