@@ -369,11 +369,11 @@ func fblockHead() (interfaces.IFBlock, error) {
 }
 
 func getfblock(keymr string) (interfaces.IFBlock, error) {
-	p, err := factom.GetRaw(keymr)
+	_, raw, err := factom.GetFBlock(keymr)
 	if err != nil {
 		return nil, err
 	}
-	return factoid.UnmarshalFBlock(p)
+	return factoid.UnmarshalFBlock(raw)
 }
 
 func getfblockbyheight(height uint32) (interfaces.IFBlock, error) {
