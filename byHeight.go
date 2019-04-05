@@ -138,22 +138,3 @@ func GetFBlockByHeight(height int64) (*BlockByHeightResponse, error) {
 
 	return block, nil
 }
-
-func GetABlockByHeight(height int64) (*BlockByHeightResponse, error) {
-	params := heightRequest{Height: height}
-	req := NewJSON2Request("ablock-by-height", APICounter(), params)
-	resp, err := factomdRequest(req)
-	if err != nil {
-		return nil, err
-	}
-	if resp.Error != nil {
-		return nil, resp.Error
-	}
-
-	block := new(BlockByHeightResponse)
-	if err := json.Unmarshal(resp.JSONResult(), block); err != nil {
-		return nil, err
-	}
-
-	return block, nil
-}
