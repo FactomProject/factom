@@ -549,3 +549,30 @@ func GetABlock(keymr string) (ablock *ABlock, raw []byte, err error) {
 
 	return wrap.ABlock, raw, nil
 }
+
+func GetABlockByHeight(height int64) (ablock *ABlock, raw []byte, err error) {
+	params := heightRequest{Height: height}
+	req := NewJSON2Request("ablock-by-height", APICounter(), params)
+	resp, err := factomdRequest(req)
+	if err != nil {
+		return
+	}
+	if resp.Error != nil {
+		return nil, nil, resp.Error
+	}
+
+	wrap := new(struct {
+		ABlock  *ABlock `json:"ablock"`
+		RawData string  `json:"rawdata"`
+	})
+	if err = json.Unmarshal(resp.JSONResult(), wrap); err != nil {
+		return
+	}
+
+	raw, err = hex.DecodeString(wrap.RawData)
+	if err != nil {
+		return
+	}
+
+	return wrap.ABlock, raw, nil
+}
