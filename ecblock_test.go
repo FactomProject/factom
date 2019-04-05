@@ -49,8 +49,8 @@ func TestGetECBlock(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	t.Log(ecb)
-	t.Log(fmt.Printf("%x\n", raw))
+	t.Log("ECBlock: ", ecb)
+	t.Log(fmt.Sprintf("raw: %x\n", raw))
 }
 
 func TestGetECBlockByHeight(t *testing.T) {
@@ -58,6 +58,6 @@ func TestGetECBlockByHeight(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	t.Log(ecb)
-	t.Log(fmt.Printf("%x\n", raw))
+	t.Log("ECBlock: ", ecb)
+	t.Log(fmt.Sprintf("raw: %x\n", raw))
 }
