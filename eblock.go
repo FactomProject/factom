@@ -10,6 +10,7 @@ import (
 
 type EBlock struct {
 	Header struct {
+		// TODO: rename BlockSequenceNumber to EBSequence
 		BlockSequenceNumber int64  `json:"blocksequencenumber"`
 		ChainID             string `json:"chainid"`
 		PrevKeyMR           string `json:"prevkeymr"`
