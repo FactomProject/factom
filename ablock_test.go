@@ -44,5 +44,4 @@ func TestGetABlockByHeight(t *testing.T) {
 	}
 	t.Log("ABlock:", ab)
 	t.Log(fmt.Sprintf("Raw: %x\n", raw))
-
 }
