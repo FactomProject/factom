@@ -5,7 +5,6 @@
 package wallet
 
 import (
-	"encoding/hex"
 	"fmt"
 	"os"
 
