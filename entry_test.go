@@ -230,7 +230,6 @@ func TestCommitEntry(t *testing.T) {
 
 	response, _ := CommitEntry(ent, ecAddr)
 
-	//fmt.Println(response)
 	expectedResponse := "bf12150038699f678ac2314e9fa2d4786dc8984d9b8c67dab8cd7c2f2e83372c"
 
 	if expectedResponse != response {
