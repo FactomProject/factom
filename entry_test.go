@@ -85,13 +85,76 @@ func TestMarshalBinary(t *testing.T) {
 	ent.ExtIDs = append(ent.ExtIDs, []byte("This is the first extid."))
 	ent.ExtIDs = append(ent.ExtIDs, []byte("This is the second extid."))
 
-	expected, _ := hex.DecodeString("005a402200c5cf278e47905ce52d7d64529a0291829a7bd230072c5468be7090690035001854686973206973207468652066697273742065787469642e00195468697320697320746865207365636f6e642065787469642e546869732069732061207465737420456e7472792e")
+	expected, err := hex.DecodeString("005a402200c5cf278e47905ce52d7d64529a0291829a7bd230072c5468be7090690035001854686973206973207468652066697273742065787469642e00195468697320697320746865207365636f6e642065787469642e546869732069732061207465737420456e7472792e")
+	if err != nil {
+		t.Error(err)
+	}
 
 	result, _ := ent.MarshalBinary()
 	if !bytes.Equal(result, expected) {
 		t.Errorf("expected:%s\nrecieved:%s", expected, result)
 	}
 	t.Logf("%x", result)
+}
+
+func TestNewEntry(t *testing.T) {
+	expected, err := hex.DecodeString("005a402200c5cf278e47905ce52d7d64529a0291829a7bd230072c5468be7090690035001854686973206973207468652066697273742065787469642e00195468697320697320746865207365636f6e642065787469642e546869732069732061207465737420456e7472792e")
+	if err != nil {
+		t.Error(err)
+	}
+
+	// Test entry from strings
+	efs := NewEntryFromStrings(
+		"5a402200c5cf278e47905ce52d7d64529a0291829a7bd230072c5468be709069",
+		"This is a test Entry.",
+		"This is the first extid.",
+		"This is the second extid.",
+	)
+	efsResult, err := efs.MarshalBinary()
+	if err != nil {
+		t.Error(err)
+	}
+	if !bytes.Equal(expected, efsResult) {
+		t.Errorf("expected:%s\nrecieved:%s", expected, efsResult)
+	}
+	t.Logf("%x", efsResult)
+
+	fmt.Printf("DEBUG: Content:%x\n", efs.Content)
+	for i, eid := range efs.ExtIDs {
+		fmt.Printf("DEBUG: ExtID%d:%x\n", i, eid)
+	}
+
+	chainid, err := hex.DecodeString("5a402200c5cf278e47905ce52d7d64529a0291829a7bd230072c5468be709069")
+	if err != nil {
+		t.Error(err)
+	}
+	content, err := hex.DecodeString("546869732069732061207465737420456e7472792e")
+	if err != nil {
+		t.Error(err)
+	}
+	ext1, err := hex.DecodeString("54686973206973207468652066697273742065787469642e")
+	if err != nil {
+		t.Error(err)
+	}
+	ext2, err := hex.DecodeString("5468697320697320746865207365636f6e642065787469642e")
+	if err != nil {
+		t.Error(err)
+	}
+
+	efb := NewEntryFromBytes(
+		chainid,
+		content,
+		ext1,
+		ext2,
+	)
+	efbResult, err := efb.MarshalBinary()
+	if err != nil {
+		t.Error(err)
+	}
+	if !bytes.Equal(expected, efbResult) {
+		t.Errorf("expected:%s\nrecieved:%s", expected, efbResult)
+	}
+	t.Logf("%x", efbResult)
 }
 
 func TestComposeEntryCommit(t *testing.T) {
