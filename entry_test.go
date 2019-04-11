@@ -119,11 +119,6 @@ func TestNewEntry(t *testing.T) {
 	}
 	t.Logf("%x", efsResult)
 
-	fmt.Printf("DEBUG: Content:%x\n", efs.Content)
-	for i, eid := range efs.ExtIDs {
-		fmt.Printf("DEBUG: ExtID%d:%x\n", i, eid)
-	}
-
 	chainid, err := hex.DecodeString("5a402200c5cf278e47905ce52d7d64529a0291829a7bd230072c5468be709069")
 	if err != nil {
 		t.Error(err)
