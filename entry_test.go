@@ -56,7 +56,6 @@ func TestEntryPrinting(t *testing.T) {
 	ent.ExtIDs = append(ent.ExtIDs, []byte("This is the first extid."))
 	ent.ExtIDs = append(ent.ExtIDs, []byte("This is the second extid."))
 
-	//fmt.Println(ent.String())
 	expectedReturn := `EntryHash: 52385948ea3ab6fd67b07664ac6a30ae5f6afa94427a547c142517beaa9054d0
 ChainID: 5a402200c5cf278e47905ce52d7d64529a0291829a7bd230072c5468be709069
 ExtID: This is the first extid.
