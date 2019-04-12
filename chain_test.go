@@ -68,7 +68,6 @@ func TestIfExists(t *testing.T) {
 	SetFactomdServer(url)
 
 	expectedID := "f65f67774139fa78344dcdd302631a0d646db0c2be4d58e3e48b2a188c1b856c"
-	//fmt.Println(ChainExists(expectedID))
 	if ChainExists(expectedID) != true {
 		t.Errorf("chain %s does not exist", expectedID)
 	}
