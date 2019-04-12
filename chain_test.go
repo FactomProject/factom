@@ -20,7 +20,7 @@ var ()
 
 func TestNewChain(t *testing.T) {
 	ent := new(Entry)
-	ent.ChainID = "5a402200c5cf278e47905ce52d7d64529a0291829a7bd230072c5468be709069"
+	ent.ChainID = ""
 	ent.Content = []byte("This is a test Entry.")
 	ent.ExtIDs = append(ent.ExtIDs, []byte("This is the first extid."))
 	ent.ExtIDs = append(ent.ExtIDs, []byte("This is the second extid."))
@@ -32,6 +32,23 @@ func TestNewChain(t *testing.T) {
 	if newChain.ChainID != expectedID {
 		t.Errorf("expected:%s\nrecieved:%s", expectedID, newChain.ChainID)
 	}
+	t.Log(newChain.ChainID)
+
+	cfb := NewChainFromBytes(ent.Content, ent.ExtIDs...)
+	if cfb.ChainID != expectedID {
+		t.Errorf("expected:%s\nrecieved:%s", expectedID, cfb.ChainID)
+	}
+	t.Log(cfb.ChainID)
+
+	cfs := NewChainFromStrings(
+		"This is a test Entry.",
+		"This is the first extid.",
+		"This is the second extid.",
+	)
+	if cfs.ChainID != expectedID {
+		t.Errorf("expected:%s\nrecieved:%s", expectedID, cfs.ChainID)
+	}
+	t.Log(cfs.ChainID)
 }
 
 func TestIfExists(t *testing.T) {
