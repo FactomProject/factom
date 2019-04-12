@@ -26,7 +26,6 @@ func TestNewChain(t *testing.T) {
 	ent.ExtIDs = append(ent.ExtIDs, []byte("This is the second extid."))
 
 	newChain := NewChain(ent)
-	//fmt.Println(newChain.ChainID)
 	expectedID := "5a402200c5cf278e47905ce52d7d64529a0291829a7bd230072c5468be709069"
 
 	if newChain.ChainID != expectedID {
