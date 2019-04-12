@@ -17,8 +17,6 @@ import (
 	. "github.com/FactomProject/factom"
 )
 
-var ()
-
 func TestNewChain(t *testing.T) {
 	ent := new(Entry)
 	ent.ChainID = ""
