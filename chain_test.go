@@ -97,14 +97,22 @@ func TestComposeChainCommit(t *testing.T) {
 	type response struct {
 		Message string `json:"message"`
 	}
-	ecAddr, _ := GetECAddress("Es2Rf7iM6PdsqfYCo3D1tnAR65SkLENyWJG1deUzpRMQmbh9F3eG")
+	ecAddr, err := GetECAddress("Es2Rf7iM6PdsqfYCo3D1tnAR65SkLENyWJG1deUzpRMQmbh9F3eG")
+	if err != nil {
+		t.Error(err)
+	}
+
 	ent := new(Entry)
 	ent.ChainID = "954d5a49fd70d9b8bcdb35d252267829957f7ef7fa6c74f88419bdc5e82209f4"
 	ent.Content = []byte("test!")
 	ent.ExtIDs = append(ent.ExtIDs, []byte("test"))
 	newChain := NewChain(ent)
 
-	cCommit, _ := ComposeChainCommit(newChain, ecAddr)
+	cCommit, err := ComposeChainCommit(newChain, ecAddr)
+	if err != nil {
+		t.Error(err)
+	}
+
 	r := new(response)
 	json.Unmarshal(cCommit.Params, r)
 	binCommit, _ := hex.DecodeString(r.Message)
@@ -123,7 +131,10 @@ func TestComposeChainCommit(t *testing.T) {
 	}
 	//skip the 6 bytes of the timestamp
 	result = binCommit[7:136]
-	expected, _ = hex.DecodeString("516870d4c0e1ee2d5f0d415e51fc10ae6b8d895561e9314afdc33048194d76f07cc61c8a81aea23d76ff6447689757dc1e36af66e300ce3e06b8d816c79acfd2285ed45081d5b8819a678d13c7c2d04f704b34c74e8aaecd9bd34609bee047200b3b6a27bcceb6a42d62a3a8d02a6f0d73653215771de243a63ac048a18b59da29")
+	expected, err = hex.DecodeString("516870d4c0e1ee2d5f0d415e51fc10ae6b8d895561e9314afdc33048194d76f07cc61c8a81aea23d76ff6447689757dc1e36af66e300ce3e06b8d816c79acfd2285ed45081d5b8819a678d13c7c2d04f704b34c74e8aaecd9bd34609bee047200b3b6a27bcceb6a42d62a3a8d02a6f0d73653215771de243a63ac048a18b59da29")
+	if err != nil {
+		t.Error(err)
+	}
 
 	if !bytes.Equal(result, expected) {
 		t.Errorf("expected:%s\nrecieved:%s", expected, result)
@@ -138,7 +149,10 @@ func TestComposeChainReveal(t *testing.T) {
 	ent.ExtIDs = append(ent.ExtIDs, []byte("test"))
 	newChain := NewChain(ent)
 
-	cReveal, _ := ComposeChainReveal(newChain)
+	cReveal, err := ComposeChainReveal(newChain)
+	if err != nil {
+		t.Error(err)
+	}
 
 	expectedResponse := `{"entry":"00954d5a49fd70d9b8bcdb35d252267829957f7ef7fa6c74f88419bdc5e82209f400060004746573747465737421"}`
 	if expectedResponse != string(cReveal.Params) {
@@ -170,7 +184,10 @@ func TestCommitChain(t *testing.T) {
 	ent.Content = []byte("test!")
 	ent.ExtIDs = append(ent.ExtIDs, []byte("test"))
 	newChain := NewChain(ent)
-	ecAddr, _ := GetECAddress("Es2Rf7iM6PdsqfYCo3D1tnAR65SkLENyWJG1deUzpRMQmbh9F3eG")
+	ecAddr, err := GetECAddress("Es2Rf7iM6PdsqfYCo3D1tnAR65SkLENyWJG1deUzpRMQmbh9F3eG")
+	if err != nil {
+		t.Error(err)
+	}
 
 	expectedResponse := "76e123d133a841fe3e08c5e3f3d392f8431f2d7668890c03f003f541efa8fc61"
 	response, _ := CommitChain(newChain, ecAddr)
@@ -207,7 +224,10 @@ func TestRevealChain(t *testing.T) {
 	newChain := NewChain(ent)
 
 	expectedResponse := "f5c956749fc3eba4acc60fd485fb100e601070a44fcce54ff358d60669854734"
-	response, _ := RevealChain(newChain)
+	response, err := RevealChain(newChain)
+	if err != nil {
+		t.Error(err)
+	}
 
 	if expectedResponse != response {
 		t.Errorf("expected:%s\nrecieved:%s", expectedResponse, response)
