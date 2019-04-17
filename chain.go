@@ -34,6 +34,18 @@ func NewChain(e *Entry) *Chain {
 	return c
 }
 
+func NewChainFromBytes(content []byte, extids ...[]byte) *Chain {
+	e := NewEntryFromBytes(nil, content, extids...)
+	c := NewChain(e)
+	return c
+}
+
+func NewChainFromStrings(content string, extids ...string) *Chain {
+	e := NewEntryFromStrings("", content, extids...)
+	c := NewChain(e)
+	return c
+}
+
 func ChainExists(chainid string) bool {
 	if _, err := GetChainHead(chainid); err == nil {
 		// no error means we found the Chain
