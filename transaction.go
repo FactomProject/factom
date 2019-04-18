@@ -631,6 +631,35 @@ func BuyExactEC(from, to string, amount uint64, force bool) (*Transaction, error
 	return r, nil
 }
 
+// FactoidSubmit sends a raw transaction to factomd to be included in the
+// network. (See ComposeTransaction for more details on how to build the binary
+// transaction for the network).
+func FactoidSubmit(tx string) (message, txid string, err error) {
+	type txreq struct {
+		Transaction string
+	}
+
+	params := txreq{Transaction: tx}
+	req := NewJSON2Request("factoid-submit", APICounter(), params)
+	resp, err := factomdRequest(req)
+	if err != nil {
+		return
+	}
+	if resp.Error != nil {
+		return
+	}
+
+	fsr := new(struct {
+		Message string `json:"message"`
+		TxID    string `json:"txid"`
+	})
+	if err = json.Unmarshal(resp.JSONResult(), fsr); err != nil {
+		return
+	}
+
+	return fsr.Message, fsr.TxID, nil
+}
+
 type TransactionResponse struct {
 	ECTranasction      interface{} `json:"ectransaction,omitempty"`
 	FactoidTransaction interface{} `json:"factoidtransaction,omitempty"`
