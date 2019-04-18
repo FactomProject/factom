@@ -7,11 +7,11 @@ package factom_test
 import (
 	"testing"
 
-	"github.com/FactomProject/factom"
+	. "github.com/FactomProject/factom"
 )
 
 func TestGetTPS(t *testing.T) {
-	instant, total, err := factom.GetTPS()
+	instant, total, err := GetTPS()
 	if err != nil {
 		t.Error(err)
 	}
