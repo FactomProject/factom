@@ -26,7 +26,10 @@ func TestGetEBlock(t *testing.T) {
 	url := ts.URL[7:]
 	SetFactomdServer(url)
 
-	response, _ := GetEBlock("5117490532e46037f8eb660c4fd49cae2a734fc9096b431b2a9a738d7d278398")
+	response, err := GetEBlock("5117490532e46037f8eb660c4fd49cae2a734fc9096b431b2a9a738d7d278398")
+	if err != nil {
+		t.Error(err)
+	}
 
 	expectedResponse := `BlockSequenceNumber: 35990
 ChainID: df3ade9eec4b08d5379cc64270c30ea7315d8a8a1a69efe2b98a60ecdd69e604
