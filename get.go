@@ -134,25 +134,6 @@ func GetHeights() (*HeightsResponse, error) {
 	return heights, nil
 }
 
-func GetRaw(keymr string) ([]byte, error) {
-	params := hashRequest{Hash: keymr}
-	req := NewJSON2Request("raw-data", APICounter(), params)
-	resp, err := factomdRequest(req)
-	if err != nil {
-		return nil, err
-	}
-	if resp.Error != nil {
-		return nil, resp.Error
-	}
-
-	raw := new(RawData)
-	if err := json.Unmarshal(resp.JSONResult(), raw); err != nil {
-		return nil, err
-	}
-
-	return raw.GetDataBytes()
-}
-
 func GetProperties() (string, string, string, string, string, string, string, string) {
 	type propertiesResponse struct {
 		FactomdVersion       string `json:"factomdversion"`
