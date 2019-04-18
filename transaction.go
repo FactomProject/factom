@@ -692,6 +692,23 @@ func GetTransaction(txID string) (*TransactionResponse, error) {
 	return txResp, nil
 }
 
+// TODO: GetPendingTransactions() should return something more useful than a
+// json string.
+func GetPendingTransactions() (string, error) {
+	req := NewJSON2Request("pending-transactions", APICounter(), nil)
+	resp, err := factomdRequest(req)
+
+	if err != nil {
+		return "", err
+	}
+	if resp.Error != nil {
+		return "", err
+	}
+
+	transList := resp.JSONResult()
+	return string(transList), nil
+}
+
 // GetTmpTransaction gets a temporary transaction from the wallet
 func GetTmpTransaction(name string) (*Transaction, error) {
 	txs, err := ListTransactionsTmp()

@@ -65,20 +65,3 @@ func GetProperties() (string, string, string, string, string, string, string, st
 	return props.FactomdVersion, props.FactomdVersionErr, props.FactomdAPIVersion, props.FactomdAPIVersionErr, wprops.WalletVersion, wprops.WalletVersionErr, wprops.WalletAPIVersion, wprops.WalletAPIVersionErr
 
 }
-
-func GetPendingTransactions() (string, error) {
-
-	req := NewJSON2Request("pending-transactions", APICounter(), nil)
-	resp, err := factomdRequest(req)
-
-	if err != nil {
-		return "", err
-	}
-	if resp.Error != nil {
-		return "", err
-	}
-	//fmt.Println("factom resp=", resp)
-	transList := resp.JSONResult()
-
-	return string(transList), nil
-}
