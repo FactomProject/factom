@@ -134,26 +134,6 @@ func GetHeights() (*HeightsResponse, error) {
 	return heights, nil
 }
 
-// GetEntry requests an Entry from factomd by its Entry Hash
-func GetEntry(hash string) (*Entry, error) {
-	params := hashRequest{Hash: hash}
-	req := NewJSON2Request("entry", APICounter(), params)
-	resp, err := factomdRequest(req)
-	if err != nil {
-		return nil, err
-	}
-	if resp.Error != nil {
-		return nil, resp.Error
-	}
-
-	e := new(Entry)
-	if err := json.Unmarshal(resp.JSONResult(), e); err != nil {
-		return nil, err
-	}
-
-	return e, nil
-}
-
 func GetRaw(keymr string) ([]byte, error) {
 	params := hashRequest{Hash: keymr}
 	req := NewJSON2Request("raw-data", APICounter(), params)
@@ -211,23 +191,6 @@ func GetProperties() (string, string, string, string, string, string, string, st
 
 	return props.FactomdVersion, props.FactomdVersionErr, props.FactomdAPIVersion, props.FactomdAPIVersionErr, wprops.WalletVersion, wprops.WalletVersionErr, wprops.WalletAPIVersion, wprops.WalletAPIVersionErr
 
-}
-
-func GetPendingEntries() (string, error) {
-
-	req := NewJSON2Request("pending-entries", APICounter(), nil)
-	resp, err := factomdRequest(req)
-
-	if err != nil {
-		return "", err
-	}
-	if resp.Error != nil {
-		return "", err
-	}
-
-	rBytes := resp.JSONResult()
-
-	return string(rBytes), nil
 }
 
 func GetPendingTransactions() (string, error) {
