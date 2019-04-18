@@ -1,4 +1,4 @@
-// Copyright 2017 Factom Foundation
+// Copyright 2016 Factom Foundation
 // Use of this source code is governed by the MIT
 // license that can be found in the LICENSE file.
 
@@ -62,10 +62,10 @@ func TestAckFct(t *testing.T) {
 
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		fmt.Fprintln(w, `{  
+		fmt.Fprintln(w, `{
    "jsonrpc":"2.0",
    "id":0,
-   "result":{  
+   "result":{
       "txid":"f1d9919829fa71ce18caf1bd8659cce8a06c0026d3f3fffc61054ebb25ebeaa0",
       "transactiondate":1441138021975,
       "transactiondatestring":"2015-09-01 15:07:01",
@@ -104,20 +104,20 @@ func TestAckEntry(t *testing.T) {
 
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		fmt.Fprintln(w, `{  
+		fmt.Fprintln(w, `{
    "jsonrpc":"2.0",
    "id":0,
-   "result":{  
+   "result":{
       "committxid":"e5b5be39a41df43a3c46beaa238dc5e6f7bb11115a8da1a9b45cd694e257935a",
       "entryhash":"9228b4b080b3cf94cceea866b74c48319f2093f56bd5a63465288e9a71437ee8",
-      "commitdata":{  
+      "commitdata":{
          "transactiondate":1449547801861,
          "transactiondatestring":"2015-12-07 22:10:01",
          "blockdate":1449547800000,
          "blockdatestring":"2015-12-07 22:10:00",
          "status":"DBlockConfirmed"
       },
-      "entrydata":{  
+      "entrydata":{
          "blockdate":1449547800000,
          "blockdatestring":"2015-12-07 22:10:00",
          "status":"DBlockConfirmed"
