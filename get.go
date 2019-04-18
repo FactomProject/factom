@@ -8,29 +8,6 @@ import (
 	"encoding/json"
 )
 
-// GetRate returns the number of factoshis per entry credit
-func GetRate() (uint64, error) {
-	type rateResponse struct {
-		Rate uint64 `json:"rate"`
-	}
-
-	req := NewJSON2Request("entry-credit-rate", APICounter(), nil)
-	resp, err := factomdRequest(req)
-	if err != nil {
-		return 0, err
-	}
-	if resp.Error != nil {
-		return 0, resp.Error
-	}
-
-	rate := new(rateResponse)
-	if err := json.Unmarshal(resp.JSONResult(), rate); err != nil {
-		return 0, err
-	}
-
-	return rate.Rate, nil
-}
-
 func GetHeights() (*HeightsResponse, error) {
 	req := NewJSON2Request("heights", APICounter(), nil)
 	resp, err := factomdRequest(req)

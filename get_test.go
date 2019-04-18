@@ -13,36 +13,6 @@ import (
 	. "github.com/FactomProject/factom"
 )
 
-func TestGetRate(t *testing.T) {
-	simlatedFactomdResponse := `{
-  "jsonrpc": "2.0",
-  "id": 0,
-  "result": {
-    "rate": 95369
-  }
-}`
-
-	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "application/json")
-		fmt.Fprintln(w, simlatedFactomdResponse)
-	}))
-	defer ts.Close()
-
-	url := ts.URL[7:]
-	SetFactomdServer(url)
-
-	response, _ := GetRate()
-
-	//fmt.Println(response)
-	expectedResponse := uint64(95369)
-
-	if expectedResponse != response {
-		fmt.Println(response)
-		fmt.Println(expectedResponse)
-		t.Fail()
-	}
-}
-
 func TestGetHeights(t *testing.T) {
 	simlatedFactomdResponse := `{
    "jsonrpc":"2.0",

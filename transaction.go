@@ -597,7 +597,7 @@ func BuyEC(from, to string, amount uint64, force bool) (*Transaction, error) {
 
 //Purchases the exact amount of ECs
 func BuyExactEC(from, to string, amount uint64, force bool) (*Transaction, error) {
-	rate, err := GetRate()
+	rate, err := GetECRate()
 	if err != nil {
 		return nil, err
 	}
