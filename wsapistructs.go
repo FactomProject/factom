@@ -4,8 +4,6 @@
 
 package factom
 
-import "fmt"
-
 // requests
 
 type heightRequest struct {
@@ -32,24 +30,6 @@ type entryRequest struct {
 
 type hashRequest struct {
 	Hash string `json:"hash"`
-}
-
-type HeightsResponse struct {
-	DirectoryBlockHeight int64 `json:"directoryblockheight"`
-	LeaderHeight         int64 `json:"leaderheight"`
-	EntryBlockHeight     int64 `json:"entryblockheight"`
-	EntryHeight          int64 `json:"entryheight"`
-}
-
-func (d *HeightsResponse) String() string {
-	var s string
-
-	s += fmt.Sprintln("DirectoryBlockHeight:", d.DirectoryBlockHeight)
-	s += fmt.Sprintln("LeaderHeight:", d.LeaderHeight)
-	s += fmt.Sprintln("EntryBlockHeight:", d.EntryBlockHeight)
-	s += fmt.Sprintln("EntryHeight:", d.EntryHeight)
-
-	return s
 }
 
 type importRequest struct {

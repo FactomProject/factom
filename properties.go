@@ -8,24 +8,7 @@ import (
 	"encoding/json"
 )
 
-func GetHeights() (*HeightsResponse, error) {
-	req := NewJSON2Request("heights", APICounter(), nil)
-	resp, err := factomdRequest(req)
-	if err != nil {
-		return nil, err
-	}
-	if resp.Error != nil {
-		return nil, resp.Error
-	}
-
-	heights := new(HeightsResponse)
-	if err := json.Unmarshal(resp.JSONResult(), heights); err != nil {
-		return nil, err
-	}
-
-	return heights, nil
-}
-
+// TODO: maybe properties should return a more useful datastructure?
 func GetProperties() (string, string, string, string, string, string, string, string) {
 	type propertiesResponse struct {
 		FactomdVersion       string `json:"factomdversion"`
@@ -38,6 +21,7 @@ func GetProperties() (string, string, string, string, string, string, string, st
 		WalletAPIVersionErr  string `json:"walletapiversionerr"`
 	}
 
+	// get properties from the factom API and the wallet API
 	props := new(propertiesResponse)
 	wprops := new(propertiesResponse)
 	req := NewJSON2Request("properties", APICounter(), nil)
@@ -63,5 +47,4 @@ func GetProperties() (string, string, string, string, string, string, string, st
 	}
 
 	return props.FactomdVersion, props.FactomdVersionErr, props.FactomdAPIVersion, props.FactomdAPIVersionErr, wprops.WalletVersion, wprops.WalletVersionErr, wprops.WalletAPIVersion, wprops.WalletAPIVersionErr
-
 }
