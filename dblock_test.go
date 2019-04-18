@@ -8,6 +8,8 @@ import (
 	"testing"
 
 	"fmt"
+	"net/http"
+	"net/http/httptest"
 
 	. "github.com/FactomProject/factom"
 )
@@ -30,4 +32,36 @@ func TestGetDBlockByHeight(t *testing.T) {
 	}
 	t.Log("dblock:", d)
 	t.Log(fmt.Sprintf("raw: %x\n", raw))
+}
+
+func TestGetDBlockHead(t *testing.T) {
+	simlatedFactomdResponse := `{
+	   "jsonrpc":"2.0",
+	   "id":0,
+	   "result":{
+	      "keymr":"7ed5d5b240973676c4a8a71c08c0cedb9e0ea335eaef22995911bcdc0fe9b26b"
+	   }
+	}`
+
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		fmt.Fprintln(w, simlatedFactomdResponse)
+	}))
+	defer ts.Close()
+
+	url := ts.URL[7:]
+	SetFactomdServer(url)
+
+	response, err := GetDBlockHead()
+	if err != nil {
+		t.Error(err)
+	}
+
+	//fmt.Println(response)
+	expectedResponse := `7ed5d5b240973676c4a8a71c08c0cedb9e0ea335eaef22995911bcdc0fe9b26b`
+
+	if expectedResponse != response {
+		t.Errorf("expected:%s\nrecieved:%s", expectedResponse, response)
+	}
+	t.Log(response)
 }

@@ -5,10 +5,10 @@
 package factom_test
 
 import (
-	"fmt"
 	"testing"
 
 	"encoding/json"
+	"fmt"
 
 	. "github.com/FactomProject/factom"
 )
