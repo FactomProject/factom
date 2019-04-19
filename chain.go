@@ -9,7 +9,11 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
-	"fmt"
+	"errors"
+)
+
+var (
+	ErrChainPending = errors.New("Chain not yet included in a Directory Block")
 )
 
 type Chain struct {
@@ -206,7 +210,7 @@ func GetAllChainEntries(chainid string) ([]*Entry, error) {
 	}
 
 	if head == "" && inPL {
-		return nil, fmt.Errorf("Chain not yet included in a Directory Block")
+		return nil, ErrChainPending
 	}
 
 	for ebhash := head; ebhash != ZeroHash; {
@@ -235,7 +239,7 @@ func GetFirstEntry(chainid string) (*Entry, error) {
 	}
 
 	if head == "" && inPL {
-		return nil, fmt.Errorf("Chain not yet included in a Directory Block")
+		return nil, ErrChainPending
 	}
 
 	eb, err := GetEBlock(head)
