@@ -18,7 +18,7 @@ func TestAckStrings(t *testing.T) {
 	status := new(EntryStatus)
 	status.CommitTxID = "107c239ee41bb2b0cfa19d8760deb82c942f1bac8ad99516f2f801bf16ae2998"
 	//status.EntryHash = "1b363e01af0c0e28f0acbc33bc816ec11f4b28680797e74e341476409dd52295"
-	gtd := new(GeneralTransactionData)
+	gtd := new(TransactionData)
 	gtd.Status = "TransactionACK"
 	gtd.TransactionDateString = "2017-02-15 13:01:41"
 
