@@ -5,16 +5,16 @@
 package factom_test
 
 import (
-	"bytes"
-	"crypto/rand"
 	"testing"
 
-	ed "github.com/FactomProject/ed25519"
-	. "github.com/FactomProject/factom"
-	"github.com/FactomProject/go-bip32"
-)
+	"bytes"
+	"crypto/rand"
 
-var ()
+	ed "github.com/FactomProject/ed25519"
+	"github.com/FactomProject/go-bip32"
+
+	. "github.com/FactomProject/factom"
+)
 
 func TestMarshalAddresses(t *testing.T) {
 	for i := 0; i < 100; i++ {
@@ -272,16 +272,30 @@ func TestMakeBIP44FactoidAddress(t *testing.T) {
 }
 
 func TestParseAndValidateMnemonic(t *testing.T) {
-	ms := []string{
-		"yellow yellow yellow yellow yellow yellow yellow yellow yellow yellow yellow yellow",   //valid
-		"yellow  yellow yellow yellow yellow yellow yellow yellow yellow yellow yellow yellow",  //extra space
-		"YELLOW yellow yellow yellow yellow yellow yellow yellow yellow yellow yellow yellow",   //capitalization
-		" yellow yellow yellow yellow yellow yellow yellow yellow yellow yellow yellow yellow ", //spaces on sides
+	goodms := []string{
+		"yellow yellow yellow yellow yellow yellow yellow yellow yellow yellow yellow yellow",   // valid
+		"yellow  yellow yellow yellow yellow yellow yellow yellow yellow yellow yellow yellow",  // extra space
+		"YELLOW yellow yellow yellow yellow yellow yellow yellow yellow yellow yellow yellow",   // capitalization
+		" yellow yellow yellow yellow yellow yellow yellow yellow yellow yellow yellow yellow ", // spaces on sides
 	}
-	for i, m := range ms {
+
+	badms := []string{
+		"yello yellow yellow yellow yellow yellow yellow yellow yellow yellow yellow yellow", // bad word
+		"yellow yellow yellow yellow yellow yellow yellow yellow yellow yellow yellow",       // bad word count
+	}
+
+	for i, m := range goodms {
 		_, err := ParseAndValidateMnemonic(m)
 		if err != nil {
-			t.Errorf("Error for mnemonic %v - `%v` - err", i, m)
+			t.Errorf("Error for mnemonic %v - `%v` - %s", i, m, err)
 		}
+	}
+
+	for i, m := range badms {
+		_, err := ParseAndValidateMnemonic(m)
+		if err == nil {
+			t.Errorf("no error for bad mnumonic %v - %v", i, m)
+		}
+		t.Log(err)
 	}
 }
