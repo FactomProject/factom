@@ -27,7 +27,11 @@ type TransactionData struct {
 	Status string `json:"status"`
 }
 
-// FactoidTxStatus is the metadata about a Factoid Transaction.
+type ReserveInfo struct {
+	TxID    string `json:"txid"`
+	Timeout int64  `json:"timeout"` //Unix time
+}
+
 type FactoidTxStatus struct {
 	TxID string `json:"txid"`
 	TransactionData
@@ -66,11 +70,6 @@ func (e *EntryStatus) String() string {
 	s += fmt.Sprintln("Date:", e.CommitData.TransactionDateString)
 
 	return s
-}
-
-type ReserveInfo struct {
-	TxID    string `json:"txid"`
-	Timeout int64  `json:"timeout"` //Unix time
 }
 
 // EntryCommitACK searches for an entry/chain commit with a given transaction ID.
