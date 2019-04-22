@@ -450,7 +450,7 @@ func (a *FactoidAddress) String() string {
 }
 
 // ParseMnemonic parse and validate a bip39 mnumonic string. Remove extra
-// spaces, capitalization, etc.
+// spaces, capitalization, etc. Return an error if the string is invalid.
 func ParseMnemonic(mnemonic string) (string, error) {
 	if l := len(strings.Fields(mnemonic)); l != 12 {
 		return "", ErrMnemonicLength
