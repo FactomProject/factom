@@ -32,6 +32,7 @@ type ReserveInfo struct {
 	Timeout int64  `json:"timeout"` //Unix time
 }
 
+// FactoidTxStatus is the metadata about a Factoid Transaction.
 type FactoidTxStatus struct {
 	TxID string `json:"txid"`
 	TransactionData
