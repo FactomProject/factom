@@ -9,6 +9,22 @@ import (
 	"fmt"
 )
 
+type GeneralTransactionData struct {
+	// TransactionDate in Unix time
+	TransactionDate int64 `json:"transactiondate,omitempty"`
+	//TransactionDateString ISO8601 time
+	TransactionDateString string `json:"transactiondatestring,omitempty"`
+	//Unix time
+	BlockDate int64 `json:"blockdate,omitempty"`
+	//ISO8601 time
+	BlockDateString string `json:"blockdatestring,omitempty"`
+
+	Malleated struct {
+		MalleatedTxIDs []string `json:"malleatedtxids"`
+	} `json:"malleated,omitempty"`
+	Status string `json:"status"`
+}
+
 type FactoidTxStatus struct {
 	TxID string `json:"txid"`
 	GeneralTransactionData
@@ -51,24 +67,6 @@ func (e *EntryStatus) String() string {
 type ReserveInfo struct {
 	TxID    string `json:"txid"`
 	Timeout int64  `json:"timeout"` //Unix time
-}
-
-type GeneralTransactionData struct {
-	// TransactionDate in Unix time
-	TransactionDate int64 `json:"transactiondate,omitempty"`
-	//TransactionDateString ISO8601 time
-	TransactionDateString string `json:"transactiondatestring,omitempty"`
-	//Unix time
-	BlockDate int64 `json:"blockdate,omitempty"`
-	//ISO8601 time
-	BlockDateString string `json:"blockdatestring,omitempty"`
-
-	Malleated *Malleated `json:"malleated,omitempty"`
-	Status    string     `json:"status"`
-}
-
-type Malleated struct {
-	MalleatedTxIDs []string `json:"malleatedtxids"`
 }
 
 // EntryCommitACK takes the txid of the commit and searches for the entry/chain commit
