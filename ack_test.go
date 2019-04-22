@@ -127,9 +127,9 @@ func TestAckEntry(t *testing.T) {
 	SetFactomdServer(url)
 
 	tx := "dummy1"
-	txid := "dummy2"
+	ehash := "dummy2"
 
-	entryStatus, err := EntryACK(txid, tx)
+	entryStatus, err := EntryRevealACK(ehash, tx, ZeroHash)
 	if err != nil {
 		t.Error(err)
 	}

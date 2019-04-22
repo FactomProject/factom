@@ -126,10 +126,3 @@ func EntryRevealACK(entryhash, fullTransaction, chainiID string) (*EntryStatus, 
 
 	return eb, nil
 }
-
-// EntryACK is a deprecated call and SHOULD NOT BE USED.
-// Use either EntryCommitAck or EntryRevealAck depending on the
-// type of hash you are sending.
-func EntryACK(entryhash, fullTransaction string) (*EntryStatus, error) {
-	return EntryRevealACK(entryhash, fullTransaction, "0000000000000000000000000000000000000000000000000000000000000000")
-}
