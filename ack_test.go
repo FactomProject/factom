@@ -5,15 +5,14 @@
 package factom_test
 
 import (
+	"testing"
+
 	"fmt"
 	"net/http"
 	"net/http/httptest"
-	"testing"
 
 	. "github.com/FactomProject/factom"
 )
-
-var ()
 
 func TestAckStrings(t *testing.T) {
 	status := new(EntryStatus)
@@ -26,17 +25,15 @@ func TestAckStrings(t *testing.T) {
 	status.CommitData = *gtd
 
 	entryPrintout := status.String()
-	//fmt.Println(entryPrintout)
 
 	expectedString := `TxID: 107c239ee41bb2b0cfa19d8760deb82c942f1bac8ad99516f2f801bf16ae2998
 Status: TransactionACK
 Date: 2017-02-15 13:01:41
 `
 	if entryPrintout != expectedString {
-		fmt.Println(entryPrintout)
-		fmt.Println(expectedString)
-		t.Fail()
+		t.Errorf("expected:%s\nrecieved:%s", expectedString, entryPrintout)
 	}
+	t.Log(entryPrintout)
 
 	txstatus := new(FactoidTxStatus)
 	txstatus.TxID = "b8b12fba54bd1857b0262bba1b71dbeb4e17404570c2ebe50de0dabf061d575c"
@@ -45,17 +42,15 @@ Date: 2017-02-15 13:01:41
 	txstatus.TransactionDateString = "2017-02-15 15:07:27"
 	//txstatus.CommitData = *gtdfct
 	fctPrintout := txstatus.String()
-	//fmt.Println(fctPrintout)
 
 	expectedfctString := `TxID: b8b12fba54bd1857b0262bba1b71dbeb4e17404570c2ebe50de0dabf061d575c
 Status: TransactionACK
 Date: 2017-02-15 15:07:27
 `
 	if fctPrintout != expectedfctString {
-		fmt.Println(fctPrintout)
-		fmt.Println(expectedfctString)
-		t.Fail()
+		t.Errorf("expected:%s\nrecieved:%s", expectedfctString, fctPrintout)
 	}
+	t.Log(fctPrintout)
 }
 
 func TestAckFct(t *testing.T) {
@@ -78,7 +73,6 @@ func TestAckFct(t *testing.T) {
 	defer ts.Close()
 
 	url := ts.URL[7:]
-	//fmt.Println("exposed URL:",url)
 	SetFactomdServer(url)
 
 	//tx := "02015a43cc6d37010100afd7c200031cce24bcc43b596af105167de2c03603c20ada3314a7cfb47befcad4883e6fafd6e4200ceb0a10711f9fb61bc983cb4761817e4b3ff6c31ab0d5da6afb03625e368859013b6a27bcceb6a42d62a3a8d02a6f0d73653215771de243a63ac048a18b59da29dcc6c027a9d321129381d2d8badb3ccd591fd8a515166ca09a8a72cbf3837916c8e4789b0452dffc708ccde097163a86fd0ac23b11416cebb7ccebcdadbba908"
@@ -86,18 +80,19 @@ func TestAckFct(t *testing.T) {
 	tx := "dummy1"
 	txid := "dummy2"
 
-	txStatus, _ := FactoidACK(txid, tx)
-	//fmt.Println(txStatus)
+	txStatus, err := FactoidACK(txid, tx)
+	if err != nil {
+		t.Error(err)
+	}
 
 	expectedfctString := `TxID: f1d9919829fa71ce18caf1bd8659cce8a06c0026d3f3fffc61054ebb25ebeaa0
 Status: DBlockConfirmed
 Date: 2015-09-01 15:07:01
 `
 	if txStatus.String() != expectedfctString {
-		fmt.Println(txStatus.String())
-		fmt.Println(expectedfctString)
-		t.Fail()
+		t.Errorf("expected:%s\nrecieved:%s", expectedfctString, txStatus.String())
 	}
+	t.Log(txStatus.String())
 }
 
 func TestAckEntry(t *testing.T) {
@@ -134,8 +129,10 @@ func TestAckEntry(t *testing.T) {
 	tx := "dummy1"
 	txid := "dummy2"
 
-	entryStatus, _ := EntryACK(txid, tx)
-	//fmt.Println(entryStatus)
+	entryStatus, err := EntryACK(txid, tx)
+	if err != nil {
+		t.Error(err)
+	}
 
 	expectedEntryString := `EntryHash: 9228b4b080b3cf94cceea866b74c48319f2093f56bd5a63465288e9a71437ee8
 Status: DBlockConfirmed
@@ -147,8 +144,7 @@ Status: DBlockConfirmed
 Date: 2015-12-07 22:10:01
 `
 	if entryStatus.String() != expectedEntryString {
-		fmt.Println(entryStatus.String())
-		fmt.Println(expectedEntryString)
-		t.Fail()
+		t.Errorf("expected:%s\nrecieved:%s", expectedEntryString, entryStatus.String())
 	}
+	t.Log(entryStatus.String())
 }
