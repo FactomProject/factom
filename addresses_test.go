@@ -285,14 +285,14 @@ func TestParseAndValidateMnemonic(t *testing.T) {
 	}
 
 	for i, m := range goodms {
-		_, err := ParseAndValidateMnemonic(m)
+		_, err := ParseMnemonic(m)
 		if err != nil {
 			t.Errorf("Error for mnemonic %v - `%v` - %s", i, m, err)
 		}
 	}
 
 	for i, m := range badms {
-		_, err := ParseAndValidateMnemonic(m)
+		_, err := ParseMnemonic(m)
 		if err == nil {
 			t.Errorf("no error for bad mnumonic %v - %v", i, m)
 		}
