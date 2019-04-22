@@ -9,6 +9,9 @@ import (
 	"fmt"
 )
 
+// TransactionData is metadata about a given Transaction, including data about
+// the Transaction Status (i.e. weather the Transaction has been written to the
+// Blockchain).
 type TransactionData struct {
 	// TransactionDate in Unix time
 	TransactionDate int64 `json:"transactiondate,omitempty"`
@@ -24,6 +27,7 @@ type TransactionData struct {
 	Status string `json:"status"`
 }
 
+// FactoidTxStatus is the metadata about a Factoid Transaction.
 type FactoidTxStatus struct {
 	TxID string `json:"txid"`
 	TransactionData
@@ -38,6 +42,7 @@ func (f *FactoidTxStatus) String() string {
 	return s
 }
 
+// EntryStatus is the metadata about an Entry Commit Transaction.
 type EntryStatus struct {
 	CommitTxID string `json:"committxid"`
 	EntryHash  string `json:"entryhash"`
