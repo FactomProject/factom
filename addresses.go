@@ -6,7 +6,7 @@ package factom
 
 import (
 	"bytes"
-	"fmt"
+	"errors"
 	"strings"
 
 	"github.com/FactomProject/btcutil/base58"
@@ -14,6 +14,15 @@ import (
 	"github.com/FactomProject/go-bip32"
 	"github.com/FactomProject/go-bip39"
 	"github.com/FactomProject/go-bip44"
+)
+
+// Common Address errors
+var (
+	ErrInvalidAddress    = errors.New("invalid address")
+	ErrInvalidFactoidSec = errors.New("invalid Factoid secret address")
+	ErrInvalidECSec      = errors.New("invalid Entry Credit secret address")
+	ErrSecKeyLength      = errors.New("secret key portion must be 32 bytes")
+	ErrMnemonicLength    = errors.New("mnemonic must be 12 words")
 )
 
 type addressStringType byte
@@ -34,10 +43,10 @@ const (
 )
 
 var (
-	ecPubPrefix = []byte{0x59, 0x2a}
-	ecSecPrefix = []byte{0x5d, 0xb6}
 	fcPubPrefix = []byte{0x5f, 0xb1}
 	fcSecPrefix = []byte{0x64, 0x78}
+	ecPubPrefix = []byte{0x59, 0x2a}
+	ecSecPrefix = []byte{0x5d, 0xb6}
 )
 
 func AddressStringType(s string) addressStringType {
@@ -119,7 +128,7 @@ func (a *ECAddress) UnmarshalBinary(data []byte) error {
 
 func (a *ECAddress) UnmarshalBinaryData(data []byte) ([]byte, error) {
 	if len(data) < 32 {
-		return nil, fmt.Errorf("secret key portion must be 32 bytes")
+		return nil, ErrSecKeyLength
 	}
 
 	if a.Sec == nil {
@@ -139,13 +148,13 @@ func (a *ECAddress) MarshalBinary() ([]byte, error) {
 // GetECAddress takes a private address string (Es...) and returns an ECAddress.
 func GetECAddress(s string) (*ECAddress, error) {
 	if !IsValidAddress(s) {
-		return nil, fmt.Errorf("Invalid Address")
+		return nil, ErrInvalidAddress
 	}
 
 	p := base58.Decode(s)
 
 	if !bytes.Equal(p[:PrefixLength], ecSecPrefix) {
-		return nil, fmt.Errorf("Invalid Entry Credit Private Address")
+		return nil, ErrInvalidECSec
 	}
 
 	return MakeECAddress(p[PrefixLength:BodyLength])
@@ -153,7 +162,7 @@ func GetECAddress(s string) (*ECAddress, error) {
 
 func MakeECAddress(sec []byte) (*ECAddress, error) {
 	if len(sec) != 32 {
-		return nil, fmt.Errorf("secret key portion must be 32 bytes")
+		return nil, ErrSecKeyLength
 	}
 
 	a := NewECAddress()
@@ -250,7 +259,7 @@ func (t *FactoidAddress) UnmarshalBinary(data []byte) error {
 
 func (t *FactoidAddress) UnmarshalBinaryData(data []byte) ([]byte, error) {
 	if len(data) < 32 {
-		return nil, fmt.Errorf("secret key portion must be 32 bytes")
+		return nil, ErrSecKeyLength
 	}
 
 	if t.Sec == nil {
@@ -273,13 +282,13 @@ func (t *FactoidAddress) MarshalBinary() ([]byte, error) {
 // FactoidAddress.
 func GetFactoidAddress(s string) (*FactoidAddress, error) {
 	if !IsValidAddress(s) {
-		return nil, fmt.Errorf("Invalid Address")
+		return nil, ErrInvalidAddress
 	}
 
 	p := base58.Decode(s)
 
 	if !bytes.Equal(p[:PrefixLength], fcSecPrefix) {
-		return nil, fmt.Errorf("Invalid Factoid Private Address")
+		return nil, ErrInvalidFactoidSec
 	}
 
 	return MakeFactoidAddress(p[PrefixLength:BodyLength])
@@ -287,7 +296,7 @@ func GetFactoidAddress(s string) (*FactoidAddress, error) {
 
 func MakeFactoidAddress(sec []byte) (*FactoidAddress, error) {
 	if len(sec) != 32 {
-		return nil, fmt.Errorf("secret key portion must be 32 bytes")
+		return nil, ErrSecKeyLength
 	}
 
 	a := NewFactoidAddress()
@@ -301,7 +310,7 @@ func MakeFactoidAddress(sec []byte) (*FactoidAddress, error) {
 
 func ParseAndValidateMnemonic(mnemonic string) (string, error) {
 	if l := len(strings.Fields(mnemonic)); l != 12 {
-		return "", fmt.Errorf("Incorrect mnemonic length. Expecitng 12 words, found %d", l)
+		return "", ErrMnemonicLength
 	}
 
 	mnemonic = strings.ToLower(strings.TrimSpace(mnemonic))
