@@ -16,6 +16,9 @@ var (
 	ErrChainPending = errors.New("Chain not yet included in a Directory Block")
 )
 
+// A Chain is a blockchain datastructure in Factom. The Chain is defined by its
+// First Entry from wich the ChainID is derived. Every Entry in the Chain will
+// share the ChainID and may be found searching the Factom Entry Blocks.
 type Chain struct {
 	//chainid was originally required as a paramater passed with the json.
 	//it is now overwritten with the chainid derived from the extid elements
@@ -23,6 +26,7 @@ type Chain struct {
 	FirstEntry *Entry `json:"firstentry"`
 }
 
+// NewChain creates a new Factom Chain from an Entry.
 func NewChain(e *Entry) *Chain {
 	c := new(Chain)
 	c.FirstEntry = e
@@ -39,18 +43,22 @@ func NewChain(e *Entry) *Chain {
 	return c
 }
 
+// NewChainFromBytes creates a new Factom Chain from byte data used to construct an Entry.
 func NewChainFromBytes(content []byte, extids ...[]byte) *Chain {
 	e := NewEntryFromBytes(nil, content, extids...)
 	c := NewChain(e)
 	return c
 }
 
+// NewChainFromStrings creates a new Factom Chain from strings used to construct an Entry.
 func NewChainFromStrings(content string, extids ...string) *Chain {
 	e := NewEntryFromStrings("", content, extids...)
 	c := NewChain(e)
 	return c
 }
 
+// ChainExists returns true if a Chain with the given chainid exists within the
+// Factom Blockchain.
 func ChainExists(chainid string) bool {
 	if _, _, err := GetChainHead(chainid); err == nil {
 		// no error means we found the Chain
@@ -153,6 +161,8 @@ func CommitChain(c *Chain, ec *ECAddress) (string, error) {
 	return r.TxID, nil
 }
 
+// RevealChain sends the Chain data to the factom network to create a chain that
+// has been commited.
 func RevealChain(c *Chain) (string, error) {
 	type revealResponse struct {
 		Message string `json:"message"`
@@ -179,6 +189,8 @@ func RevealChain(c *Chain) (string, error) {
 	return r.Entry, nil
 }
 
+// GetChainHead returns the hash of the most recent Entry made into a given
+// Factom Chain.
 func GetChainHead(chainid string) (string, bool, error) {
 	params := chainIDRequest{ChainID: chainid}
 	req := NewJSON2Request("chain-head", APICounter(), params)
@@ -201,6 +213,7 @@ func GetChainHead(chainid string) (string, bool, error) {
 	return head.ChainHead, head.ChainInProcessList, nil
 }
 
+// GetAllChainEntries returns a list of all Factom Entries for a given Chain.
 func GetAllChainEntries(chainid string) ([]*Entry, error) {
 	es := make([]*Entry, 0)
 
@@ -230,6 +243,7 @@ func GetAllChainEntries(chainid string) ([]*Entry, error) {
 	return es, nil
 }
 
+// GetFirstEntry returns the first Entry used to create the given Factom Chain.
 func GetFirstEntry(chainid string) (*Entry, error) {
 	e := new(Entry)
 
