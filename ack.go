@@ -9,7 +9,7 @@ import (
 	"fmt"
 )
 
-type GeneralTransactionData struct {
+type TransactionData struct {
 	// TransactionDate in Unix time
 	TransactionDate int64 `json:"transactiondate,omitempty"`
 	//TransactionDateString ISO8601 time
@@ -18,8 +18,7 @@ type GeneralTransactionData struct {
 	BlockDate int64 `json:"blockdate,omitempty"`
 	//ISO8601 time
 	BlockDateString string `json:"blockdatestring,omitempty"`
-
-	Malleated struct {
+	Malleated       struct {
 		MalleatedTxIDs []string `json:"malleatedtxids"`
 	} `json:"malleated,omitempty"`
 	Status string `json:"status"`
@@ -27,7 +26,7 @@ type GeneralTransactionData struct {
 
 type FactoidTxStatus struct {
 	TxID string `json:"txid"`
-	GeneralTransactionData
+	TransactionData
 }
 
 func (f *FactoidTxStatus) String() string {
@@ -43,8 +42,8 @@ type EntryStatus struct {
 	CommitTxID string `json:"committxid"`
 	EntryHash  string `json:"entryhash"`
 
-	CommitData GeneralTransactionData `json:"commitdata"`
-	EntryData  GeneralTransactionData `json:"entrydata"`
+	CommitData TransactionData `json:"commitdata"`
+	EntryData  TransactionData `json:"entrydata"`
 
 	ReserveTransactions          []ReserveInfo `json:"reserveinfo,omitempty"`
 	ConflictingRevealEntryHashes []string      `json:"conflictingrevealentryhashes,omitempty"`
@@ -69,7 +68,7 @@ type ReserveInfo struct {
 	Timeout int64  `json:"timeout"` //Unix time
 }
 
-// EntryCommitACK takes the txid of the commit and searches for the entry/chain commit
+// EntryCommitACK searches for an entry/chain commit with a given transaction ID.
 func EntryCommitACK(txID, fullTransaction string) (*EntryStatus, error) {
 	params := ackRequest{Hash: txID, ChainID: "c", FullTransaction: fullTransaction}
 	req := NewJSON2Request("ack", APICounter(), params)
