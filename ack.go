@@ -73,6 +73,25 @@ func (e *EntryStatus) String() string {
 	return s
 }
 
+func FactoidACK(txID, fullTransaction string) (*FactoidTxStatus, error) {
+	params := ackRequest{Hash: txID, ChainID: "f", FullTransaction: fullTransaction}
+	req := NewJSON2Request("ack", APICounter(), params)
+	resp, err := factomdRequest(req)
+	if err != nil {
+		return nil, err
+	}
+	if resp.Error != nil {
+		return nil, resp.Error
+	}
+
+	eb := new(FactoidTxStatus)
+	if err := json.Unmarshal(resp.JSONResult(), eb); err != nil {
+		return nil, err
+	}
+
+	return eb, nil
+}
+
 // EntryCommitACK searches for an entry/chain commit with a given transaction ID.
 func EntryCommitACK(txID, fullTransaction string) (*EntryStatus, error) {
 	params := ackRequest{Hash: txID, ChainID: "c", FullTransaction: fullTransaction}
@@ -86,25 +105,6 @@ func EntryCommitACK(txID, fullTransaction string) (*EntryStatus, error) {
 	}
 
 	eb := new(EntryStatus)
-	if err := json.Unmarshal(resp.JSONResult(), eb); err != nil {
-		return nil, err
-	}
-
-	return eb, nil
-}
-
-func FactoidACK(txID, fullTransaction string) (*FactoidTxStatus, error) {
-	params := ackRequest{Hash: txID, ChainID: "f", FullTransaction: fullTransaction}
-	req := NewJSON2Request("ack", APICounter(), params)
-	resp, err := factomdRequest(req)
-	if err != nil {
-		return nil, err
-	}
-	if resp.Error != nil {
-		return nil, resp.Error
-	}
-
-	eb := new(FactoidTxStatus)
 	if err := json.Unmarshal(resp.JSONResult(), eb); err != nil {
 		return nil, err
 	}
