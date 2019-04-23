@@ -80,7 +80,7 @@ func (tx *Transaction) String() (s string) {
 
 // MarshalJSON converts the Transaction into a JSON object
 func (tx *Transaction) MarshalJSON() ([]byte, error) {
-	tmp := &struct {
+	txReq := &struct {
 		BlockHeight    uint32          `json:"blockheight,omitempty"`
 		FeesPaid       uint64          `json:"feespaid,omitempty"`
 		FeesRequired   uint64          `json:"feesrequired,omitempty"`
@@ -110,12 +110,12 @@ func (tx *Transaction) MarshalJSON() ([]byte, error) {
 		TxID:           tx.TxID,
 	}
 
-	return json.Marshal(tmp)
+	return json.Marshal(txReq)
 }
 
 // UnmarshalJSON converts the JSON Transaction back into a Transaction
 func (tx *Transaction) UnmarshalJSON(data []byte) error {
-	type jsontx struct {
+	txResp := new(struct {
 		BlockHeight    uint32          `json:"blockheight,omitempty"`
 		FeesPaid       uint64          `json:"feespaid,omitempty"`
 		FeesRequired   uint64          `json:"feesrequired,omitempty"`
@@ -129,26 +129,25 @@ func (tx *Transaction) UnmarshalJSON(data []byte) error {
 		Outputs        []*TransAddress `json:"outputs"`
 		ECOutputs      []*TransAddress `json:"ecoutputs"`
 		TxID           string          `json:"txid,omitempty"`
-	}
-	tmp := new(jsontx)
+	})
 
-	if err := json.Unmarshal(data, tmp); err != nil {
+	if err := json.Unmarshal(data, txResp); err != nil {
 		return err
 	}
 
-	tx.BlockHeight = tmp.BlockHeight
-	tx.FeesPaid = tmp.FeesPaid
-	tx.FeesRequired = tmp.FeesRequired
-	tx.IsSigned = tmp.IsSigned
-	tx.Name = tmp.Name
-	tx.Timestamp = time.Unix(tmp.Timestamp, 0)
-	tx.TotalECOutputs = tmp.TotalECOutputs
-	tx.TotalInputs = tmp.TotalInputs
-	tx.TotalOutputs = tmp.TotalOutputs
-	tx.Inputs = tmp.Inputs
-	tx.Outputs = tmp.Outputs
-	tx.ECOutputs = tmp.ECOutputs
-	tx.TxID = tmp.TxID
+	tx.BlockHeight = txResp.BlockHeight
+	tx.FeesPaid = txResp.FeesPaid
+	tx.FeesRequired = txResp.FeesRequired
+	tx.IsSigned = txResp.IsSigned
+	tx.Name = txResp.Name
+	tx.Timestamp = time.Unix(txResp.Timestamp, 0)
+	tx.TotalECOutputs = txResp.TotalECOutputs
+	tx.TotalInputs = txResp.TotalInputs
+	tx.TotalOutputs = txResp.TotalOutputs
+	tx.Inputs = txResp.Inputs
+	tx.Outputs = txResp.Outputs
+	tx.ECOutputs = txResp.ECOutputs
+	tx.TxID = txResp.TxID
 
 	return nil
 }
@@ -189,10 +188,6 @@ func DeleteTransaction(name string) error {
 }
 
 func ListTransactionsAll() ([]*Transaction, error) {
-	type multiTransactionResponse struct {
-		Transactions []*Transaction `json:"transactions"`
-	}
-
 	req := NewJSON2Request("transactions", APICounter(), nil)
 	resp, err := walletRequest(req)
 	if err != nil {
@@ -202,7 +197,9 @@ func ListTransactionsAll() ([]*Transaction, error) {
 		return nil, resp.Error
 	}
 
-	list := new(multiTransactionResponse)
+	list := new(struct {
+		Transactions []*Transaction `json:"transactions"`
+	})
 	if err := json.Unmarshal(resp.JSONResult(), list); err != nil {
 		return nil, err
 	}
@@ -211,15 +208,11 @@ func ListTransactionsAll() ([]*Transaction, error) {
 }
 
 func ListTransactionsAddress(addr string) ([]*Transaction, error) {
-	type multiTransactionResponse struct {
-		Transactions []*Transaction `json:"transactions"`
-	}
-
-	type txReq struct {
+	params := &struct {
 		Address string `json:"address"`
+	}{
+		Address: addr,
 	}
-
-	params := txReq{Address: addr}
 
 	req := NewJSON2Request("transactions", APICounter(), params)
 	resp, err := walletRequest(req)
@@ -230,7 +223,9 @@ func ListTransactionsAddress(addr string) ([]*Transaction, error) {
 		return nil, resp.Error
 	}
 
-	list := new(multiTransactionResponse)
+	list := new(struct {
+		Transactions []*Transaction `json:"transactions"`
+	})
 	if err := json.Unmarshal(resp.JSONResult(), list); err != nil {
 		return nil, err
 	}
@@ -239,15 +234,11 @@ func ListTransactionsAddress(addr string) ([]*Transaction, error) {
 }
 
 func ListTransactionsID(id string) ([]*Transaction, error) {
-	type multiTransactionResponse struct {
-		Transactions []*Transaction `json:"transactions"`
-	}
-
-	type txReq struct {
+	params := &struct {
 		TxID string `json:"txid"`
+	}{
+		TxID: id,
 	}
-
-	params := txReq{TxID: id}
 
 	req := NewJSON2Request("transactions", APICounter(), params)
 	resp, err := walletRequest(req)
@@ -258,7 +249,9 @@ func ListTransactionsID(id string) ([]*Transaction, error) {
 		return nil, resp.Error
 	}
 
-	list := new(multiTransactionResponse)
+	list := new(struct {
+		Transactions []*Transaction `json:"transactions"`
+	})
 	if err := json.Unmarshal(resp.JSONResult(), list); err != nil {
 		return nil, err
 	}
@@ -267,18 +260,12 @@ func ListTransactionsID(id string) ([]*Transaction, error) {
 }
 
 func ListTransactionsRange(start, end int) ([]*Transaction, error) {
-	type multiTransactionResponse struct {
-		Transactions []*Transaction `json:"transactions"`
-	}
-
-	type txReq struct {
+	params := new(struct {
 		Range struct {
 			Start int `json:"start"`
 			End   int `json:"end"`
 		} `json:"range"`
-	}
-
-	params := new(txReq)
+	})
 	params.Range.Start = start
 	params.Range.End = end
 
@@ -291,7 +278,9 @@ func ListTransactionsRange(start, end int) ([]*Transaction, error) {
 		return nil, resp.Error
 	}
 
-	list := new(multiTransactionResponse)
+	list := new(struct {
+		Transactions []*Transaction `json:"transactions"`
+	})
 	if err := json.Unmarshal(resp.JSONResult(), list); err != nil {
 		return nil, err
 	}
@@ -300,10 +289,6 @@ func ListTransactionsRange(start, end int) ([]*Transaction, error) {
 }
 
 func ListTransactionsTmp() ([]*Transaction, error) {
-	type multiTransactionResponse struct {
-		Transactions []*Transaction `json:"transactions"`
-	}
-
 	req := NewJSON2Request("tmp-transactions", APICounter(), nil)
 	resp, err := walletRequest(req)
 	if err != nil {
@@ -313,7 +298,9 @@ func ListTransactionsTmp() ([]*Transaction, error) {
 		return nil, resp.Error
 	}
 
-	txs := new(multiTransactionResponse)
+	txs := new(struct {
+		Transactions []*Transaction `json:"transactions"`
+	})
 	if err := json.Unmarshal(resp.JSONResult(), txs); err != nil {
 		return nil, err
 	}
@@ -332,7 +319,9 @@ func AddTransactionInput(
 	params := transactionValueRequest{
 		Name:    name,
 		Address: address,
-		Amount:  amount}
+		Amount:  amount,
+	}
+
 	req := NewJSON2Request("add-input", APICounter(), params)
 
 	resp, err := walletRequest(req)
@@ -362,7 +351,9 @@ func AddTransactionOutput(
 	params := transactionValueRequest{
 		Name:    name,
 		Address: address,
-		Amount:  amount}
+		Amount:  amount,
+	}
+
 	req := NewJSON2Request("add-output", APICounter(), params)
 
 	resp, err := walletRequest(req)
@@ -380,11 +371,7 @@ func AddTransactionOutput(
 	return tx, nil
 }
 
-func AddTransactionECOutput(
-	name,
-	address string,
-	amount uint64,
-) (*Transaction, error) {
+func AddTransactionECOutput(name, address string, amount uint64) (*Transaction, error) {
 	if AddressStringType(address) != ECPub {
 		return nil, fmt.Errorf("%s is not an Entry Credit address", address)
 	}
@@ -392,7 +379,9 @@ func AddTransactionECOutput(
 	params := transactionValueRequest{
 		Name:    name,
 		Address: address,
-		Amount:  amount}
+		Amount:  amount,
+	}
+
 	req := NewJSON2Request("add-ec-output", APICounter(), params)
 
 	resp, err := walletRequest(req)
@@ -417,7 +406,9 @@ func AddTransactionFee(name, address string) (*Transaction, error) {
 
 	params := transactionValueRequest{
 		Name:    name,
-		Address: address}
+		Address: address,
+	}
+
 	req := NewJSON2Request("add-fee", APICounter(), params)
 
 	resp, err := walletRequest(req)
@@ -438,7 +429,9 @@ func AddTransactionFee(name, address string) (*Transaction, error) {
 func SubTransactionFee(name, address string) (*Transaction, error) {
 	params := transactionValueRequest{
 		Name:    name,
-		Address: address}
+		Address: address,
+	}
+
 	req := NewJSON2Request("sub-fee", APICounter(), params)
 
 	resp, err := walletRequest(req)
@@ -457,8 +450,11 @@ func SubTransactionFee(name, address string) (*Transaction, error) {
 }
 
 func SignTransaction(name string, force bool) (*Transaction, error) {
-	params := transactionRequest{Name: name}
-	params.Force = force
+	params := transactionRequest{
+		Name:  name,
+		Force: force,
+	}
+
 	req := NewJSON2Request("sign-transaction", APICounter(), params)
 
 	resp, err := walletRequest(req)
@@ -635,11 +631,12 @@ func BuyExactEC(from, to string, amount uint64, force bool) (*Transaction, error
 // network. (See ComposeTransaction for more details on how to build the binary
 // transaction for the network).
 func FactoidSubmit(tx string) (message, txid string, err error) {
-	type txreq struct {
+	params := &struct {
 		Transaction string
+	}{
+		Transaction: tx,
 	}
 
-	params := txreq{Transaction: tx}
 	req := NewJSON2Request("factoid-submit", APICounter(), params)
 	resp, err := factomdRequest(req)
 	if err != nil {
