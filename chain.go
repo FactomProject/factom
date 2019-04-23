@@ -162,7 +162,7 @@ func CommitChain(c *Chain, ec *ECAddress) (string, error) {
 }
 
 // RevealChain sends the Chain data to the factom network to create a chain that
-// has been commited.
+// has previously been commited.
 func RevealChain(c *Chain) (string, error) {
 	type revealResponse struct {
 		Message string `json:"message"`
