@@ -9,6 +9,9 @@ import (
 	"fmt"
 )
 
+// HeightsResponse is a list of the various current heights of blocks from
+// factomd. These show the current heights of blocks on the network as well as
+// the heights of the blocks saved in the local factomd database.
 type HeightsResponse struct {
 	DirectoryBlockHeight int64 `json:"directoryblockheight"`
 	LeaderHeight         int64 `json:"leaderheight"`
@@ -27,6 +30,7 @@ func (d *HeightsResponse) String() string {
 	return s
 }
 
+// GetHeights requests the list of heights from the factomd API.
 func GetHeights() (*HeightsResponse, error) {
 	req := NewJSON2Request("heights", APICounter(), nil)
 	resp, err := factomdRequest(req)
