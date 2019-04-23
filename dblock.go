@@ -100,7 +100,7 @@ func GetDBlock(keymr string) (dblock *DBlock, raw []byte, err error) {
 	return GetDBlockByHeight(db.Header.SequenceNumber)
 }
 
-// GetDBlock requests a Directory Block by its block height from the factomd
+// GetDBlockByHeight requests a Directory Block by its block height from the factomd
 // API.
 func GetDBlockByHeight(height int64) (dblock *DBlock, raw []byte, err error) {
 	params := heightRequest{Height: height}
