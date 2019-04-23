@@ -16,8 +16,10 @@ var (
 	ErrAIDUnknown = errors.New("unknown ABlock Entry type")
 )
 
+// AdminID defines the type of an Admin Block Entry
 type AdminID byte
 
+// Available AdminID types
 const (
 	AIDMinuteNumber             AdminID = iota // 0
 	AIDDBSignature                             // 1
@@ -73,8 +75,9 @@ func (id AdminID) String() string {
 	}
 }
 
-// ABlock (Administrative Block) records metadata about the Factom Network and
-// the consensus process into the Factom Blockchain.
+// ABlock is an Administrative Block that records metadata about the Factom
+// Network and the consensus process for writing blocks into the Factom
+// Blockchain.
 type ABlock struct {
 	PrevBackreferenceHash string    `json:"prevbackrefhash"`
 	DBHeight              int64     `json:"dbheight"`
