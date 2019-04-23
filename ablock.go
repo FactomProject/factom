@@ -12,6 +12,10 @@ import (
 	"regexp"
 )
 
+var (
+	ErrAIDUnknown = errors.New("unknown ABlock Entry type")
+)
+
 type AdminID byte
 
 const (
@@ -32,9 +36,42 @@ const (
 	AIDAddAuthorityEfficiency                  // 14
 )
 
-var (
-	ErrAIDUnknown = errors.New("unknown ABlock Entry type")
-)
+func (id AdminID) String() string {
+	switch id {
+	case AIDMinuteNumber:
+		return "MinuteNumber"
+	case AIDDBSignature:
+		return "DBSignature"
+	case AIDRevealHash:
+		return "RevealHash"
+	case AIDAddHash:
+		return "AddHash"
+	case AIDIncreaseServerCount:
+		return "IncreaseServerCount"
+	case AIDAddFederatedServer:
+		return "AddFederatedServer"
+	case AIDAddAuditServer:
+		return "AddAuditServer"
+	case AIDRemoveFederatedServer:
+		return "RemoveFederatedServer"
+	case AIDAddFederatedServerKey:
+		return "AddFederatedServerKey"
+	case AIDAddFederatedServerBTCKey:
+		return "AddFederatedServerBTCKey"
+	case AIDServerFault:
+		return "ServerFault"
+	case AIDCoinbaseDescriptor:
+		return "CoinbaseDescriptor"
+	case AIDCoinbaseDescriptorCancel:
+		return "CoinbaseDescriptorCancel"
+	case AIDAddAuthorityAddress:
+		return "AddAuthorityAddress"
+	case AIDAddAuthorityEfficiency:
+		return "AddAuthorityEfficiency"
+	default:
+		return "AIDUndefined"
+	}
+}
 
 type ABlock struct {
 	PrevBackreferenceHash string    `json:"prevbackrefhash"`
