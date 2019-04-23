@@ -8,43 +8,54 @@ import (
 	"encoding/json"
 )
 
-// TODO: maybe properties should return a more useful datastructure?
-func GetProperties() (string, string, string, string, string, string, string, string) {
-	type propertiesResponse struct {
-		FactomdVersion       string `json:"factomdversion"`
-		FactomdVersionErr    string `json:"factomdversionerr"`
-		FactomdAPIVersion    string `json:"factomdapiversion"`
-		FactomdAPIVersionErr string `json:"factomdapiversionerr"`
-		WalletVersion        string `json:"walletversion"`
-		WalletVersionErr     string `json:"walletversionerr"`
-		WalletAPIVersion     string `json:"walletapiversion"`
-		WalletAPIVersionErr  string `json:"walletapiversionerr"`
-	}
+// PropertiesResponse represents properties of the running factomd and factom
+// wallet.
+type PropertiesResponse struct {
+	FactomdVersion       string `json:"factomdversion"`
+	FactomdVersionErr    string `json:"factomdversionerr"`
+	FactomdAPIVersion    string `json:"factomdapiversion"`
+	FactomdAPIVersionErr string `json:"factomdapiversionerr"`
+	WalletVersion        string `json:"walletversion"`
+	WalletVersionErr     string `json:"walletversionerr"`
+	WalletAPIVersion     string `json:"walletapiversion"`
+	WalletAPIVersionErr  string `json:"walletapiversionerr"`
+}
 
+// GetProperties requests various properties of the factomd and factom wallet
+// software and API versions.
+func GetProperties() (*PropertiesResponse, error) {
 	// get properties from the factom API and the wallet API
-	props := new(propertiesResponse)
-	wprops := new(propertiesResponse)
+	props := new(PropertiesResponse)
+	// wprops := new(PropertiesResponse)
 	req := NewJSON2Request("properties", APICounter(), nil)
 	wreq := NewJSON2Request("properties", APICounter(), nil)
 
 	resp, err := factomdRequest(req)
 	if err != nil {
 		props.FactomdVersionErr = err.Error()
+		return props, err
 	} else if resp.Error != nil {
 		props.FactomdVersionErr = resp.Error.Error()
 	} else if jerr := json.Unmarshal(resp.JSONResult(), props); jerr != nil {
 		props.FactomdVersionErr = jerr.Error()
+		return props, jerr
 	}
 
 	wresp, werr := walletRequest(wreq)
-
+	wprops := new(PropertiesResponse)
 	if werr != nil {
-		wprops.WalletVersionErr = werr.Error()
+		props.WalletVersionErr = werr.Error()
+		return props, werr
 	} else if wresp.Error != nil {
-		wprops.WalletVersionErr = wresp.Error.Error()
+		props.WalletVersionErr = wresp.Error.Error()
 	} else if jwerr := json.Unmarshal(wresp.JSONResult(), wprops); jwerr != nil {
-		wprops.WalletVersionErr = jwerr.Error()
+		props.WalletVersionErr = jwerr.Error()
+		return props, jwerr
 	}
+	props.WalletVersion = wprops.WalletVersion
+	props.WalletVersionErr = wprops.WalletVersionErr
+	props.WalletAPIVersion = wprops.WalletAPIVersion
+	props.WalletVersionErr = wprops.WalletAPIVersionErr
 
-	return props.FactomdVersion, props.FactomdVersionErr, props.FactomdAPIVersion, props.FactomdAPIVersionErr, wprops.WalletVersion, wprops.WalletVersionErr, wprops.WalletAPIVersion, wprops.WalletAPIVersionErr
+	return props, nil
 }
