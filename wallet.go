@@ -41,6 +41,8 @@ func BackupWallet() (string, error) {
 	return s, nil
 }
 
+// GenerateFactoidAddress creates a new Factoid Address and stores it in the
+// Factom Wallet.
 func GenerateFactoidAddress() (*FactoidAddress, error) {
 	req := NewJSON2Request("generate-factoid-address", APICounter(), nil)
 	resp, err := walletRequest(req)
@@ -63,6 +65,8 @@ func GenerateFactoidAddress() (*FactoidAddress, error) {
 	return f, nil
 }
 
+// GenerateECAddress creates a new Entry Credit Address and stores it in the
+// Factom Wallet.
 func GenerateECAddress() (*ECAddress, error) {
 	req := NewJSON2Request("generate-ec-address", APICounter(), nil)
 	resp, err := walletRequest(req)
@@ -85,6 +89,8 @@ func GenerateECAddress() (*ECAddress, error) {
 	return e, nil
 }
 
+// ImportAddresses takes a number of Factoid and Entry Creidit secure keys and
+// stores the Facotid and Entry Credit addresses in the Factom Wallet.
 func ImportAddresses(addrs ...string) (
 	[]*FactoidAddress,
 	[]*ECAddress,
@@ -132,6 +138,12 @@ func ImportAddresses(addrs ...string) (
 	return fs, es, nil
 }
 
+// ImportKoinify creates a Factoid Address from a secret 12 word koinify
+// mnumonic.
+//
+// This functionality is used only to recover addresses that were funded by the
+// Factom Genisis block to pay participants in the initial Factom network crowd
+// funding.
 func ImportKoinify(mnemonic string) (*FactoidAddress, error) {
 	params := new(importKoinifyRequest)
 	params.Words = mnemonic
@@ -157,6 +169,8 @@ func ImportKoinify(mnemonic string) (*FactoidAddress, error) {
 	return f, nil
 }
 
+// RemoveAddress removes an address from the Factom Wallet database.
+// (Be careful!)
 func RemoveAddress(address string) error {
 	params := new(addressRequest)
 	params.Address = address
@@ -173,6 +187,7 @@ func RemoveAddress(address string) error {
 	return nil
 }
 
+// FetchAddresses requests all of the addresses in the Factom Wallet database.
 func FetchAddresses() ([]*FactoidAddress, []*ECAddress, error) {
 	req := NewJSON2Request("all-addresses", APICounter(), nil)
 	resp, err := walletRequest(req)
@@ -213,6 +228,7 @@ func FetchAddresses() ([]*FactoidAddress, []*ECAddress, error) {
 	return fs, es, nil
 }
 
+// FetchECAddress requests an Entry Credit address from the Factom Wallet.
 func FetchECAddress(ecpub string) (*ECAddress, error) {
 	if AddressStringType(ecpub) != ECPub {
 		return nil, fmt.Errorf(
@@ -238,6 +254,7 @@ func FetchECAddress(ecpub string) (*ECAddress, error) {
 	return GetECAddress(r.Secret)
 }
 
+// FetchFactoidAddress requests a Factom address from the Factom Wallet.
 func FetchFactoidAddress(fctpub string) (*FactoidAddress, error) {
 	if AddressStringType(fctpub) != FactoidPub {
 		return nil, fmt.Errorf("%s is not a Factoid Address", fctpub)
@@ -262,6 +279,8 @@ func FetchFactoidAddress(fctpub string) (*FactoidAddress, error) {
 	return GetFactoidAddress(r.Secret)
 }
 
+// GetWalletHeight requests the current block heights known to the Factom
+// Wallet.
 func GetWalletHeight() (uint32, error) {
 	req := NewJSON2Request("get-height", APICounter(), nil)
 	resp, err := walletRequest(req)
@@ -306,6 +325,13 @@ type composeEntryResponse struct {
 	Reveal *JSON2Request `json:"reveal"`
 }
 
+// WalletComposeChainCommitReveal composes commit and reveal json objects that
+// may be used to make API calls to the factomd API to create a new Factom
+// Chain.
+//
+// WalletComposeChainCommitReveal may be used by an offline wallet to create the
+// calls needed to create new chains while keeping addresses secure in an
+// offline wallet.
 func WalletComposeChainCommitReveal(chain *Chain, ecPub string, force bool) (*JSON2Request, *JSON2Request, error) {
 	params := new(composeChainRequest)
 	params.Chain = *chain
@@ -329,6 +355,13 @@ func WalletComposeChainCommitReveal(chain *Chain, ecPub string, force bool) (*JS
 	return r.Commit, r.Reveal, nil
 }
 
+// WalletComposeEntryCommitReveal composes commit and reveal json objects that
+// may be used to make API calls to the factomd API to create a new Factom
+// Entry.
+//
+// WalletComposeEntryCommitReveal may be used by an offline wallet to create the
+// calls needed to create new entries while keeping addresses secure in an
+// offline wallet.
 func WalletComposeEntryCommitReveal(entry *Entry, ecPub string, force bool) (*JSON2Request, *JSON2Request, error) {
 	params := new(composeEntryRequest)
 	params.Entry = *entry
