@@ -131,8 +131,11 @@ func ImportAddresses(addrs ...string) (
 }
 
 func ImportKoinify(mnemonic string) (*FactoidAddress, error) {
-	params := new(importKoinifyRequest)
-	params.Words = mnemonic
+	params := &struct {
+		Words string `json:"words"`
+	}{
+		Words: mnemonic,
+	}
 
 	req := NewJSON2Request("import-koinify", APICounter(), params)
 	resp, err := walletRequest(req)
