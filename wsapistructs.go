@@ -36,10 +36,6 @@ type importRequest struct {
 	Addresses []secretRequest `json:"addresses"`
 }
 
-type importKoinifyRequest struct {
-	Words string `json:"words"`
-}
-
 type keyMRRequest struct {
 	KeyMR string `json:"keymr"`
 }

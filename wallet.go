@@ -143,8 +143,11 @@ func ImportAddresses(addrs ...string) (
 // Factom Genisis block to pay participants in the initial Factom network crowd
 // funding.
 func ImportKoinify(mnemonic string) (*FactoidAddress, error) {
-	params := new(importKoinifyRequest)
-	params.Words = mnemonic
+	params := &struct {
+		Words string `json:"words"`
+	}{
+		Words: mnemonic,
+	}
 
 	req := NewJSON2Request("import-koinify", APICounter(), params)
 	resp, err := walletRequest(req)
