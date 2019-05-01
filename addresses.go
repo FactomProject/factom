@@ -70,34 +70,11 @@ func AddressStringType(s string) addressStringType {
 }
 
 func IsValidAddress(s string) bool {
-	p := base58.Decode(s)
-
-	if len(p) != AddressLength {
+	aType := AddressStringType(s)
+	if aType == InvalidAddress {
 		return false
 	}
-
-	prefix := p[:PrefixLength]
-	switch {
-	case bytes.Equal(prefix, ecPubPrefix):
-		break
-	case bytes.Equal(prefix, ecSecPrefix):
-		break
-	case bytes.Equal(prefix, fcPubPrefix):
-		break
-	case bytes.Equal(prefix, fcSecPrefix):
-		break
-	default:
-		return false
-	}
-
-	// verify the address checksum
-	body := p[:BodyLength]
-	check := p[AddressLength-ChecksumLength:]
-	if bytes.Equal(shad(body)[:ChecksumLength], check) {
-		return true
-	}
-
-	return false
+	return true
 }
 
 type ECAddress struct {
