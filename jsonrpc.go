@@ -22,13 +22,13 @@ type RPCConfig struct {
 	WalletTLSCertFile  string
 	WalletRPCUser      string
 	WalletRPCPassword  string
+	WalletServer       string
+	WalletTimeout      time.Duration
 	FactomdTLSEnable   bool
 	FactomdTLSCertFile string
 	FactomdRPCUser     string
 	FactomdRPCPassword string
 	FactomdServer      string
-	WalletServer       string
-	WalletTimeout      time.Duration
 	FactomdTimeout     time.Duration
 }
 
