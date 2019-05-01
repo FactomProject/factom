@@ -215,7 +215,6 @@ func factomdRequest(req *JSON2Request) (*JSON2Response, error) {
 
 		client = &http.Client{Transport: tr}
 		httpx = "https"
-
 	} else {
 		client = &http.Client{}
 		httpx = "http"
@@ -279,7 +278,6 @@ func walletRequest(req *JSON2Request) (*JSON2Response, error) {
 
 		client = &http.Client{Transport: tr}
 		httpx = "https"
-
 	} else {
 		client = &http.Client{}
 		httpx = "http"
