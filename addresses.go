@@ -70,11 +70,10 @@ func AddressStringType(s string) addressStringType {
 }
 
 func IsValidAddress(s string) bool {
-	aType := AddressStringType(s)
-	if aType == InvalidAddress {
-		return false
+	if AddressStringType(s) != InvalidAddress {
+		return true
 	}
-	return true
+	return false
 }
 
 type ECAddress struct {
