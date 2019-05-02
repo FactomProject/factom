@@ -9,6 +9,7 @@ import (
 	"crypto/sha256"
 	"crypto/sha512"
 	"encoding/binary"
+	"encoding/hex"
 	"fmt"
 	"math"
 	"regexp"
@@ -28,6 +29,28 @@ var (
 		WalletServer:  "localhost:8089",
 	}
 )
+
+// ChainIDFromFields computes a ChainID based on the binary External IDs of that
+// Chain's First Entry.
+func ChainIDFromFields(fields [][]byte) string {
+	hs := sha256.New()
+	for _, id := range fields {
+		h := sha256.Sum256(id)
+		hs.Write(h[:])
+	}
+	cid := hs.Sum(nil)
+	return hex.EncodeToString(cid)
+}
+
+// ChainIDFromStrings computes the ChainID of a Chain Created with External IDs
+// that would match the given string (in order).
+func ChainIDFromStrings(fields []string) string {
+	var bin [][]byte
+	for _, str := range fields {
+		bin = append(bin, []byte(str))
+	}
+	return ChainIDFromFields(bin)
+}
 
 func EntryCost(e *Entry) (int8, error) {
 	p, err := e.MarshalBinary()
