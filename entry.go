@@ -18,6 +18,24 @@ type Entry struct {
 	Content []byte   `json:"content"`
 }
 
+func NewEntryFromBytes(chainid []byte, content []byte, extids ...[]byte) *Entry {
+	entry := new(Entry)
+	entry.ChainID = hex.EncodeToString(chainid)
+	entry.Content = content
+	entry.ExtIDs = extids
+	return entry
+}
+
+func NewEntryFromStrings(chainid string, content string, extids ...string) *Entry {
+	entry := new(Entry)
+	entry.ChainID = chainid
+	entry.Content = []byte(content)
+	for _, eid := range extids {
+		entry.ExtIDs = append(entry.ExtIDs, []byte(eid))
+	}
+	return entry
+}
+
 func (e *Entry) Hash() []byte {
 	a, err := e.MarshalBinary()
 	if err != nil {
