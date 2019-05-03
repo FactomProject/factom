@@ -136,7 +136,6 @@ func (e *ECBlock) UnmarshalJSON(js []byte) error {
 					return err
 				}
 				e.Entries = append(e.Entries, a)
-
 			} else {
 				a := new(ECEntryCommit)
 				err := json.Unmarshal(v, a)
