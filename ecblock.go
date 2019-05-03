@@ -51,10 +51,11 @@ func (id ECID) String() string {
 // Entries, and fund Entry Credit Addresses.
 type ECBlock struct {
 	Header struct {
-		BodyHash       string `json:"bodyhash"`
-		PrevHeaderHash string `json:"prevheaderhash"`
-		PrevFullHash   string `json:"prevfullhash"`
-		DBHeight       int64  `json:"dbheight"`
+		BodyHash            string          `json:"bodyhash"`
+		PrevHeaderHash      string          `json:"prevheaderhash"`
+		PrevFullHash        string          `json:"prevfullhash"`
+		DBHeight            int64           `json:"dbheight"`
+		HeaderExpansionArea json.RawMessage `json:"headerexpansionarea,omitempty"`
 	} `json:"header"`
 	HeaderHash string     `json:"headerhash"`
 	FullHash   string     `json:"fullhash"`
@@ -70,6 +71,9 @@ func (e *ECBlock) String() string {
 	s += fmt.Sprintln("PrevFullHash:", e.Header.PrevFullHash)
 	s += fmt.Sprintln("BodyHash:", e.Header.BodyHash)
 	s += fmt.Sprintln("DBHeight:", e.Header.DBHeight)
+	if e.Header.HeaderExpansionArea != nil {
+		s += fmt.Sprintln("HeaderExpansionArea:", e.Header.HeaderExpansionArea)
+	}
 
 	s += fmt.Sprintln("Entries:")
 	for _, v := range e.Entries {
