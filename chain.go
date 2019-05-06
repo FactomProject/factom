@@ -1,4 +1,4 @@
-// Copyright 2015 Factom Foundation
+// Copyright 2016 Factom Foundation
 // Use of this source code is governed by the MIT
 // license that can be found in the LICENSE file.
 
@@ -8,6 +8,11 @@ import (
 	"bytes"
 	"encoding/hex"
 	"encoding/json"
+	"errors"
+)
+
+var (
+	ErrChainPending = errors.New("Chain not yet included in a Directory Block")
 )
 
 type Chain struct {
@@ -27,8 +32,20 @@ func NewChain(e *Entry) *Chain {
 	return c
 }
 
+func NewChainFromBytes(content []byte, extids ...[]byte) *Chain {
+	e := NewEntryFromBytes(nil, content, extids...)
+	c := NewChain(e)
+	return c
+}
+
+func NewChainFromStrings(content string, extids ...string) *Chain {
+	e := NewEntryFromStrings("", content, extids...)
+	c := NewChain(e)
+	return c
+}
+
 func ChainExists(chainid string) bool {
-	if _, err := GetChainHead(chainid); err == nil {
+	if _, _, err := GetChainHead(chainid); err == nil {
 		// no error means we found the Chain
 		return true
 	}
@@ -153,4 +170,83 @@ func RevealChain(c *Chain) (string, error) {
 		return "", err
 	}
 	return r.Entry, nil
+}
+
+func GetChainHead(chainid string) (string, bool, error) {
+	params := chainIDRequest{ChainID: chainid}
+	req := NewJSON2Request("chain-head", APICounter(), params)
+	resp, err := factomdRequest(req)
+	if err != nil {
+		return "", false, err
+	}
+	if resp.Error != nil {
+		return "", false, resp.Error
+	}
+
+	head := new(struct {
+		ChainHead          string `json:"chainhead"`
+		ChainInProcessList bool   `json:"chaininprocesslist"`
+	})
+	if err := json.Unmarshal(resp.JSONResult(), head); err != nil {
+		return "", false, err
+	}
+
+	return head.ChainHead, head.ChainInProcessList, nil
+}
+
+func GetAllChainEntries(chainid string) ([]*Entry, error) {
+	es := make([]*Entry, 0)
+
+	head, inPL, err := GetChainHead(chainid)
+	if err != nil {
+		return es, err
+	}
+
+	if head == "" && inPL {
+		return nil, ErrChainPending
+	}
+
+	for ebhash := head; ebhash != ZeroHash; {
+		eb, err := GetEBlock(ebhash)
+		if err != nil {
+			return es, err
+		}
+		s, err := GetAllEBlockEntries(ebhash)
+		if err != nil {
+			return es, err
+		}
+		es = append(s, es...)
+
+		ebhash = eb.Header.PrevKeyMR
+	}
+
+	return es, nil
+}
+
+func GetFirstEntry(chainid string) (*Entry, error) {
+	e := new(Entry)
+
+	head, inPL, err := GetChainHead(chainid)
+	if err != nil {
+		return e, err
+	}
+
+	if head == "" && inPL {
+		return nil, ErrChainPending
+	}
+
+	eb, err := GetEBlock(head)
+	if err != nil {
+		return e, err
+	}
+
+	for eb.Header.PrevKeyMR != ZeroHash {
+		ebhash := eb.Header.PrevKeyMR
+		eb, err = GetEBlock(ebhash)
+		if err != nil {
+			return e, err
+		}
+	}
+
+	return GetEntry(eb.EntryList[0].EntryHash)
 }

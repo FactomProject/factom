@@ -15,7 +15,7 @@ import (
 // ImportWalletFromMnemonic creates a new wallet with a provided Mnemonic seed
 // defined in bip-0039.
 func ImportLDBWalletFromMnemonic(mnemonic, path string) (*Wallet, error) {
-	mnemonic, err := factom.ParseAndValidateMnemonic(mnemonic)
+	mnemonic, err := factom.ParseMnemonic(mnemonic)
 	if err != nil {
 		return nil, err
 	}

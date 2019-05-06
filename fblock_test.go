@@ -37,3 +37,12 @@ func TestGetFBlock(t *testing.T) {
 	t.Log(fb)
 	t.Log(fmt.Printf("%x\n", raw))
 }
+
+func TestGetFBlockByHeight(t *testing.T) {
+	ab, raw, err := GetFBlockByHeight(20000)
+	if err != nil {
+		t.Error(err)
+	}
+	t.Log("FBlock:", ab)
+	t.Log(fmt.Sprintf("Raw: %x\n", raw))
+}

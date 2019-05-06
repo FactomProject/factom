@@ -41,7 +41,6 @@ type AnchorSigningKey struct {
 	KeyLevel   byte   `json:"level"`
 	KeyType    byte   `json:"keytype"`
 	SigningKey string `json:"key"` //if bytes, it is hex
-
 }
 
 func (k *AnchorSigningKey) String() string {

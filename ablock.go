@@ -12,6 +12,10 @@ import (
 	"regexp"
 )
 
+var (
+	ErrAIDUnknown = errors.New("unknown ABlock Entry type")
+)
+
 type AdminID byte
 
 const (
@@ -32,9 +36,42 @@ const (
 	AIDAddAuthorityEfficiency                  // 14
 )
 
-var (
-	ErrAIDUnknown = errors.New("unknown ABlock Entry type")
-)
+func (id AdminID) String() string {
+	switch id {
+	case AIDMinuteNumber:
+		return "MinuteNumber"
+	case AIDDBSignature:
+		return "DBSignature"
+	case AIDRevealHash:
+		return "RevealHash"
+	case AIDAddHash:
+		return "AddHash"
+	case AIDIncreaseServerCount:
+		return "IncreaseServerCount"
+	case AIDAddFederatedServer:
+		return "AddFederatedServer"
+	case AIDAddAuditServer:
+		return "AddAuditServer"
+	case AIDRemoveFederatedServer:
+		return "RemoveFederatedServer"
+	case AIDAddFederatedServerKey:
+		return "AddFederatedServerKey"
+	case AIDAddFederatedServerBTCKey:
+		return "AddFederatedServerBTCKey"
+	case AIDServerFault:
+		return "ServerFault"
+	case AIDCoinbaseDescriptor:
+		return "CoinbaseDescriptor"
+	case AIDCoinbaseDescriptorCancel:
+		return "CoinbaseDescriptorCancel"
+	case AIDAddAuthorityAddress:
+		return "AddAuthorityAddress"
+	case AIDAddAuthorityEfficiency:
+		return "AddAuthorityEfficiency"
+	default:
+		return "AIDUndefined"
+	}
+}
 
 type ABlock struct {
 	PrevBackreferenceHash string    `json:"prevbackrefhash"`
@@ -539,6 +576,33 @@ func GetABlock(keymr string) (ablock *ABlock, raw []byte, err error) {
 
 	err = json.Unmarshal(resp.JSONResult(), wrap)
 	if err != nil {
+		return
+	}
+
+	raw, err = hex.DecodeString(wrap.RawData)
+	if err != nil {
+		return
+	}
+
+	return wrap.ABlock, raw, nil
+}
+
+func GetABlockByHeight(height int64) (ablock *ABlock, raw []byte, err error) {
+	params := heightRequest{Height: height}
+	req := NewJSON2Request("ablock-by-height", APICounter(), params)
+	resp, err := factomdRequest(req)
+	if err != nil {
+		return
+	}
+	if resp.Error != nil {
+		return nil, nil, resp.Error
+	}
+
+	wrap := new(struct {
+		ABlock  *ABlock `json:"ablock"`
+		RawData string  `json:"rawdata"`
+	})
+	if err = json.Unmarshal(resp.JSONResult(), wrap); err != nil {
 		return
 	}
 

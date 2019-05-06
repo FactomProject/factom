@@ -234,14 +234,15 @@ func factomdRequest(req *JSON2Request) (*JSON2Response, error) {
 
 		client = &http.Client{Transport: tr, Timeout: GetFactomdTimeout()}
 		httpx = "https"
-
 	} else {
 		client = &http.Client{Timeout: GetFactomdTimeout()}
 		httpx = "http"
 	}
-	re, err := http.NewRequest("POST",
+	re, err := http.NewRequest(
+		"POST",
 		fmt.Sprintf("%s://%s/v2", httpx, RpcConfig.FactomdServer),
-		bytes.NewBuffer(j))
+		bytes.NewBuffer(j),
+	)
 	if err != nil {
 		return nil, err
 	}
@@ -296,15 +297,16 @@ func walletRequest(req *JSON2Request) (*JSON2Response, error) {
 
 		client = &http.Client{Transport: tr, Timeout: GetWalletTimeout()}
 		httpx = "https"
-
 	} else {
 		client = &http.Client{Timeout: GetWalletTimeout()}
 		httpx = "http"
 	}
 
-	re, err := http.NewRequest("POST",
+	re, err := http.NewRequest(
+		"POST",
 		fmt.Sprintf("%s://%s/v2", httpx, RpcConfig.WalletServer),
-		bytes.NewBuffer(j))
+		bytes.NewBuffer(j),
+	)
 	if err != nil {
 		return nil, err
 	}

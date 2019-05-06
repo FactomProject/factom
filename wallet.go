@@ -12,11 +12,6 @@ import (
 // BackupWallet returns a formatted string with the wallet seed and the secret
 // keys for all of the wallet addresses.
 func BackupWallet() (string, error) {
-	type walletBackupResponse struct {
-		Seed      string             `json:"wallet-seed"`
-		Addresses []*addressResponse `json:"addresses"`
-	}
-
 	req := NewJSON2Request("wallet-backup", APICounter(), nil)
 	resp, err := walletRequest(req)
 	if err != nil {
@@ -26,7 +21,10 @@ func BackupWallet() (string, error) {
 		return "", resp.Error
 	}
 
-	w := new(walletBackupResponse)
+	w := new(struct {
+		Seed      string             `json:"wallet-seed"`
+		Addresses []*addressResponse `json:"addresses"`
+	})
 	if err := json.Unmarshal(resp.JSONResult(), w); err != nil {
 		return "", err
 	}
@@ -133,8 +131,11 @@ func ImportAddresses(addrs ...string) (
 }
 
 func ImportKoinify(mnemonic string) (*FactoidAddress, error) {
-	params := new(importKoinifyRequest)
-	params.Words = mnemonic
+	params := &struct {
+		Words string `json:"words"`
+	}{
+		Words: mnemonic,
+	}
 
 	req := NewJSON2Request("import-koinify", APICounter(), params)
 	resp, err := walletRequest(req)

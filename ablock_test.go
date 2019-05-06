@@ -34,5 +34,14 @@ func TestGetABlock(t *testing.T) {
 		t.Error(err)
 	}
 	t.Log("ABlock:", ab)
-	t.Log(fmt.Printf("Raw: %x\n", raw))
+	t.Log(fmt.Sprintf("Raw: %x\n", raw))
+}
+
+func TestGetABlockByHeight(t *testing.T) {
+	ab, raw, err := GetABlockByHeight(20000)
+	if err != nil {
+		t.Error(err)
+	}
+	t.Log("ABlock:", ab)
+	t.Log(fmt.Sprintf("Raw: %x\n", raw))
 }
