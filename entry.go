@@ -18,6 +18,7 @@ type Entry struct {
 	Content []byte   `json:"content"`
 }
 
+// NewEntryFromBytes creates a new Factom Entry from byte data.
 func NewEntryFromBytes(chainid []byte, content []byte, extids ...[]byte) *Entry {
 	entry := new(Entry)
 	entry.ChainID = hex.EncodeToString(chainid)
@@ -26,6 +27,7 @@ func NewEntryFromBytes(chainid []byte, content []byte, extids ...[]byte) *Entry 
 	return entry
 }
 
+// NewEntryFromStrings creates a new Factom Entry from strings.
 func NewEntryFromStrings(chainid string, content string, extids ...string) *Entry {
 	entry := new(Entry)
 	entry.ChainID = chainid
@@ -246,6 +248,8 @@ func CommitEntry(e *Entry, ec *ECAddress) (string, error) {
 	return r.TxID, nil
 }
 
+// RevealEntrysends the Entry data to the factom network to create an Entry that
+// has previously been commited.
 func RevealEntry(e *Entry) (string, error) {
 	type revealResponse struct {
 		Message string `json:"message"`
@@ -272,7 +276,7 @@ func RevealEntry(e *Entry) (string, error) {
 	return r.Entry, nil
 }
 
-// GetEntry requests an Entry from factomd by its Entry Hash
+// GetEntry requests an Entry from the factomd API by its Entry Hash
 func GetEntry(hash string) (*Entry, error) {
 	params := hashRequest{Hash: hash}
 	req := NewJSON2Request("entry", APICounter(), params)
@@ -292,8 +296,9 @@ func GetEntry(hash string) (*Entry, error) {
 	return e, nil
 }
 
+// GetPendingEntries requests a list of all Entries that are waiting to be
+// written into the next block on the Factom Blockchain.
 func GetPendingEntries() (string, error) {
-
 	req := NewJSON2Request("pending-entries", APICounter(), nil)
 	resp, err := factomdRequest(req)
 

@@ -102,7 +102,7 @@ func (d *Diagnostics) String() string {
 	return s
 }
 
-// GetDiagnostics reads diagnostic information from factomd.
+// GetDiagnostics requests diagnostic information from factomd.
 func GetDiagnostics() (*Diagnostics, error) {
 	req := NewJSON2Request("diagnostics", APICounter(), nil)
 	resp, err := factomdRequest(req)

@@ -49,6 +49,9 @@ var (
 	ecSecPrefix = []byte{0x5d, 0xb6}
 )
 
+// AddressStringType determin the type of address from the given string.
+// AddressStringType must return one of the defined address types;
+// InvalidAddress, FactoidPub, FactoidSec, ECPub, or ECSec.
 func AddressStringType(s string) addressStringType {
 	p := base58.Decode(s)
 
@@ -78,6 +81,12 @@ func AddressStringType(s string) addressStringType {
 	}
 }
 
+// IsValidAddress checks that a string is a valid address of one of the defined
+// address types.
+//
+// For an address to be valid it must be the correct length, it must begin with
+// one of the defined address prefixes, and the address checksum must match the
+// address body.
 func IsValidAddress(s string) bool {
 	if AddressStringType(s) != InvalidAddress {
 		return true
@@ -85,11 +94,14 @@ func IsValidAddress(s string) bool {
 	return false
 }
 
+// ECAddress is an Entry Credit public/secret key pair.
 type ECAddress struct {
 	Pub *[ed.PublicKeySize]byte
 	Sec *[ed.PrivateKeySize]byte
 }
 
+// NewECAddress creates a blank public/secret key pair for an Entry Credit
+// Address.
 func NewECAddress() *ECAddress {
 	a := new(ECAddress)
 	a.Pub = new([ed.PublicKeySize]byte)
@@ -102,6 +114,8 @@ func (a *ECAddress) UnmarshalBinary(data []byte) error {
 	return err
 }
 
+// UnmarshalBinaryData reads an ECAddress from a byte stream and returns the
+// remainder of the byte stream.
 func (a *ECAddress) UnmarshalBinaryData(data []byte) ([]byte, error) {
 	if len(data) < 32 {
 		return nil, ErrSecKeyLength
@@ -121,7 +135,8 @@ func (a *ECAddress) MarshalBinary() ([]byte, error) {
 	return a.SecBytes()[:32], nil
 }
 
-// GetECAddress takes a private address string (Es...) and returns an ECAddress.
+// GetECAddress creates an Entry Credit Address public/secret key pair from a
+// secret Entry Credit Address string i.e. Es...
 func GetECAddress(s string) (*ECAddress, error) {
 	if !IsValidAddress(s) {
 		return nil, ErrInvalidAddress
@@ -136,6 +151,8 @@ func GetECAddress(s string) (*ECAddress, error) {
 	return MakeECAddress(p[PrefixLength:BodyLength])
 }
 
+// MakeECAddress creates an Entry Credit Address public/secret key pair from a
+// secret key []byte.
 func MakeECAddress(sec []byte) (*ECAddress, error) {
 	if len(sec) != 32 {
 		return nil, ErrSecKeyLength
@@ -151,6 +168,9 @@ func MakeECAddress(sec []byte) (*ECAddress, error) {
 	return a, nil
 }
 
+// MakeBIP44ECAddress generates an Entry Credit Address from a 12 word mnemonic,
+// an account index, a chain index, and an address index, according to the bip44
+// standard for multicoin wallets.
 func MakeBIP44ECAddress(mnemonic string, account, chain, address uint32) (*ECAddress, error) {
 	mnemonic, err := ParseMnemonic(mnemonic)
 	if err != nil {
@@ -165,17 +185,17 @@ func MakeBIP44ECAddress(mnemonic string, account, chain, address uint32) (*ECAdd
 	return MakeECAddress(child.Key)
 }
 
-// PubBytes returns the []byte representation of the public key
+// PubBytes returns the []byte representation of the public key.
 func (a *ECAddress) PubBytes() []byte {
 	return a.Pub[:]
 }
 
-// PubFixed returns the fixed size public key
+// PubFixed returns the fixed size public key ([32]byte).
 func (a *ECAddress) PubFixed() *[ed.PublicKeySize]byte {
 	return a.Pub
 }
 
-// PubString returns the string encoding of the public key
+// PubString returns the string encoding of the public key i.e. EC...
 func (a *ECAddress) PubString() string {
 	buf := new(bytes.Buffer)
 
@@ -192,17 +212,17 @@ func (a *ECAddress) PubString() string {
 	return base58.Encode(buf.Bytes())
 }
 
-// SecBytes returns the []byte representation of the secret key
+// SecBytes returns the []byte representation of the secret key.
 func (a *ECAddress) SecBytes() []byte {
 	return a.Sec[:]
 }
 
-// SecFixed returns the fixed size secret key
+// SecFixed returns the fixed size secret key ([64]byte).
 func (a *ECAddress) SecFixed() *[ed.PrivateKeySize]byte {
 	return a.Sec
 }
 
-// SecString returns the string encoding of the secret key
+// SecString returns the string encoding of the secret key i.e. Es...
 func (a *ECAddress) SecString() string {
 	buf := new(bytes.Buffer)
 
@@ -219,7 +239,7 @@ func (a *ECAddress) SecString() string {
 	return base58.Encode(buf.Bytes())
 }
 
-// Sign the message with the ECAddress private key
+// Sign the message with the ECAddress secret key.
 func (a *ECAddress) Sign(msg []byte) *[ed.SignatureSize]byte {
 	return ed.Sign(a.SecFixed(), msg)
 }
@@ -228,11 +248,14 @@ func (a *ECAddress) String() string {
 	return a.PubString()
 }
 
+// FactoidAddress is a Factoid Redeem Condition Datastructure (a type 1 RCD is
+// just the public key) and a corresponding secret key.
 type FactoidAddress struct {
 	RCD RCD
 	Sec *[ed.PrivateKeySize]byte
 }
 
+// NewFactoidAddress creates a blank rcd/secret key pair for a Factoid Address.
 func NewFactoidAddress() *FactoidAddress {
 	a := new(FactoidAddress)
 	r := NewRCD1()
@@ -242,8 +265,8 @@ func NewFactoidAddress() *FactoidAddress {
 	return a
 }
 
-// GetFactoidAddress takes a private address string (Fs...) and returns a
-// FactoidAddress.
+// GetFactoidAddress creates a Factoid Address rcd/secret key pair from a secret
+// Factoid Address string i.e. Fs...
 func GetFactoidAddress(s string) (*FactoidAddress, error) {
 	if !IsValidAddress(s) {
 		return nil, ErrInvalidAddress
@@ -258,6 +281,8 @@ func GetFactoidAddress(s string) (*FactoidAddress, error) {
 	return MakeFactoidAddress(p[PrefixLength:BodyLength])
 }
 
+// MakeFactoidAddress creates a Factoid Address rcd/secret key pair from a
+// secret key []byte.
 func MakeFactoidAddress(sec []byte) (*FactoidAddress, error) {
 	if len(sec) != 32 {
 		return nil, ErrSecKeyLength
@@ -272,6 +297,9 @@ func MakeFactoidAddress(sec []byte) (*FactoidAddress, error) {
 	return a, nil
 }
 
+// MakeBIP44FactoidAddress generates a Factoid Address from a 12 word mnemonic,
+// an account index, a chain index, and an address index, according to the bip44
+// standard for multicoin wallets.
 func MakeBIP44FactoidAddress(mnemonic string, account, chain, address uint32) (*FactoidAddress, error) {
 	mnemonic, err := ParseMnemonic(mnemonic)
 	if err != nil {
@@ -336,26 +364,35 @@ func (a *FactoidAddress) MarshalBinary() ([]byte, error) {
 	return a.SecBytes()[:32], nil
 }
 
+// RCDHash returns the Hash of the Redeem Condition Datastructure from a Factoid
+// Address.
 func (a *FactoidAddress) RCDHash() []byte {
 	return a.RCD.Hash()
 }
 
+// RCDType returns the Redeem Condition Datastructure type used by the Factoid
+// Address.
 func (a *FactoidAddress) RCDType() uint8 {
 	return a.RCD.Type()
 }
 
+// PubBytes returns the []byte representation of the Redeem Condition
+// Datastructure.
 func (a *FactoidAddress) PubBytes() []byte {
 	return a.RCD.(*RCD1).PubBytes()
 }
 
+// SecBytes returns the []byte representation of the secret key.
 func (a *FactoidAddress) SecBytes() []byte {
 	return a.Sec[:]
 }
 
+// SecFixed returns the fixed size secret key ([64]byte).
 func (a *FactoidAddress) SecFixed() *[ed.PrivateKeySize]byte {
 	return a.Sec
 }
 
+// SecString returns the string encoding of the secret key i.e. Es...
 func (a *FactoidAddress) SecString() string {
 	buf := new(bytes.Buffer)
 
@@ -388,6 +425,8 @@ func (a *FactoidAddress) String() string {
 	return base58.Encode(buf.Bytes())
 }
 
+// ParseMnemonic parse and validate a bip39 mnumonic string. Remove extra
+// spaces, capitalization, etc. Return an error if the string is invalid.
 func ParseMnemonic(mnemonic string) (string, error) {
 	if l := len(strings.Fields(mnemonic)); l != 12 {
 		return "", ErrMnemonicLength

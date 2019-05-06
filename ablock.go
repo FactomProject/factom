@@ -16,8 +16,10 @@ var (
 	ErrAIDUnknown = errors.New("unknown ABlock Entry type")
 )
 
+// AdminID defines the type of an Admin Block Entry
 type AdminID byte
 
+// Available AdminID types
 const (
 	AIDMinuteNumber             AdminID = iota // 0
 	AIDDBSignature                             // 1
@@ -73,6 +75,9 @@ func (id AdminID) String() string {
 	}
 }
 
+// ABlock is an Administrative Block that records metadata about the Factom
+// Network and the consensus process for writing blocks into the Factom
+// Blockchain.
 type ABlock struct {
 	PrevBackreferenceHash string    `json:"prevbackrefhash"`
 	DBHeight              int64     `json:"dbheight"`
@@ -123,7 +128,7 @@ func (a *ABlock) UnmarshalJSON(js []byte) error {
 	// and unmarshal the ABEntry into its correct type
 	for _, v := range tmp.ABEntries {
 		switch {
-		case regexp.MustCompile(`"adminidtype":0`).MatchString(string(v)):
+		case regexp.MustCompile(`"adminidtype":0,`).MatchString(string(v)):
 			e := new(AdminMinuteNumber)
 			err := json.Unmarshal(v, e)
 			if err != nil {
@@ -236,11 +241,18 @@ func (a *ABlock) UnmarshalJSON(js []byte) error {
 	return nil
 }
 
+// ABEntry is any valid Admin Block Entry type
 type ABEntry interface {
 	Type() AdminID
 	String() string
 }
 
+// AdminMinuteNumber is depricated as of the Factom Milestone 2 release, but is
+// kept here for backwards compatability.
+//
+// AdminMinuteNumber represents the end of a minute during the 10 minute block
+// period for Facom. All Entries in the ABlock preceeding a Minute Number Entry
+// were recieved by the network before the specified time.
 type AdminMinuteNumber struct {
 	MinuteNumber int `json:"minutenumber"`
 }
@@ -253,6 +265,7 @@ func (a *AdminMinuteNumber) String() string {
 	return fmt.Sprintln("MinuteNumber:", a.MinuteNumber)
 }
 
+// AdminDBSignature is a signature of the previous DBlock Header.
 type AdminDBSignature struct {
 	IdentityChainID   string `json:"identityadminchainid"`
 	PreviousSignature struct {
@@ -279,6 +292,8 @@ func (a *AdminDBSignature) String() string {
 	return s
 }
 
+// AdminRevealHash is a reveal of the matryoshka hash used to determin the
+// server priority in subsequent blocks.
 type AdminRevealHash struct {
 	IdentityChainID string `json:"identitychainid"`
 	MatryoshkaHash  string `json:"mhash"`
@@ -299,6 +314,8 @@ func (a *AdminRevealHash) String() string {
 	return s
 }
 
+// AdminAddHash adds or replaces a matryoshka hash whithin the ABlock. This
+// Entry superseeds any previous ABlock Entries from the same Identity.
 type AdminAddHash struct {
 	IdentityChainID string `json:"identitychainid"`
 	MatryoshkaHash  string `json:"mhash"`
@@ -319,6 +336,8 @@ func (a *AdminAddHash) String() string {
 	return s
 }
 
+// AdminIncreaseServerCount increases the maximum number of authoritative
+// servers that can participate in consensus when building subsequent blocks.
 type AdminIncreaseServerCount struct {
 	Amount int `json:"amount"`
 }
@@ -331,6 +350,8 @@ func (a *AdminIncreaseServerCount) String() string {
 	return fmt.Sprintln("IncreaseServerCount:", a.Amount)
 }
 
+// AdminAddFederatedServer adds a Federated Server to the pool to participate in
+// building subsequent blocks.
 type AdminAddFederatedServer struct {
 	IdentityChainID string `json:"identitychainid"`
 	DBHeight        int64  `json:"dbheight"`
@@ -351,6 +372,8 @@ func (a *AdminAddFederatedServer) String() string {
 	return s
 }
 
+// AdminAddAuditServer adds an Audit Server to the pool to participate in
+// auditing the Federated Servers.
 type AdminAddAuditServer struct {
 	IdentityChainID string `json:"identitychainid"`
 	DBHeight        int64  `json:"dbheight"`
@@ -371,6 +394,8 @@ func (a *AdminAddAuditServer) String() string {
 	return s
 }
 
+// AdminRemoveFederatedServer removes a Federated Server from the pool at the
+// specified Directory Block Height.
 type AdminRemoveFederatedServer struct {
 	IdentityChainID string `json:"identitychainid"`
 	DBHeight        int64  `json:"dbheight"`
@@ -391,6 +416,8 @@ func (a *AdminRemoveFederatedServer) String() string {
 	return s
 }
 
+// AdminAddFederatedServerKey adds or replaces a signing key in the key
+// hierarchy for a Federated Server Identity.
 type AdminAddFederatedServerKey struct {
 	IdentityChainID string `json:"identitychainid"`
 	KeyPriority     int    `json:"keypriority"`
@@ -415,6 +442,9 @@ func (a *AdminAddFederatedServerKey) String() string {
 	return s
 }
 
+// AdminAddFederatedServerBTCKey adds a Bitcoin public key that the Federated
+// server will use to create the Anchor transaction to record the Factom
+// Directory Block Hash on the Bitcoin Blockchain.
 type AdminAddFederatedServerBTCKey struct {
 	IdentityChainID string `json:"identitychainid"`
 	KeyPriority     int    `json:"keypriority"`
@@ -439,6 +469,7 @@ func (a *AdminAddFederatedServerBTCKey) String() string {
 	return s
 }
 
+// AdminServerFault authorizes the removal of a Federated Server.
 type AdminServerFault struct {
 	Timestamp     string `json:"timestamp"`
 	ServerID      string `json:"serverid"`
@@ -470,6 +501,9 @@ func (a *AdminServerFault) String() string {
 	return s
 }
 
+// AdminCoinbaseDescriptor specifies a genesis transaction that creates new
+// Factoids. The Coinbase Descriptor may only occur on blocks with heights
+// divisible by 25.
 type AdminCoinbaseDescriptor struct {
 	Outputs []struct {
 		Amount  int    `json:"amount"`
@@ -496,6 +530,9 @@ func (a *AdminCoinbaseDescriptor) String() string {
 	return s
 }
 
+// AdminCoinbaseDescriptorCancel cancels a specific output in a Coinbase
+// Descriptor. The Coinbase Cancel is only valid if it is added before the
+// Coinbase Descriptor it cancels has been recorded into the Blockchain.
 type AdminCoinbaseDescriptorCancel struct {
 	DescriptorHeight int `json:"descriptor_height"`
 	DescriptorIndex  int `json:descriptor_index`
@@ -516,6 +553,8 @@ func (a *AdminCoinbaseDescriptorCancel) String() string {
 	return s
 }
 
+// AdminAddAuthorityAddress adds or replaces a Factoid Address to be used in a
+// Coinbase Descriptor.
 type AdminAddAuthorityAddress struct {
 	IdentityChainID string `json:"identitychainid"`
 	FactoidAddress  string `json:"factoidaddress"`
@@ -536,6 +575,9 @@ func (a *AdminAddAuthorityAddress) String() string {
 	return s
 }
 
+// AdminAddAuthorityEfficiency set the percentage of the Factoid reward that a
+// server yeilds to the Grant Pool to be used by the Factom Governance to
+// improve the network.
 type AdminAddAuthorityEfficiency struct {
 	IdentityChainID string `json:"identitychainid"`
 	Efficiency      int    `json:"efficiency"`
@@ -556,7 +598,7 @@ func (a *AdminAddAuthorityEfficiency) String() string {
 	return s
 }
 
-// GetABlock requests a specified ABlock from the factomd API.
+// GetABlock requests a specific ABlock from the factomd API.
 func GetABlock(keymr string) (ablock *ABlock, raw []byte, err error) {
 	params := keyMRRequest{KeyMR: keymr}
 	req := NewJSON2Request("admin-block", APICounter(), params)
@@ -587,6 +629,8 @@ func GetABlock(keymr string) (ablock *ABlock, raw []byte, err error) {
 	return wrap.ABlock, raw, nil
 }
 
+// GetABlockByHeight requests an ABlock of a specific height from the factomd
+// API.
 func GetABlockByHeight(height int64) (ablock *ABlock, raw []byte, err error) {
 	params := heightRequest{Height: height}
 	req := NewJSON2Request("ablock-by-height", APICounter(), params)

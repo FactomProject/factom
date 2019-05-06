@@ -10,6 +10,10 @@ import (
 	"fmt"
 )
 
+// DBlock is a Factom Network Directory Block containing the Merkel root of all
+// of the Entries and blocks from a 10 minute period in the Factom Network. The
+// Directory Block Key Merkel Root is anchored into the Bitcoin and other
+// blockchains for added security and immutability.
 type DBlock struct {
 	DBHash     string `json:"dbhash"`
 	KeyMR      string `json:"keymr"`
@@ -59,7 +63,7 @@ func (db *DBlock) String() string {
 // re-directing to dblock-by-height.
 // we either need to change the "directoy-block" API call or add a new call to
 // return the propper information (it should match the dblock-by-height call)
-//
+
 // GetDBlock requests a Directory Block by its Key Merkle Root from the factomd
 // API.
 func GetDBlock(keymr string) (dblock *DBlock, raw []byte, err error) {
@@ -96,7 +100,7 @@ func GetDBlock(keymr string) (dblock *DBlock, raw []byte, err error) {
 	return GetDBlockByHeight(db.Header.SequenceNumber)
 }
 
-// GetDBlock requests a Directory Block by its block height from the factomd
+// GetDBlockByHeight requests a Directory Block by its block height from the factomd
 // API.
 func GetDBlockByHeight(height int64) (dblock *DBlock, raw []byte, err error) {
 	params := heightRequest{Height: height}
@@ -127,6 +131,8 @@ func GetDBlockByHeight(height int64) (dblock *DBlock, raw []byte, err error) {
 	return wrap.DBlock, raw, nil
 }
 
+// GetDBlockHead requests the most recent Directory Block Key Merkel Root
+// created by the Factom Network.
 func GetDBlockHead() (string, error) {
 	req := NewJSON2Request("directory-block-head", APICounter(), nil)
 	resp, err := factomdRequest(req)

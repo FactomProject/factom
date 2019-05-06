@@ -347,6 +347,8 @@ func GetECBlock(keymr string) (ecblock *ECBlock, raw []byte, err error) {
 	return wrap.ECBlock, raw, nil
 }
 
+// GetECBlockByHeight request an Entry Credit Block of a given height from the
+// factomd API.
 func GetECBlockByHeight(height int64) (ecblock *ECBlock, raw []byte, err error) {
 	params := heightRequest{Height: height}
 	req := NewJSON2Request("ecblock-by-height", APICounter(), params)

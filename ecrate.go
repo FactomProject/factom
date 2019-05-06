@@ -8,7 +8,8 @@ import (
 	"encoding/json"
 )
 
-// GetECRate returns the number of factoshis per entry credit
+// GetECRate returns the current conversion rate cost in factoshis
+// (Factoid^(-1e8)) of purchasing Entry Credits.
 func GetECRate() (uint64, error) {
 	type rateResponse struct {
 		Rate uint64 `json:"rate"`

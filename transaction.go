@@ -12,11 +12,14 @@ import (
 	"time"
 )
 
+// TransAddress represents the imputs and outputs in a Factom Transaction.
 type TransAddress struct {
 	Address string `json:"address"`
 	Amount  uint64 `json:"amount"`
 }
 
+// A Transaction from the Factom Network represents a transfer of value between
+// Factoid addresses and/or the creation of new Entry Credits.
 type Transaction struct {
 	BlockHeight    uint32          `json:"blockheight,omitempty"`
 	FeesPaid       uint64          `json:"feespaid,omitempty"`
@@ -78,7 +81,7 @@ func (tx *Transaction) String() (s string) {
 	return s
 }
 
-// MarshalJSON converts the Transaction into a JSON object
+// MarshalJSON converts the Transaction into a JSON object.
 func (tx *Transaction) MarshalJSON() ([]byte, error) {
 	txReq := &struct {
 		BlockHeight    uint32          `json:"blockheight,omitempty"`
@@ -113,7 +116,7 @@ func (tx *Transaction) MarshalJSON() ([]byte, error) {
 	return json.Marshal(txReq)
 }
 
-// UnmarshalJSON converts the JSON Transaction back into a Transaction
+// UnmarshalJSON converts the JSON Transaction back into a Transaction.
 func (tx *Transaction) UnmarshalJSON(data []byte) error {
 	txResp := new(struct {
 		BlockHeight    uint32          `json:"blockheight,omitempty"`
@@ -152,7 +155,7 @@ func (tx *Transaction) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-// NewTransaction creates a new temporary Transaction in the wallet
+// NewTransaction creates a new temporary Transaction in the wallet.
 func NewTransaction(name string) (*Transaction, error) {
 	params := transactionRequest{Name: name}
 	req := NewJSON2Request("new-transaction", APICounter(), params)
@@ -172,6 +175,7 @@ func NewTransaction(name string) (*Transaction, error) {
 	return tx, nil
 }
 
+// DeleteTransaction remove a temporary transacton from the wallet.
 func DeleteTransaction(name string) error {
 	params := transactionRequest{Name: name}
 	req := NewJSON2Request("delete-transaction", APICounter(), params)
@@ -187,6 +191,7 @@ func DeleteTransaction(name string) error {
 	return nil
 }
 
+// ListTransactionsAll lists all the transactions from the wallet database.
 func ListTransactionsAll() ([]*Transaction, error) {
 	req := NewJSON2Request("transactions", APICounter(), nil)
 	resp, err := walletRequest(req)
@@ -207,6 +212,7 @@ func ListTransactionsAll() ([]*Transaction, error) {
 	return list.Transactions, nil
 }
 
+// ListTransactionsAddress lists all transaction to and from a given address.
 func ListTransactionsAddress(addr string) ([]*Transaction, error) {
 	params := &struct {
 		Address string `json:"address"`
@@ -233,6 +239,8 @@ func ListTransactionsAddress(addr string) ([]*Transaction, error) {
 	return list.Transactions, nil
 }
 
+// ListTransactionsID lists a transaction from the wallet database with a given
+// Transaction ID.
 func ListTransactionsID(id string) ([]*Transaction, error) {
 	params := &struct {
 		TxID string `json:"txid"`
@@ -259,6 +267,8 @@ func ListTransactionsID(id string) ([]*Transaction, error) {
 	return list.Transactions, nil
 }
 
+// ListTransactionsRange lists all transacions from the wallet database made
+// within a given range of Directory Block heights.
 func ListTransactionsRange(start, end int) ([]*Transaction, error) {
 	params := new(struct {
 		Range struct {
@@ -288,6 +298,9 @@ func ListTransactionsRange(start, end int) ([]*Transaction, error) {
 	return list.Transactions, nil
 }
 
+// ListTransactionsTmp lists all of the temporary transaction held in the
+// wallet. Temporary transaction are held by the wallet while they are being
+// constructed and prepaired to be submitted to the network.
 func ListTransactionsTmp() ([]*Transaction, error) {
 	req := NewJSON2Request("tmp-transactions", APICounter(), nil)
 	resp, err := walletRequest(req)
@@ -307,6 +320,9 @@ func ListTransactionsTmp() ([]*Transaction, error) {
 	return txs.Transactions, nil
 }
 
+// AddTransactionInput adds a factoid input to a temporary transaction in the
+// wallet. The imput should come from a Factoid address heald in the wallet
+// database.
 func AddTransactionInput(
 	name,
 	address string,
@@ -339,6 +355,8 @@ func AddTransactionInput(
 	return tx, nil
 }
 
+// AddTransactionOutput adds a factoid output to a temporary transaction in
+// the wallet.
 func AddTransactionOutput(
 	name,
 	address string,
@@ -371,6 +389,8 @@ func AddTransactionOutput(
 	return tx, nil
 }
 
+// AddTransactionECOutput adds an Entry Credit output to a temporary transaction
+// in the wallet.
 func AddTransactionECOutput(name, address string, amount uint64) (*Transaction, error) {
 	if AddressStringType(address) != ECPub {
 		return nil, fmt.Errorf("%s is not an Entry Credit address", address)
@@ -399,6 +419,8 @@ func AddTransactionECOutput(name, address string, amount uint64) (*Transaction, 
 	return tx, nil
 }
 
+// AddTransactionFee adds the appropriate factoid fee payment to a transaction
+// input of a temporary transaction in the wallet.
 func AddTransactionFee(name, address string) (*Transaction, error) {
 	if AddressStringType(address) != FactoidPub {
 		return nil, fmt.Errorf("%s is not a Factoid address", address)
@@ -426,6 +448,8 @@ func AddTransactionFee(name, address string) (*Transaction, error) {
 	return tx, nil
 }
 
+// SubTransactionFee subtracts the appropriate factoid fee payment from a
+// transaction output of a temporary transaction in the wallet.
 func SubTransactionFee(name, address string) (*Transaction, error) {
 	params := transactionValueRequest{
 		Name:    name,
@@ -449,6 +473,8 @@ func SubTransactionFee(name, address string) (*Transaction, error) {
 	return tx, nil
 }
 
+// SignTransaction adds the reqired signatures from the appropriate factoid
+// addresses to a temporary transaction in the wallet.
 func SignTransaction(name string, force bool) (*Transaction, error) {
 	params := transactionRequest{
 		Name:  name,
@@ -472,6 +498,13 @@ func SignTransaction(name string, force bool) (*Transaction, error) {
 	return tx, nil
 }
 
+// ComposeTransaction creates a json object from a temporary transaction in the
+// wallet that may be sent to the factomd API to submit the transaction to the
+// network.
+//
+// ComposeTransaction may be used by an offline wallet to create an API call
+// that can be securely transfered to an online node to enable transactions from
+// compleatly offline addresses.
 func ComposeTransaction(name string) ([]byte, error) {
 	params := transactionRequest{Name: name}
 	req := NewJSON2Request("compose-transaction", APICounter(), params)
@@ -487,6 +520,8 @@ func ComposeTransaction(name string) ([]byte, error) {
 	return resp.JSONResult(), nil
 }
 
+// SendTransaction composes a prepaired temoprary transaction from the wallet
+// and sends it to the factomd API to be included on the factom network.
 func SendTransaction(name string) (*Transaction, error) {
 	params := transactionRequest{Name: name}
 
@@ -523,6 +558,7 @@ func SendTransaction(name string) (*Transaction, error) {
 	return tx, nil
 }
 
+// SendFactoid creates and sends a transaction to the Factom Network.
 func SendFactoid(from, to string, amount uint64, force bool) (*Transaction, error) {
 	n := make([]byte, 16)
 	if _, err := rand.Read(n); err != nil {
@@ -562,6 +598,8 @@ func SendFactoid(from, to string, amount uint64, force bool) (*Transaction, erro
 	return r, nil
 }
 
+// BuyEC creates and sends a transaction to the Factom Network that purchases
+// Entry Credits.
 func BuyEC(from, to string, amount uint64, force bool) (*Transaction, error) {
 	n := make([]byte, 16)
 	if _, err := rand.Read(n); err != nil {
@@ -591,7 +629,12 @@ func BuyEC(from, to string, amount uint64, force bool) (*Transaction, error) {
 	return r, nil
 }
 
-//Purchases the exact amount of ECs
+// BuyExactEC creates and sends a transaction to the Factom Network that
+// purchases an exact number of Entry Credits.
+//
+// BuyExactEC calculates the and adds the transaction fees and Entry Credit rate
+// so that the exact requested number of Entry Credits are created by the output
+// of the transacton.
 func BuyExactEC(from, to string, amount uint64, force bool) (*Transaction, error) {
 	rate, err := GetECRate()
 	if err != nil {
@@ -657,6 +700,8 @@ func FactoidSubmit(tx string) (message, txid string, err error) {
 	return fsr.Message, fsr.TxID, nil
 }
 
+// TransactionResponse is the factomd API responce to a request made for a
+// transaction.
 type TransactionResponse struct {
 	ECTranasction      interface{} `json:"ectransaction,omitempty"`
 	FactoidTransaction interface{} `json:"factoidtransaction,omitempty"`
@@ -670,6 +715,7 @@ type TransactionResponse struct {
 	IncludedInDirectoryBlockHeight int64 `json:"includedindirectoryblockheight"`
 }
 
+// GetTransaction requests a transaction from the factomd API.
 func GetTransaction(txID string) (*TransactionResponse, error) {
 	params := hashRequest{Hash: txID}
 	req := NewJSON2Request("transaction", APICounter(), params)
@@ -691,6 +737,10 @@ func GetTransaction(txID string) (*TransactionResponse, error) {
 
 // TODO: GetPendingTransactions() should return something more useful than a
 // json string.
+
+// GetPendingTransactions requests a list of transactions that have been
+// submitted to the Factom Network, but have not yet been included in a Factoid
+// Block.
 func GetPendingTransactions() (string, error) {
 	req := NewJSON2Request("pending-transactions", APICounter(), nil)
 	resp, err := factomdRequest(req)
@@ -706,7 +756,7 @@ func GetPendingTransactions() (string, error) {
 	return string(transList), nil
 }
 
-// GetTmpTransaction gets a temporary transaction from the wallet
+// GetTmpTransaction requests a temporary transaction from the wallet.
 func GetTmpTransaction(name string) (*Transaction, error) {
 	txs, err := ListTransactionsTmp()
 	if err != nil {

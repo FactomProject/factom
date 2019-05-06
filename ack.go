@@ -9,6 +9,9 @@ import (
 	"fmt"
 )
 
+// TransactionData is metadata about a given Transaction, including data about
+// the Transaction Status (i.e. weather the Transaction has been written to the
+// Blockchain).
 type TransactionData struct {
 	// TransactionDate in Unix time
 	TransactionDate int64 `json:"transactiondate,omitempty"`
@@ -29,6 +32,7 @@ type ReserveInfo struct {
 	Timeout int64  `json:"timeout"` //Unix time
 }
 
+// FactoidTxStatus is the metadata about a Factoid Transaction.
 type FactoidTxStatus struct {
 	TxID string `json:"txid"`
 	TransactionData
@@ -43,6 +47,7 @@ func (f *FactoidTxStatus) String() string {
 	return s
 }
 
+// EntryStatus is the metadata about an Entry Commit Transaction.
 type EntryStatus struct {
 	CommitTxID string `json:"committxid"`
 	EntryHash  string `json:"entryhash"`
@@ -68,6 +73,7 @@ func (e *EntryStatus) String() string {
 	return s
 }
 
+// FactoidACK gets the status of a given Factoid Transaction.
 func FactoidACK(txID, fullTransaction string) (*FactoidTxStatus, error) {
 	params := ackRequest{Hash: txID, ChainID: "f", FullTransaction: fullTransaction}
 	req := NewJSON2Request("ack", APICounter(), params)

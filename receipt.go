@@ -8,6 +8,13 @@ import (
 	"encoding/json"
 )
 
+// Receipt is the Merkel proof that a given Entry and its metadata (such as the
+// Entry Block timestamp) have been written to the Factom Blockchain and
+// possibly anchored into Bitcoin, Etherium, or other blockchains.
+//
+// The data from the reciept may be used to reconstruct the Merkel proof for the
+// requested Entry thus cryptographically proving the Entry is represented by a
+// known Factom Directory Block.
 type Receipt struct {
 	Entry struct {
 		Raw       string `json:"raw,omitempty"`
@@ -25,6 +32,7 @@ type Receipt struct {
 	BitcoinBlockHash       string `json:"bitcoinblockhash,omitempty"`
 }
 
+// GetReceipt requests a Receipt for a given Factom Entry.
 func GetReceipt(hash string) (*Receipt, error) {
 	type receiptResponse struct {
 		Receipt *Receipt `json:"receipt"`

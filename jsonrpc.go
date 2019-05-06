@@ -16,6 +16,7 @@ import (
 	"time"
 )
 
+// RPCConfig is the configuration for the API handler
 type RPCConfig struct {
 	WalletTLSEnable    bool
 	WalletTLSKeyFile   string
@@ -212,6 +213,8 @@ func SendFactomdRequest(req *JSON2Request) (*JSON2Response, error) {
 	return factomdRequest(req)
 }
 
+// factomdRequest sends a JSON RPC request to the factomd API server and returns
+// the corresponding API response.
 func factomdRequest(req *JSON2Request) (*JSON2Response, error) {
 	j, err := json.Marshal(req)
 	if err != nil {
@@ -275,6 +278,8 @@ func factomdRequest(req *JSON2Request) (*JSON2Response, error) {
 	return r, nil
 }
 
+// walletRequest sends a JSON RPC request to the factom wallet API server and
+// returns the corresponding API response.
 func walletRequest(req *JSON2Request) (*JSON2Response, error) {
 	j, err := json.Marshal(req)
 	if err != nil {

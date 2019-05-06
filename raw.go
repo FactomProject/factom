@@ -9,6 +9,7 @@ import (
 	"encoding/json"
 )
 
+// RawData is a simple hex encoded byte string
 type RawData struct {
 	Data string `json:"data"`
 }
@@ -17,6 +18,8 @@ func (r *RawData) GetDataBytes() ([]byte, error) {
 	return hex.DecodeString(r.Data)
 }
 
+// GetRaw requests the raw data for any binary block kept in the factomd
+// database.
 func GetRaw(keymr string) ([]byte, error) {
 	params := hashRequest{Hash: keymr}
 	req := NewJSON2Request("raw-data", APICounter(), params)
@@ -36,6 +39,8 @@ func GetRaw(keymr string) ([]byte, error) {
 	return raw.GetDataBytes()
 }
 
+// SendRawMsg sends a raw hex encoded byte string for factomd to send as a
+// binary message on the Factom Netwrork.
 func SendRawMsg(message string) (string, error) {
 	param := messageRequest{Message: message}
 	req := NewJSON2Request("send-raw-message", APICounter(), param)

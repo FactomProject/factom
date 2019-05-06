@@ -9,6 +9,10 @@ import (
 	"fmt"
 )
 
+// EBlock is an Entry Block from the Factom Network. An Entry Block contains a
+// series of Entries all belonging to the same Chain on Factom from a given 10
+// minute period. All of the Entry Blocks from a given period are collected into
+// a Merkel Tree the root of which is the Factom Directory Block.
 type EBlock struct {
 	Header struct {
 		// TODO: rename BlockSequenceNumber to EBSequence
@@ -21,6 +25,13 @@ type EBlock struct {
 	EntryList []EBEntry `json:"entrylist"`
 }
 
+// EBEntry is a member of the Entry Block representing a Factom Entry. The
+// EBEntry has the hash of the Factom Entry and the time when the entry was
+// added.
+//
+// The consensus algorithm does NOT garuntee that the cannonical order of the
+// EBEntries is the same order that they were recieved for multiple Entries that
+// are made to the network during a single minute.
 type EBEntry struct {
 	EntryHash string `json:"entryhash"`
 	Timestamp int64  `json:"timestamp"`
@@ -62,7 +73,7 @@ func GetEBlock(keymr string) (*EBlock, error) {
 	return eb, nil
 }
 
-// GetAllEBlockEntries requests every Entry in a specific Entry Block
+// GetAllEBlockEntries requests every Entry from a given Entry Block
 func GetAllEBlockEntries(keymr string) ([]*Entry, error) {
 	es := make([]*Entry, 0)
 

@@ -24,6 +24,7 @@ const (
 )
 
 var (
+	// RpcConfig sets the default target for the factomd and walletd API servers
 	RpcConfig = &RPCConfig{
 		FactomdServer: "localhost:8088",
 		WalletServer:  "localhost:8089",
@@ -52,6 +53,10 @@ func ChainIDFromStrings(fields []string) string {
 	return ChainIDFromFields(bin)
 }
 
+// EntryCost calculates the cost in Entry Credits of adding an Entry to a Chain
+// on the Factom protocol.
+// The cost is the size of the Entry in Kilobytes excluding the Entry Header
+// with any remainder being charged as a whole Kilobyte.
 func EntryCost(e *Entry) (int8, error) {
 	p, err := e.MarshalBinary()
 	if err != nil {
@@ -72,9 +77,11 @@ func EntryCost(e *Entry) (int8, error) {
 		n++
 	}
 
+	// The Entry Cost should never be less than one
 	if n < 1 {
 		n = 1
 	}
+
 	return n, nil
 }
 
