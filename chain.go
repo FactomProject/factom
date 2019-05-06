@@ -236,6 +236,41 @@ func GetAllChainEntries(chainid string) ([]*Entry, error) {
 	return es, nil
 }
 
+// GetAllChainEntriesAtHeight returns a list of all Factom Entries for a given
+// Chain at a given point in the Chain's history.
+func GetAllChainEntriesAtHeight(chainid string, height int64) ([]*Entry, error) {
+	es := make([]*Entry, 0)
+
+	head, inPL, err := GetChainHead(chainid)
+	if err != nil {
+		return es, err
+	}
+
+	if head == "" && inPL {
+		return nil, ErrChainPending
+	}
+
+	for ebhash := head; ebhash != ZeroHash; {
+		eb, err := GetEBlock(ebhash)
+		if err != nil {
+			return es, err
+		}
+		if eb.Header.DBHeight > height {
+			ebhash = eb.Header.PrevKeyMR
+			continue
+		}
+		s, err := GetAllEBlockEntries(ebhash)
+		if err != nil {
+			return es, err
+		}
+		es = append(s, es...)
+
+		ebhash = eb.Header.PrevKeyMR
+	}
+
+	return es, nil
+}
+
 // GetFirstEntry returns the first Entry used to create the given Factom Chain.
 func GetFirstEntry(chainid string) (*Entry, error) {
 	e := new(Entry)
