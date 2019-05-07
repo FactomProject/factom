@@ -15,7 +15,7 @@ import (
 func TestGetCurrentMinute(t *testing.T) {
 	min, err := GetCurrentMinute()
 	if err != nil {
-		t.Error(err)
+		t.Fatal(err)
 	}
 	t.Log(min.String())
 }
