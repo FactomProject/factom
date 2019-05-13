@@ -58,10 +58,12 @@ type Diagnostics struct {
 func (d *Diagnostics) String() string {
 	var s string
 
+	// ServerInfo
 	s += fmt.Sprintln("Name:", d.Name)
 	s += fmt.Sprintln("ID:", d.ID)
 	s += fmt.Sprintln("PublicKey:", d.PublicKey)
 	s += fmt.Sprintln("Role:", d.Role)
+	// NetworkInfo
 	s += fmt.Sprintln("LeaderHeight:", d.LeaderHeight)
 	s += fmt.Sprintln("CurrentMinute:", d.CurrentMinute)
 	s += fmt.Sprintln("CurrentMinuteDuration:", d.CurrentMinuteDuration)
