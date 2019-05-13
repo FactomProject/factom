@@ -13,12 +13,12 @@ import (
 // signing some part of the Factom Directory Block merkel tree to achieve
 // consensus on the network to create a canonical Directory Block.
 type Authority struct {
-	AuthorityChainID  string             `json:"chainid"`
-	ManagementChainID string             `json:"manageid"`
-	MatryoshkaHash    string             `json:"matroyshka"` // [sic]
-	SigningKey        string             `json:"signingkey"`
-	Status            string             `json:"status"`
-	AnchorKeys        []AnchorSigningKey `json:"anchorkeys"`
+	AuthorityChainID  string              `json:"chainid"`
+	ManagementChainID string              `json:"manageid"`
+	MatryoshkaHash    string              `json:"matroyshka"` // [sic]
+	SigningKey        string              `json:"signingkey"`
+	Status            string              `json:"status"`
+	AnchorKeys        []*AnchorSigningKey `json:"anchorkeys"`
 }
 
 func (a *Authority) String() string {
