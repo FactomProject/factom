@@ -128,105 +128,105 @@ func (a *ABlock) UnmarshalJSON(js []byte) error {
 	// and unmarshal the ABEntry into its correct type
 	for _, v := range tmp.ABEntries {
 		switch {
-		case regexp.MustCompile(`"adminidtype":0,`).MatchString(string(v)):
+		case regexp.MustCompile(`"adminidtype": ?0,`).MatchString(string(v)):
 			e := new(AdminMinuteNumber)
 			err := json.Unmarshal(v, e)
 			if err != nil {
 				return err
 			}
 			a.ABEntries = append(a.ABEntries, e)
-		case regexp.MustCompile(`"adminidtype":1,`).MatchString(string(v)):
+		case regexp.MustCompile(`"adminidtype": ?1,`).MatchString(string(v)):
 			e := new(AdminDBSignature)
 			err := json.Unmarshal(v, e)
 			if err != nil {
 				return err
 			}
 			a.ABEntries = append(a.ABEntries, e)
-		case regexp.MustCompile(`"adminidtype":2,`).MatchString(string(v)):
+		case regexp.MustCompile(`"adminidtype": ?2,`).MatchString(string(v)):
 			e := new(AdminRevealHash)
 			err := json.Unmarshal(v, e)
 			if err != nil {
 				return err
 			}
 			a.ABEntries = append(a.ABEntries, e)
-		case regexp.MustCompile(`"adminidtype":3,`).MatchString(string(v)):
+		case regexp.MustCompile(`"adminidtype": ?3,`).MatchString(string(v)):
 			e := new(AdminAddHash)
 			err := json.Unmarshal(v, e)
 			if err != nil {
 				return err
 			}
 			a.ABEntries = append(a.ABEntries, e)
-		case regexp.MustCompile(`"adminidtype":4,`).MatchString(string(v)):
+		case regexp.MustCompile(`"adminidtype": ?4,`).MatchString(string(v)):
 			e := new(AdminIncreaseServerCount)
 			err := json.Unmarshal(v, e)
 			if err != nil {
 				return err
 			}
 			a.ABEntries = append(a.ABEntries, e)
-		case regexp.MustCompile(`"adminidtype":5,`).MatchString(string(v)):
+		case regexp.MustCompile(`"adminidtype": ?5,`).MatchString(string(v)):
 			e := new(AdminAddFederatedServer)
 			err := json.Unmarshal(v, e)
 			if err != nil {
 				return err
 			}
 			a.ABEntries = append(a.ABEntries, e)
-		case regexp.MustCompile(`"adminidtype":6,`).MatchString(string(v)):
+		case regexp.MustCompile(`"adminidtype": ?6,`).MatchString(string(v)):
 			e := new(AdminAddAuditServer)
 			err := json.Unmarshal(v, e)
 			if err != nil {
 				return err
 			}
 			a.ABEntries = append(a.ABEntries, e)
-		case regexp.MustCompile(`"adminidtype":7,`).MatchString(string(v)):
+		case regexp.MustCompile(`"adminidtype": ?7,`).MatchString(string(v)):
 			e := new(AdminRemoveFederatedServer)
 			err := json.Unmarshal(v, e)
 			if err != nil {
 				return err
 			}
 			a.ABEntries = append(a.ABEntries, e)
-		case regexp.MustCompile(`"adminidtype":8,`).MatchString(string(v)):
+		case regexp.MustCompile(`"adminidtype": ?8,`).MatchString(string(v)):
 			e := new(AdminAddFederatedServerKey)
 			err := json.Unmarshal(v, e)
 			if err != nil {
 				return err
 			}
 			a.ABEntries = append(a.ABEntries, e)
-		case regexp.MustCompile(`"adminidtype":9,`).MatchString(string(v)):
+		case regexp.MustCompile(`"adminidtype": ?9,`).MatchString(string(v)):
 			e := new(AdminAddFederatedServerBTCKey)
 			err := json.Unmarshal(v, e)
 			if err != nil {
 				return err
 			}
 			a.ABEntries = append(a.ABEntries, e)
-		case regexp.MustCompile(`"adminidtype":10,`).MatchString(string(v)):
+		case regexp.MustCompile(`"adminidtype": ?10,`).MatchString(string(v)):
 			e := new(AdminServerFault)
 			err := json.Unmarshal(v, e)
 			if err != nil {
 				return err
 			}
 			a.ABEntries = append(a.ABEntries, e)
-		case regexp.MustCompile(`"adminidtype":11,`).MatchString(string(v)):
+		case regexp.MustCompile(`"adminidtype": ?11,`).MatchString(string(v)):
 			e := new(AdminCoinbaseDescriptor)
 			err := json.Unmarshal(v, e)
 			if err != nil {
 				return err
 			}
 			a.ABEntries = append(a.ABEntries, e)
-		case regexp.MustCompile(`"adminidtype":12,`).MatchString(string(v)):
+		case regexp.MustCompile(`"adminidtype": ?12,`).MatchString(string(v)):
 			e := new(AdminCoinbaseDescriptorCancel)
 			err := json.Unmarshal(v, e)
 			if err != nil {
 				return err
 			}
 			a.ABEntries = append(a.ABEntries, e)
-		case regexp.MustCompile(`"adminidtype":13,`).MatchString(string(v)):
+		case regexp.MustCompile(`"adminidtype": ?13,`).MatchString(string(v)):
 			e := new(AdminAddAuthorityAddress)
 			err := json.Unmarshal(v, e)
 			if err != nil {
 				return err
 			}
 			a.ABEntries = append(a.ABEntries, e)
-		case regexp.MustCompile(`"adminidtype":14,`).MatchString(string(v)):
+		case regexp.MustCompile(`"adminidtype": ?14,`).MatchString(string(v)):
 			e := new(AdminAddAuthorityEfficiency)
 			err := json.Unmarshal(v, e)
 			if err != nil {
@@ -535,7 +535,7 @@ func (a *AdminCoinbaseDescriptor) String() string {
 // Coinbase Descriptor it cancels has been recorded into the Blockchain.
 type AdminCoinbaseDescriptorCancel struct {
 	DescriptorHeight int `json:"descriptor_height"`
-	DescriptorIndex  int `json:descriptor_index`
+	DescriptorIndex  int `json:"descriptor_index"`
 }
 
 func (a *AdminCoinbaseDescriptorCancel) Type() AdminID {
