@@ -51,10 +51,11 @@ func (id ECID) String() string {
 // Entries, and fund Entry Credit Addresses.
 type ECBlock struct {
 	Header struct {
-		BodyHash       string `json:"bodyhash"`
-		PrevHeaderHash string `json:"prevheaderhash"`
-		PrevFullHash   string `json:"prevfullhash"`
-		DBHeight       int64  `json:"dbheight"`
+		BodyHash            string `json:"bodyhash"`
+		PrevHeaderHash      string `json:"prevheaderhash"`
+		PrevFullHash        string `json:"prevfullhash"`
+		DBHeight            int64  `json:"dbheight"`
+		HeaderExpansionArea []byte `json:"headerexpansionarea,omitempty"`
 	} `json:"header"`
 	HeaderHash string     `json:"headerhash"`
 	FullHash   string     `json:"fullhash"`
@@ -70,6 +71,9 @@ func (e *ECBlock) String() string {
 	s += fmt.Sprintln("PrevFullHash:", e.Header.PrevFullHash)
 	s += fmt.Sprintln("BodyHash:", e.Header.BodyHash)
 	s += fmt.Sprintln("DBHeight:", e.Header.DBHeight)
+	if e.Header.HeaderExpansionArea != nil {
+		s += fmt.Sprintf("HeaderExpansionArea: %x\n", e.Header.HeaderExpansionArea)
+	}
 
 	s += fmt.Sprintln("Entries:")
 	for _, v := range e.Entries {
@@ -132,7 +136,6 @@ func (e *ECBlock) UnmarshalJSON(js []byte) error {
 					return err
 				}
 				e.Entries = append(e.Entries, a)
-
 			} else {
 				a := new(ECEntryCommit)
 				err := json.Unmarshal(v, a)
@@ -149,7 +152,7 @@ func (e *ECBlock) UnmarshalJSON(js []byte) error {
 	return nil
 }
 
-// Entry Credit Block Entries are individual members of the Entry Credit Block.
+// an ECBEntry is an individual member of the Entry Credit Block.
 type ECBEntry interface {
 	Type() ECID
 	String() string

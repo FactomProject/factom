@@ -15,7 +15,6 @@ import (
 // a Merkel Tree the root of which is the Factom Directory Block.
 type EBlock struct {
 	Header struct {
-		// TODO: rename BlockSequenceNumber to EBSequence
 		BlockSequenceNumber int64  `json:"blocksequencenumber"`
 		ChainID             string `json:"chainid"`
 		PrevKeyMR           string `json:"prevkeymr"`
