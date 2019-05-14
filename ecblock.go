@@ -152,7 +152,7 @@ func (e *ECBlock) UnmarshalJSON(js []byte) error {
 	return nil
 }
 
-// Entry Credit Block Entries are individual members of the Entry Credit Block.
+// an ECBEntry is an individual member of the Entry Credit Block.
 type ECBEntry interface {
 	Type() ECID
 	String() string
