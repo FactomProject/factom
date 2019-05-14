@@ -70,12 +70,6 @@ func GetAuthorities() ([]*Authority, error) {
 		return nil, resp.Error
 	}
 
-	j, err := resp.JSONString()
-	if err != nil {
-		fmt.Println("DEBUG:", err)
-	}
-	fmt.Println("DEBUG:", j)
-
 	// create a temporary type to unmarshal the json object
 	a := new(struct {
 		Authorities []*Authority `json:"authorities"`
