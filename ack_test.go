@@ -5,13 +5,13 @@
 package factom_test
 
 import (
-	"testing"
-
 	"fmt"
 	"net/http"
 	"net/http/httptest"
 
 	. "github.com/FactomProject/factom"
+
+	"testing"
 )
 
 // TODO: these tests need a lot of cleanup, possibly just re-write

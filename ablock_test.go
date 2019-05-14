@@ -31,7 +31,7 @@ func TestUnmarshalABlock(t *testing.T) {
 }
 
 func TestGetABlock(t *testing.T) {
-	simlatedFactomdResponse := `{
+	factomdResponse := `{
 	    "jsonrpc": "2.0",
 	    "id": 1,
 	    "result": {
@@ -65,7 +65,7 @@ func TestGetABlock(t *testing.T) {
 	}`
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		fmt.Fprintln(w, simlatedFactomdResponse)
+		fmt.Fprintln(w, factomdResponse)
 	}))
 	defer ts.Close()
 

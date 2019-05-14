@@ -5,8 +5,6 @@
 package factom_test
 
 import (
-	"testing"
-
 	"bytes"
 	"crypto/rand"
 
@@ -14,6 +12,8 @@ import (
 	"github.com/FactomProject/go-bip32"
 
 	. "github.com/FactomProject/factom"
+
+	"testing"
 )
 
 func TestMarshalAddresses(t *testing.T) {
