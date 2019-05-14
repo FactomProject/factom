@@ -98,35 +98,34 @@ Date: 2015-09-01 15:07:01
 }
 
 func TestAckEntry(t *testing.T) {
+	factomdResponse := `{
+	   "jsonrpc":"2.0",
+	   "id":0,
+	   "result":{
+	      "committxid":"e5b5be39a41df43a3c46beaa238dc5e6f7bb11115a8da1a9b45cd694e257935a",
+	      "entryhash":"9228b4b080b3cf94cceea866b74c48319f2093f56bd5a63465288e9a71437ee8",
+	      "commitdata":{
+	         "transactiondate":1449547801861,
+	         "transactiondatestring":"2015-12-07 22:10:01",
+	         "blockdate":1449547800000,
+	         "blockdatestring":"2015-12-07 22:10:00",
+	         "status":"DBlockConfirmed"
+	      },
+	      "entrydata":{
+	         "blockdate":1449547800000,
+	         "blockdatestring":"2015-12-07 22:10:00",
+	         "status":"DBlockConfirmed"
+	      }
+	   }
+	}`
 
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		fmt.Fprintln(w, `{
-		   "jsonrpc":"2.0",
-		   "id":0,
-		   "result":{
-		      "committxid":"e5b5be39a41df43a3c46beaa238dc5e6f7bb11115a8da1a9b45cd694e257935a",
-		      "entryhash":"9228b4b080b3cf94cceea866b74c48319f2093f56bd5a63465288e9a71437ee8",
-		      "commitdata":{
-		         "transactiondate":1449547801861,
-		         "transactiondatestring":"2015-12-07 22:10:01",
-		         "blockdate":1449547800000,
-		         "blockdatestring":"2015-12-07 22:10:00",
-		         "status":"DBlockConfirmed"
-		      },
-		      "entrydata":{
-		         "blockdate":1449547800000,
-		         "blockdatestring":"2015-12-07 22:10:00",
-		         "status":"DBlockConfirmed"
-		      }
-		   }
-		}`)
+		fmt.Fprintln(w, factomdResponse)
 	}))
 	defer ts.Close()
 
-	url := ts.URL[7:]
-	//fmt.Println("exposed URL:",url)
-	SetFactomdServer(url)
+	SetFactomdServer(ts.URL[7:])
 
 	tx := "dummy1"
 	ehash := "dummy2"
