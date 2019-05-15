@@ -238,30 +238,31 @@ func TestCommitEntry(t *testing.T) {
 }
 
 func TestReveaEntry(t *testing.T) {
-	simlatedFactomdResponse := `{
-  "jsonrpc": "2.0",
-  "id": 0,
-  "result": {
-    "message": "Entry Reveal Success",
-    "entryhash": "f5c956749fc3eba4acc60fd485fb100e601070a44fcce54ff358d60669854734"
-  }
-}`
-
+	factomdResponse := `{
+	  "jsonrpc": "2.0",
+	  "id": 0,
+	  "result": {
+	    "message": "Entry Reveal Success",
+	    "entryhash": "f5c956749fc3eba4acc60fd485fb100e601070a44fcce54ff358d60669854734"
+	  }
+	}`
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		fmt.Fprintln(w, simlatedFactomdResponse)
+		fmt.Fprintln(w, factomdResponse)
 	}))
 	defer ts.Close()
 
-	url := ts.URL[7:]
-	SetFactomdServer(url)
+	SetFactomdServer(ts.URL[7:])
 
 	ent := new(Entry)
 	ent.ChainID = "954d5a49fd70d9b8bcdb35d252267829957f7ef7fa6c74f88419bdc5e82209f4"
 	ent.Content = []byte("test!")
 	ent.ExtIDs = append(ent.ExtIDs, []byte("test"))
 
-	response, _ := RevealEntry(ent)
+	response, err := RevealEntry(ent)
+	if err != nil {
+		t.Error(err)
+	}
 
 	expectedResponse := "f5c956749fc3eba4acc60fd485fb100e601070a44fcce54ff358d60669854734"
 
@@ -272,7 +273,7 @@ func TestReveaEntry(t *testing.T) {
 }
 
 func TestGetEntry(t *testing.T) {
-	simlatedFactomdResponse := `{
+	factomdResponse := `{
 		"jsonrpc":"2.0",
 		"id":0,
 		"result":{
@@ -283,19 +284,19 @@ func TestGetEntry(t *testing.T) {
 			]
 		}
 	}`
-
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		fmt.Fprintln(w, simlatedFactomdResponse)
+		fmt.Fprintln(w, factomdResponse)
 	}))
 	defer ts.Close()
 
-	url := ts.URL[7:]
-	SetFactomdServer(url)
+	SetFactomdServer(ts.URL[7:])
 
-	response, _ := GetEntry("be5216cc7a5a3ad44b49245aec298f47cbdfca9862dee13b0093e5880012b771")
+	response, err := GetEntry("be5216cc7a5a3ad44b49245aec298f47cbdfca9862dee13b0093e5880012b771")
+	if err != nil {
+		t.Error(err)
+	}
 
-	//fmt.Println(response)
 	expectedResponse := `EntryHash: 1c840bc18be182e89e12f9e63fb8897d13b071b631ced7e656837ccea8fdb3ae
 ChainID: df3ade9eec4b08d5379cc64270c30ea7315d8a8a1a69efe2b98a60ecdd69e604
 ExtID: FactomAnchorChain
