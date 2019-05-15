@@ -9,7 +9,7 @@ import (
 	"fmt"
 )
 
-// PropertiesResponse represents properties of the running factomd and factom
+// Properties represents properties of the running factomd and factom
 // wallet.
 type Properties struct {
 	FactomdVersion       string `json:"factomdversion"`
