@@ -6,6 +6,7 @@ package factom
 
 import (
 	"encoding/json"
+	"fmt"
 )
 
 // Receipt is the Merkel proof that a given Entry and its metadata (such as the
@@ -30,6 +31,35 @@ type Receipt struct {
 	DirectoryBlockKeyMR    string `json:"directoryblockkeymr,omitempty"`
 	BitcoinTransactionHash string `json:"bitcointransactionhash,omitempty"`
 	BitcoinBlockHash       string `json:"bitcoinblockhash,omitempty"`
+}
+
+func (r *Receipt) String() string {
+	var s string
+
+	if r.Entry.Raw != "" {
+		s += fmt.Sprintln("Raw:", r.Entry.Raw)
+	}
+	if r.Entry.EntryHash != "" {
+		s += fmt.Sprintln("EntryHash:", r.Entry.EntryHash)
+	}
+	if r.Entry.Json != "" {
+		s += fmt.Sprintln("JSON:", r.Entry.Json)
+	}
+	s += fmt.Sprintln("DirectoryBlockKeyMR:", r.DirectoryBlockKeyMR)
+	s += fmt.Sprintln("EntryBlockKeyMR:", r.EntryBlockKeyMR)
+	s += fmt.Sprintln("BitcoinTransactionHash:", r.BitcoinTransactionHash)
+	s += fmt.Sprintln("BitcoinBlockHash:", r.BitcoinBlockHash)
+	s += fmt.Sprintln("MerkelBranch [")
+	for _, b := range r.MerkleBranch {
+		s += fmt.Sprintln(" {")
+		s += fmt.Sprintln("  left:", b.Left)
+		s += fmt.Sprintln("  right:", b.Right)
+		s += fmt.Sprintln("  top:", b.Top)
+		s += fmt.Sprintln(" }")
+	}
+	s += fmt.Sprintln("]")
+
+	return s
 }
 
 // GetReceipt requests a Receipt for a given Factom Entry.
