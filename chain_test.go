@@ -50,22 +50,21 @@ func TestNewChain(t *testing.T) {
 }
 
 func TestIfExists(t *testing.T) {
-	simlatedFactomdResponse := `{
-  "jsonrpc": "2.0",
-  "id": 0,
-  "result": {
-    "ChainHead": "f65f67774139fa78344dcdd302631a0d646db0c2be4d58e3e48b2a188c1b856c"
-  }
-}`
+	factomdResponse := `{
+	  "jsonrpc": "2.0",
+	  "id": 0,
+	  "result": {
+	    "ChainHead": "f65f67774139fa78344dcdd302631a0d646db0c2be4d58e3e48b2a188c1b856c"
+	  }
+	}`
 
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		fmt.Fprintln(w, simlatedFactomdResponse)
+		fmt.Fprintln(w, factomdResponse)
 	}))
 	defer ts.Close()
 
-	url := ts.URL[7:]
-	SetFactomdServer(url)
+	SetFactomdServer(ts.URL[7:])
 
 	expectedID := "f65f67774139fa78344dcdd302631a0d646db0c2be4d58e3e48b2a188c1b856c"
 	if ChainExists(expectedID) != true {
@@ -74,16 +73,22 @@ func TestIfExists(t *testing.T) {
 }
 
 func TestIfNotExists(t *testing.T) {
-	simlatedFactomdResponse := `{"jsonrpc":"2.0","id":0,"error":{"code":-32009,"message":"Missing Chain Head"}}`
+	factomdResponse := `{
+		"jsonrpc":"2.0",
+		"id":0,
+		"error":{
+			"code":-32009,
+			"message":"Missing Chain Head"
+		}
+	}`
 
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		fmt.Fprintln(w, simlatedFactomdResponse)
+		fmt.Fprintln(w, factomdResponse)
 	}))
 	defer ts.Close()
 
-	url := ts.URL[7:]
-	SetFactomdServer(url)
+	SetFactomdServer(ts.URL[7:])
 	unexpectedID := "5a402200c5cf278e47905ce52d7d64529a0291829a7bd230072c5468be709069"
 
 	if ChainExists(unexpectedID) != false {
@@ -158,23 +163,22 @@ func TestComposeChainReveal(t *testing.T) {
 }
 
 func TestCommitChain(t *testing.T) {
-	simlatedFactomdResponse := `{
-   "jsonrpc":"2.0",
-   "id":0,
-   "result":{
-      "message":"Chain Commit Success",
-      "txid":"76e123d133a841fe3e08c5e3f3d392f8431f2d7668890c03f003f541efa8fc61"
-   }
-}`
+	factomdResponse := `{
+	   "jsonrpc":"2.0",
+	   "id":0,
+	   "result":{
+	      "message":"Chain Commit Success",
+	      "txid":"76e123d133a841fe3e08c5e3f3d392f8431f2d7668890c03f003f541efa8fc61"
+	   }
+	}`
 
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		fmt.Fprintln(w, simlatedFactomdResponse)
+		fmt.Fprintln(w, factomdResponse)
 	}))
 	defer ts.Close()
 
-	url := ts.URL[7:]
-	SetFactomdServer(url)
+	SetFactomdServer(ts.URL[7:])
 
 	ent := new(Entry)
 	ent.ChainID = "954d5a49fd70d9b8bcdb35d252267829957f7ef7fa6c74f88419bdc5e82209f4"
@@ -196,23 +200,21 @@ func TestCommitChain(t *testing.T) {
 }
 
 func TestRevealChain(t *testing.T) {
-	simlatedFactomdResponse := `{
-  "jsonrpc": "2.0",
-  "id": 0,
-  "result": {
-    "message": "Entry Reveal Success",
-    "entryhash": "f5c956749fc3eba4acc60fd485fb100e601070a44fcce54ff358d60669854734"
-  }
-}`
-
+	factomdResponse := `{
+	  "jsonrpc": "2.0",
+	  "id": 0,
+	  "result": {
+	    "message": "Entry Reveal Success",
+	    "entryhash": "f5c956749fc3eba4acc60fd485fb100e601070a44fcce54ff358d60669854734"
+	  }
+	}`
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		fmt.Fprintln(w, simlatedFactomdResponse)
+		fmt.Fprintln(w, factomdResponse)
 	}))
 	defer ts.Close()
 
-	url := ts.URL[7:]
-	SetFactomdServer(url)
+	SetFactomdServer(ts.URL[7:])
 
 	ent := new(Entry)
 	ent.ChainID = "954d5a49fd70d9b8bcdb35d252267829957f7ef7fa6c74f88419bdc5e82209f4"
