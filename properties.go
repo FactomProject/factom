@@ -76,6 +76,7 @@ func GetProperties() (*Properties, error) {
 		props.WalletVersionErr = jwerr.Error()
 		return props, jwerr
 	}
+
 	props.WalletVersion = wprops.WalletVersion
 	props.WalletVersionErr = wprops.WalletVersionErr
 	props.WalletAPIVersion = wprops.WalletAPIVersion

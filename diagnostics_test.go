@@ -5,14 +5,14 @@
 package factom_test
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
-	"testing"
-
-	"encoding/json"
 
 	. "github.com/FactomProject/factom"
+
+	"testing"
 )
 
 func TestUnmarshalDiagnostics(t *testing.T) {
