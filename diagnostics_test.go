@@ -5,6 +5,9 @@
 package factom_test
 
 import (
+	"fmt"
+	"net/http"
+	"net/http/httptest"
 	"testing"
 
 	"encoding/json"
@@ -25,6 +28,99 @@ func TestUnmarshalDiagnostics(t *testing.T) {
 
 // a local factomd api server must be running for this test to pass!
 func TestGetDiagnostics(t *testing.T) {
+	factomdResponse := `{
+	   "jsonrpc": "2.0",
+	   "id": 1,
+	   "result": {
+	      "name": "FNode0",
+	      "id": "38bab1455b7bd7e5efd15c53c777c79d0c988e9210f1da49a99d95b3a6417be9",
+	      "publickey": "cc1985cdfae4e32b5a454dfda8ce5e1361558482684f3367649c3ad852c8e31a",
+	      "role": "Follower",
+	      "leaderheight": 192669,
+	      "currentminute": 0,
+	      "currentminuteduration": 2335868444,
+	      "previousminuteduration": 1557938081229465300,
+	      "balancehash": "266960096c4e0e016a9dff266f25c91039eed9c28c8f7339e29ec724b60aaafe",
+	      "tempbalancehash": "26695dbc339e7316aea2683faf839c1b7b1ee2313db792112588118df066aa35",
+	      "lastblockfromdbstate": false,
+	      "syncing": {
+	         "status": "Processing"
+	      },
+	      "authset": {
+	         "leaders": [
+	            {
+	               "id": "8888880180b0290bbb670e399af48e57a227c939a2d20f6b0e147d24f995a6ef",
+	               "vm": 10,
+	               "listheight": 0,
+	               "listlength": 0,
+	               "nextnil": 0
+	            }, {
+	               "id": "88888807e4f3bbb9a2b229645ab6d2f184224190f83e78761674c2362aca4425",
+	               "vm": 11,
+	               "listheight": 0,
+	               "listlength": 0,
+	               "nextnil": 0
+	            }, {
+	               "id": "8888880a1ad522921100a0fdbc42ab4e701cae15d71c5ce414ec74ecd2b6d201",
+	               "vm": 12,
+	               "listheight": 0,
+	               "listlength": 0,
+	               "nextnil": 0
+	            }, {
+	               "id": "8888880c67754f737fd59310d7dbf2df08daed3b161347fbe76ca24517373911",
+	               "vm": 13,
+	               "listheight": 0,
+	               "listlength": 0,
+	               "nextnil": 0
+	            }, {
+	               "id": "888888f4d59308deaa587498e5e1c4e0228a190eba50c9ad23b604da1cbd8c77",
+	               "vm": 9,
+	               "listheight": 0,
+	               "listlength": 0,
+	               "nextnil": 0
+	            }
+	         ],
+	         "audits": [
+	            {
+	               "id": "88888804081f44513658c1565558f7e2dfb9b3b992763d88349e635db4b83101",
+	               "online": false
+	            }, {
+	               "id": "8888880834dfe56c8c5827026eec58a8a71e3496fb76035c8710f7b708a3daf6",
+	               "online": false
+	            }, {
+	               "id": "88888808e14a4e802ba540c86c2d6345d69a4938e77dd7beecbc0da6dc47b3e3",
+	               "online": false
+	            }, {
+	               "id": "8888881f8fd587a9e4b5163112b7332df01e7c5b11294652106a9b8e4e87ec24",
+	               "online": false
+	            }, {
+	               "id": "88888821e559c76aca86e03582abdb07e87095bfa239a0b5feb3943e6c85b0a3",
+	               "online": false
+	            }, {
+	               "id": "88888824716497c80f5bd509cd59049cd957dc4ff64ddd5ad77505a758a2c2dc",
+	               "online": false
+	            }, {
+	               "id": "88888852a0821dd227735c50c5016741de67786432b9644c5d695b5ce7e42e58",
+	               "online": false
+	            }, {
+	               "id": "888888ff0fa60c17e33b6173068c7dcacdc4d0ea55df6fbdd0ff2ae2db13917f",
+	               "online": false
+	            }
+	         ]
+	      },
+	      "elections": {
+	         "inprogress": false
+	      }
+	   }
+	}`
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		fmt.Fprintln(w, factomdResponse)
+	}))
+	defer ts.Close()
+
+	SetFactomdServer(ts.URL[7:])
+
 	d, err := GetDiagnostics()
 	if err != nil {
 		t.Error(err)

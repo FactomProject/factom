@@ -81,7 +81,6 @@ func TestIfNotExists(t *testing.T) {
 			"message":"Missing Chain Head"
 		}
 	}`
-
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		fmt.Fprintln(w, factomdResponse)
@@ -89,6 +88,7 @@ func TestIfNotExists(t *testing.T) {
 	defer ts.Close()
 
 	SetFactomdServer(ts.URL[7:])
+
 	unexpectedID := "5a402200c5cf278e47905ce52d7d64529a0291829a7bd230072c5468be709069"
 
 	if ChainExists(unexpectedID) != false {

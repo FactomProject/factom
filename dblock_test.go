@@ -5,13 +5,13 @@
 package factom_test
 
 import (
-	"testing"
-
 	"fmt"
 	"net/http"
 	"net/http/httptest"
 
 	. "github.com/FactomProject/factom"
+
+	"testing"
 )
 
 func TestGetDBlockByHeight(t *testing.T) {
