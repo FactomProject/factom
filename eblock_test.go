@@ -5,17 +5,17 @@
 package factom_test
 
 import (
-	"testing"
-
 	"fmt"
 	"net/http"
 	"net/http/httptest"
 
 	. "github.com/FactomProject/factom"
+
+	"testing"
 )
 
 func TestGetEBlock(t *testing.T) {
-	simlatedFactomdResponse := `{"jsonrpc":"2.0","id":0,"result":{
+	factomdResponse := `{"jsonrpc":"2.0","id":0,"result":{
 		"header":{
 			"blocksequencenumber":35990,
 			"chainid":"df3ade9eec4b08d5379cc64270c30ea7315d8a8a1a69efe2b98a60ecdd69e604",
@@ -35,12 +35,11 @@ func TestGetEBlock(t *testing.T) {
 
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		fmt.Fprintln(w, simlatedFactomdResponse)
+		fmt.Fprintln(w, factomdResponse)
 	}))
 	defer ts.Close()
 
-	url := ts.URL[7:]
-	SetFactomdServer(url)
+	SetFactomdServer(ts.URL[7:])
 
 	response, err := GetEBlock("5117490532e46037f8eb660c4fd49cae2a734fc9096b431b2a9a738d7d278398")
 	if err != nil {
