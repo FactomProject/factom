@@ -15,12 +15,37 @@ import (
 )
 
 func TestGetMultipleFCTBalances(t *testing.T) {
-	badfa := "abcdef"
-	if bs, err := GetMultipleFCTBalances(badfa); err != nil {
-		t.Error(err)
-	} else if bs.Balances[0].Err != "Error decoding address" {
-		t.Error("should have recieved error for bad address instead got", err)
-	}
+	factomdResponse := `{
+	  "jsonrpc": "2.0",
+	  "id": 3,
+	  "result": {
+	    "currentheight": 192663,
+	    "lastsavedheight": 192662,
+	    "balances": [
+	      {
+	        "ack": 4008,
+	        "saved": 4008,
+	        "err": ""
+	      }, {
+	        "ack": 4008,
+	        "saved": 4008,
+	        "err": ""
+	      }, {
+	        "ack": 4,
+	        "saved": 4,
+	        "err": ""
+	      }
+	    ]
+	  }
+	}`
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		fmt.Fprintln(w, factomdResponse)
+	}))
+	defer ts.Close()
+
+	SetFactomdServer(ts.URL[7:])
+
 	fas := []string{
 		"FA1y5ZGuHSLmf2TqNf6hVMkPiNGyQpQDTFJvDLRkKQaoPo4bmbgu",
 		"FA1y5ZGuHSLmf2TqNf6hVMkPiNGyQpQDTFJvDLRkKQaoPo4bmbgu",
@@ -34,12 +59,37 @@ func TestGetMultipleFCTBalances(t *testing.T) {
 }
 
 func TestGetMultipleECBalances(t *testing.T) {
-	badec := "abcdef"
-	if bs, err := GetMultipleECBalances(badec); err != nil {
-		t.Error(err)
-	} else if bs.Balances[0].Err != "Error decoding address" {
-		t.Error("should have recieved error for bad address instead got", err)
-	}
+	factomdResponse := `{
+	  "jsonrpc": "2.0",
+	  "id": 4,
+	  "result": {
+	    "currentheight": 192663,
+	    "lastsavedheight": 192662,
+	    "balances": [
+	      {
+	        "ack": 4008,
+	        "saved": 4008,
+	        "err": ""
+	      }, {
+	        "ack": 4008,
+	        "saved": 4008,
+	        "err": ""
+	      }, {
+	        "ack": 4,
+	        "saved": 4,
+	        "err": ""
+	      }
+	    ]
+	  }
+	}`
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		fmt.Fprintln(w, factomdResponse)
+	}))
+	defer ts.Close()
+
+	SetFactomdServer(ts.URL[7:])
+
 	ecs := []string{
 		"EC1m9mouvUQeEidmqpUYpYtXg8fvTYi6GNHaKg8KMLbdMBrFfmUa",
 		"EC1m9mouvUQeEidmqpUYpYtXg8fvTYi6GNHaKg8KMLbdMBrFfmUa",
