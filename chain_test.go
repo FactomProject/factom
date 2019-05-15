@@ -5,8 +5,6 @@
 package factom_test
 
 import (
-	"testing"
-
 	"bytes"
 	"encoding/hex"
 	"encoding/json"
@@ -15,6 +13,8 @@ import (
 	"net/http/httptest"
 
 	. "github.com/FactomProject/factom"
+
+	"testing"
 )
 
 func TestNewChain(t *testing.T) {
