@@ -5,12 +5,12 @@
 package factom_test
 
 import (
-	"testing"
-
 	"encoding/json"
 	"time"
 
 	. "github.com/FactomProject/factom"
+
+	"testing"
 )
 
 func TestJSONTransactions(t *testing.T) {
