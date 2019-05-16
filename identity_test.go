@@ -1,11 +1,13 @@
-package factom
+package factom_test
 
 import (
-	"fmt"
-	"testing"
-
 	"encoding/json"
+
 	ed "github.com/FactomProject/ed25519"
+
+	. "github.com/FactomProject/factom"
+
+	"testing"
 )
 
 func TestGetIdentityChainID(t *testing.T) {
@@ -38,9 +40,7 @@ func TestNewIdentityChain(t *testing.T) {
 	expectedChainID := "e0cf1713b492e09e783d5d9f4fc6e2c71b5bdc9af4806a7937a5e935819717e9"
 	t.Run("ChainID", func(t *testing.T) {
 		if newChain.ChainID != expectedChainID {
-			fmt.Println(newChain.ChainID)
-			fmt.Println(expectedChainID)
-			t.Fail()
+			t.Errorf("expected:%s\nrecieved:%s", expectedChainID, newChain.ChainID)
 		}
 	})
 	t.Run("Keys accessible from Content", func(t *testing.T) {
@@ -56,7 +56,6 @@ func TestNewIdentityChain(t *testing.T) {
 			}
 		}
 	})
-
 }
 
 func TestNewIdentityKeyReplacementEntry(t *testing.T) {
