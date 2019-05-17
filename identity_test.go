@@ -2,7 +2,6 @@ package factom_test
 
 import (
 	"encoding/json"
-	"fmt"
 
 	ed "github.com/FactomProject/ed25519"
 
@@ -89,9 +88,6 @@ func TestNewIdentityKeyReplacementEntry(t *testing.T) {
 		}
 	})
 	t.Run("Signature", func(t *testing.T) {
-		for i, v := range observedEntry.ExtIDs {
-			fmt.Printf("DEBUG: ExtID[%d] = %s\n", i, v)
-		}
 		observedSignature := new([64]byte)
 		copy(observedSignature[:], observedEntry.ExtIDs[3])
 		message := []byte(chainID + oldKey.String() + newKey.String())
