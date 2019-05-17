@@ -29,7 +29,10 @@ func TestNewIdentityChain(t *testing.T) {
 	}
 	var keys []string
 	for _, v := range secretKeys {
-		k, _ := GetIdentityKey(v)
+		k, err := GetIdentityKey(v)
+		if err != nil {
+			t.Error(err)
+		}
 		keys = append(keys, k.PubString())
 	}
 
@@ -46,8 +49,7 @@ func TestNewIdentityChain(t *testing.T) {
 	t.Run("Keys accessible from Content", func(t *testing.T) {
 		var contentMap map[string]interface{}
 		content := newChain.FirstEntry.Content
-		err := json.Unmarshal(content, &contentMap)
-		if err != nil {
+		if err := json.Unmarshal(content, &contentMap); err != nil {
 			t.Errorf("Failed to unmarshal content")
 		}
 		for i, v := range contentMap["keys"].([]interface{}) {
@@ -60,9 +62,18 @@ func TestNewIdentityChain(t *testing.T) {
 
 func TestNewIdentityKeyReplacementEntry(t *testing.T) {
 	chainID := "44abb806a2029ed77dca63770e2e4ac4b2fedd2e1847339ac59b180ee223eb84"
-	oldKey, _ := GetIdentityKey("idsec1jztZ7dypqtwtPPWxybZFNpvvpUh6g8oog6Mnk2gGCm1pNBTgE")
-	newKey, _ := GetIdentityKey("idsec2J3nNoqdiyboCBKDGauqN9Jb33dyFSqaJKZqTs6i5FmztsTn5f")
-	signerKey, _ := GetIdentityKey("idsec2wH72BNR9QZhTMGDbxwLWGrghZQexZvLTros2wCekkc62N9h7s")
+	oldKey, err := GetIdentityKey("idsec1jztZ7dypqtwtPPWxybZFNpvvpUh6g8oog6Mnk2gGCm1pNBTgE")
+	if err != nil {
+		t.Error(err)
+	}
+	newKey, err := GetIdentityKey("idsec2J3nNoqdiyboCBKDGauqN9Jb33dyFSqaJKZqTs6i5FmztsTn5f")
+	if err != nil {
+		t.Error(err)
+	}
+	signerKey, err := GetIdentityKey("idsec2wH72BNR9QZhTMGDbxwLWGrghZQexZvLTros2wCekkc62N9h7s")
+	if err != nil {
+		t.Error(err)
+	}
 
 	observedEntry, err := NewIdentityKeyReplacementEntry(chainID, oldKey.PubString(), newKey.PubString(), signerKey)
 	if err != nil {
