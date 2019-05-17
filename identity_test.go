@@ -2,6 +2,7 @@ package factom_test
 
 import (
 	"encoding/json"
+	"fmt"
 
 	ed "github.com/FactomProject/ed25519"
 
@@ -37,7 +38,7 @@ func TestNewIdentityChain(t *testing.T) {
 	if err != nil {
 		t.Errorf("Failed to compose identity chain struct %s", err.Error())
 	}
-	expectedChainID := "e0cf1713b492e09e783d5d9f4fc6e2c71b5bdc9af4806a7937a5e935819717e9"
+	expectedChainID := "44abb806a2029ed77dca63770e2e4ac4b2fedd2e1847339ac59b180ee223eb84"
 	t.Run("ChainID", func(t *testing.T) {
 		if newChain.ChainID != expectedChainID {
 			t.Errorf("expected:%s\nrecieved:%s", expectedChainID, newChain.ChainID)
@@ -59,7 +60,7 @@ func TestNewIdentityChain(t *testing.T) {
 }
 
 func TestNewIdentityKeyReplacementEntry(t *testing.T) {
-	chainID := "e0cf1713b492e09e783d5d9f4fc6e2c71b5bdc9af4806a7937a5e935819717e9"
+	chainID := "44abb806a2029ed77dca63770e2e4ac4b2fedd2e1847339ac59b180ee223eb84"
 	oldKey, _ := GetIdentityKey("idsec1jztZ7dypqtwtPPWxybZFNpvvpUh6g8oog6Mnk2gGCm1pNBTgE")
 	newKey, _ := GetIdentityKey("idsec2J3nNoqdiyboCBKDGauqN9Jb33dyFSqaJKZqTs6i5FmztsTn5f")
 	signerKey, _ := GetIdentityKey("idsec2wH72BNR9QZhTMGDbxwLWGrghZQexZvLTros2wCekkc62N9h7s")
@@ -88,10 +89,13 @@ func TestNewIdentityKeyReplacementEntry(t *testing.T) {
 		}
 	})
 	t.Run("Signature", func(t *testing.T) {
-		var observedSignature [64]byte
+		for i, v := range observedEntry.ExtIDs {
+			fmt.Printf("DEBUG: ExtID[%d] = %s\n", i, v)
+		}
+		observedSignature := new([64]byte)
 		copy(observedSignature[:], observedEntry.ExtIDs[3])
-		message := []byte(oldKey.String() + newKey.String())
-		if !ed.Verify(signerKey.Pub, message, &observedSignature) {
+		message := []byte(chainID + oldKey.String() + newKey.String())
+		if !ed.Verify(signerKey.Pub, message, observedSignature) {
 			t.Fail()
 		}
 	})
@@ -100,7 +104,7 @@ func TestNewIdentityKeyReplacementEntry(t *testing.T) {
 func TestNewIdentityAttributeEntry(t *testing.T) {
 	receiverChainID := "5ef81cd345fd497a376ca5e5670ef10826d96e73c9f797b33ea46552a47834a3"
 	destinationChainID := "5a402200c5cf278e47905ce52d7d64529a0291829a7bd230072c5468be709069"
-	signerChainID := "e0cf1713b492e09e783d5d9f4fc6e2c71b5bdc9af4806a7937a5e935819717e9"
+	signerChainID := "44abb806a2029ed77dca63770e2e4ac4b2fedd2e1847339ac59b180ee223eb84"
 	signerKey, err := GetIdentityKey("idsec2J3nNoqdiyboCBKDGauqN9Jb33dyFSqaJKZqTs6i5FmztsTn5f")
 	if err != nil {
 		t.Errorf("Failed to get identity key")
@@ -127,7 +131,7 @@ func TestNewIdentityAttributeEntry(t *testing.T) {
 
 func TestNewIdentityAttributeEndorsementEntry(t *testing.T) {
 	destinationChainID := "5a402200c5cf278e47905ce52d7d64529a0291829a7bd230072c5468be709069"
-	signerChainID := "e0cf1713b492e09e783d5d9f4fc6e2c71b5bdc9af4806a7937a5e935819717e9"
+	signerChainID := "44abb806a2029ed77dca63770e2e4ac4b2fedd2e1847339ac59b180ee223eb84"
 	signerKey, _ := GetIdentityKey("idsec2J3nNoqdiyboCBKDGauqN9Jb33dyFSqaJKZqTs6i5FmztsTn5f")
 	entryHash := "52385948ea3ab6fd67b07664ac6a30ae5f6afa94427a547c142517beaa9054d0"
 
