@@ -13,6 +13,7 @@ import (
 )
 
 type Entry struct {
+	Version uint8    `json:"version"`
 	ChainID string   `json:"chainid"`
 	ExtIDs  [][]byte `json:"extids"`
 	Content []byte   `json:"content"`
@@ -54,7 +55,7 @@ func (e *Entry) MarshalBinary() ([]byte, error) {
 	// Header
 
 	// 1 byte Version
-	buf.Write([]byte{0})
+	buf.WriteByte(e.Version)
 
 	// 32 byte chainid
 	if p, err := hex.DecodeString(e.ChainID); err != nil {
@@ -176,7 +177,7 @@ func ComposeEntryCommit(e *Entry, ec *ECAddress) (*JSON2Request, error) {
 	buf := new(bytes.Buffer)
 
 	// 1 byte version
-	buf.Write([]byte{0})
+	buf.WriteByte(e.Version)
 
 	// 6 byte milliTimestamp (truncated unix time)
 	buf.Write(milliTime())
