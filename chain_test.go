@@ -32,21 +32,35 @@ func TestNewChain(t *testing.T) {
 	}
 	t.Log(newChain.ChainID)
 
-	cfb := NewChainFromBytes(ent.Content, ent.ExtIDs...)
-	if cfb.ChainID != expectedID {
-		t.Errorf("expected:%s\nrecieved:%s", expectedID, cfb.ChainID)
-	}
-	t.Log(cfb.ChainID)
+	t.Run("from bytes", func(t *testing.T) {
+		chain := NewChainFromBytes(ent.Content, ent.ExtIDs...)
+		cid := ChainIDFromFields(ent.ExtIDs)
+		if chain.ChainID != expectedID {
+			t.Errorf("expected:%s\nrecieved:%s", expectedID, chain.ChainID)
+		}
+		if cid != expectedID {
+			t.Errorf("expected:%s\nrecieved:%s", expectedID, cid)
+		}
+		t.Log(chain.ChainID)
+	})
 
-	cfs := NewChainFromStrings(
-		"This is a test Entry.",
-		"This is the first extid.",
-		"This is the second extid.",
-	)
-	if cfs.ChainID != expectedID {
-		t.Errorf("expected:%s\nrecieved:%s", expectedID, cfs.ChainID)
-	}
-	t.Log(cfs.ChainID)
+	t.Run("from strings", func(t *testing.T) {
+		chain := NewChainFromStrings(
+			"This is a test Entry.",
+			"This is the first extid.",
+			"This is the second extid.",
+		)
+		cid := ChainIDFromStrings([]string{
+			"This is the first extid.",
+			"This is the second extid.",
+		})
+		if chain.ChainID != expectedID {
+			t.Errorf("expected:%s\nrecieved:%s", expectedID, chain.ChainID)
+		}
+		if cid != expectedID {
+			t.Errorf("expected:%s\nrecieved:%s", expectedID, cid)
+		}
+	})
 }
 
 func TestIfExists(t *testing.T) {
