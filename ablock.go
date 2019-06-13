@@ -247,7 +247,7 @@ type ABEntry interface {
 	String() string
 }
 
-// AdminMinuteNumber is depricated as of the Factom Milestone 2 release, but is
+// AdminMinuteNumber is deprecated as of the Factom Milestone 2 release, but is
 // kept here for backwards compatability.
 //
 // AdminMinuteNumber represents the end of a minute during the 10 minute block
@@ -336,6 +336,9 @@ func (a *AdminAddHash) String() string {
 	return s
 }
 
+// AdminMinuteNumber is deprecated as of the Factom Milestone 2 release, but is
+// kept here for backwards compatability.
+//
 // AdminIncreaseServerCount increases the maximum number of authoritative
 // servers that can participate in consensus when building subsequent blocks.
 type AdminIncreaseServerCount struct {
@@ -394,8 +397,8 @@ func (a *AdminAddAuditServer) String() string {
 	return s
 }
 
-// AdminRemoveFederatedServer removes a Federated Server from the pool at the
-// specified Directory Block Height.
+// AdminRemoveFederatedServer removes an Authority Server from the pool at the
+// specified Directory Block Height. This server can be a Federated or Audit server.
 type AdminRemoveFederatedServer struct {
 	IdentityChainID string `json:"identitychainid"`
 	DBHeight        int64  `json:"dbheight"`
@@ -470,6 +473,7 @@ func (a *AdminAddFederatedServerBTCKey) String() string {
 }
 
 // AdminServerFault authorizes the removal of a Federated Server.
+// This message is not currently in use by the protocol.
 type AdminServerFault struct {
 	Timestamp     string `json:"timestamp"`
 	ServerID      string `json:"serverid"`
