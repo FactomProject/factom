@@ -81,7 +81,7 @@ func (id AdminID) String() string {
 type ABlock struct {
 	PrevBackreferenceHash string    `json:"prevbackrefhash"`
 	DBHeight              int64     `json:"dbheight"`
-	BackReverenceHash     string    `json:"backreferencehash"`
+	BackReferenceHash     string    `json:"backreferencehash"`
 	LookupHash            string    `json:"lookuphash"`
 	ABEntries             []ABEntry `json:"abentries"`
 }
@@ -89,7 +89,7 @@ type ABlock struct {
 func (a *ABlock) String() string {
 	var s string
 
-	s += fmt.Sprintln("BackReverenceHash:", a.BackReverenceHash)
+	s += fmt.Sprintln("BackReferenceHash:", a.BackReferenceHash)
 	s += fmt.Sprintln("LookupHash:", a.LookupHash)
 	s += fmt.Sprintln("PrevBackreferenceHash:", a.PrevBackreferenceHash)
 	s += fmt.Sprintln("DBHeight:", a.DBHeight)
@@ -109,7 +109,7 @@ func (a *ABlock) UnmarshalJSON(js []byte) error {
 			PrevBackreferenceHash string `json:"prevbackrefhash"`
 			DBHeight              int64  `json:"dbheight"`
 		}
-		BackReverenceHash string            `json:"backreferencehash"`
+		BackReferenceHash string            `json:"backreferencehash"`
 		LookupHash        string            `json:"lookuphash"`
 		ABEntries         []json.RawMessage `json:"abentries"`
 	})
@@ -121,7 +121,7 @@ func (a *ABlock) UnmarshalJSON(js []byte) error {
 
 	a.PrevBackreferenceHash = tmp.Header.PrevBackreferenceHash
 	a.DBHeight = tmp.Header.DBHeight
-	a.BackReverenceHash = tmp.BackReverenceHash
+	a.BackReferenceHash = tmp.BackReferenceHash
 	a.LookupHash = tmp.LookupHash
 
 	// Use a regular expression to match the "adminidtype" field from the json
