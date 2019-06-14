@@ -60,3 +60,18 @@ jobs:
             export GOPATH=/tmp/go
             cd /tmp/go/src/github.com/FactomProject/factom
             go test -v ./...
+
+workflows:
+  version: 2
+  commit-workflow:
+    jobs:
+      - build:
+          filters:
+            tags:
+              only: /.*/
+      - test:
+          filters:
+            tags:
+              only: /.*/
+          requires:
+            - build
