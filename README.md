@@ -1,6 +1,6 @@
 factom api
 ===
-[![Build Status](https://travis-ci.org/FactomProject/factom.svg?branch=develop)](https://travis-ci.org/FactomProject/factom)
+[![CircleCI](https://circleci.com/gh/FactomProject/factom/tree/master.svg?style=svg)](https://circleci.com/gh/FactomProject/factom/tree/master)
 [![GoDoc](https://godoc.org/github.com/FactomProject/factom?status.svg)](https://godoc.org/github.com/FactomProject/factom)
 
 Golang client implementation of the
