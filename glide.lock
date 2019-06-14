@@ -1,5 +1,5 @@
 hash: e7a2fca998c7734fbff1b93b4038d50df8d0fa45bffba23de5043fcbba6b4426
-updated: 2019-06-14T11:31:11.313362719-05:00
+updated: 2019-06-14T12:32:37.517228145-05:00
 imports:
 - name: github.com/beorn7/perks
   version: 3a771d992973f24aa725d07868b467d1ddfceafb
@@ -9,6 +9,10 @@ imports:
   version: f2b1058a82554c0c7c3b8809c5956c38374604d8
   subpackages:
   - base58
+- name: github.com/davecgh/go-spew
+  version: d8f796af33cc11cb798c1aaeb27a4ebc5099927d
+  subpackages:
+  - spew
 - name: github.com/FactomProject/basen
   version: fe3947df716ebfda9847eb1b9a48f9592e06478c
 - name: github.com/FactomProject/bolt
@@ -39,6 +43,8 @@ imports:
 - name: github.com/FactomProject/factomd
   version: 2696967805906799a50cb2db2e55947b08b06e92
   subpackages:
+  - Utilities/CorrectChainHeads/correctChainHeads
+  - Utilities/tools
   - activations
   - anchor
   - common/adminBlock
@@ -153,6 +159,10 @@ imports:
   version: 6d0b8010fcc857872e42fc6c931227569016843c
 - name: github.com/oklog/run
   version: 6934b124db28979da51d3470dadfa34d73d72652
+- name: github.com/pmezard/go-difflib
+  version: 792786c7400a136282c1664665ae0a8db921c6c2
+  subpackages:
+  - difflib
 - name: github.com/prometheus/client_golang
   version: f30f428035633da15d00d3dfefb0128c5e569ef4
   subpackages:
@@ -178,6 +188,10 @@ imports:
   version: a3460e445dd310dbefee993fe449f2ff9c08ae71
 - name: github.com/sirupsen/logrus
   version: 566a5f690849162ff53cf98f3c42135389d63f95
+- name: github.com/stretchr/testify
+  version: ffdc059bfe9ce6a4e144ba849dbedead332c6053
+  subpackages:
+  - assert
 - name: golang.org/x/crypto
   version: 4d3f4d9ffa16a13f451c3b2999e9c49e9750bf06
   subpackages:

@@ -23,10 +23,11 @@ jobs:
             cd $GOPATH/src/github.com/Masterminds/glide
             git checkout tags/v0.13.1
             go install
-      - run:
-          name: Get goveralls
-          command: |
-            go get github.com/mattn/goveralls
+# Potentially enable coveralls in the future
+#      - run:
+#          name: Get goveralls
+#          command: |
+#            go get github.com/mattn/goveralls
       - run:
           name: Get the dependencies
           command: |
@@ -54,7 +55,7 @@ jobs:
       - attach_workspace:
           at: /tmp
       - run:
-          name: Launch factomd + walletd, then run unit tests
+          name: Run unit tests
           command: |
             export PATH="/tmp/go/bin:$PATH"
             export GOPATH=/tmp/go
