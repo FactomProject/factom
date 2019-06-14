@@ -1,5 +1,5 @@
 hash: e7a2fca998c7734fbff1b93b4038d50df8d0fa45bffba23de5043fcbba6b4426
-updated: 2019-06-13T10:27:31.039889643-05:00
+updated: 2019-06-14T11:31:11.313362719-05:00
 imports:
 - name: github.com/beorn7/perks
   version: 3a771d992973f24aa725d07868b467d1ddfceafb
@@ -37,10 +37,8 @@ imports:
   subpackages:
   - controlpanel
 - name: github.com/FactomProject/factomd
-  version: c1cc53ae6bd1d3882d30d8afcb0134ab139efe47
+  version: 2696967805906799a50cb2db2e55947b08b06e92
   subpackages:
-  - Utilities/CorrectChainHeads/correctChainHeads
-  - Utilities/tools
   - activations
   - anchor
   - common/adminBlock
@@ -211,7 +209,7 @@ imports:
   - unicode/bidi
   - unicode/norm
 - name: google.golang.org/genproto
-  version: a7e196e89fd3a3c4d103ca540bd5dac3a736e375
+  version: 32ee49c4dd805befd833990acba36cb75042378c
   subpackages:
   - googleapis/rpc/status
 - name: google.golang.org/grpc
