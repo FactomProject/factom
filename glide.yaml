@@ -27,3 +27,6 @@ import:
   - leveldb
 - package: github.com/FactomProject/netki-go-partner-client
 - package: github.com/FactomProject/web
+- package: github.com/stretchr/testify
+  subpackages:
+  - assert
