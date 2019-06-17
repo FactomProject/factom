@@ -9,10 +9,6 @@ imports:
   version: f2b1058a82554c0c7c3b8809c5956c38374604d8
   subpackages:
   - base58
-- name: github.com/davecgh/go-spew
-  version: d8f796af33cc11cb798c1aaeb27a4ebc5099927d
-  subpackages:
-  - spew
 - name: github.com/FactomProject/basen
   version: fe3947df716ebfda9847eb1b9a48f9592e06478c
 - name: github.com/FactomProject/bolt
@@ -159,10 +155,6 @@ imports:
   version: 6d0b8010fcc857872e42fc6c931227569016843c
 - name: github.com/oklog/run
   version: 6934b124db28979da51d3470dadfa34d73d72652
-- name: github.com/pmezard/go-difflib
-  version: 792786c7400a136282c1664665ae0a8db921c6c2
-  subpackages:
-  - difflib
 - name: github.com/prometheus/client_golang
   version: f30f428035633da15d00d3dfefb0128c5e569ef4
   subpackages:
