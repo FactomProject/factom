@@ -14,15 +14,14 @@ import (
 	"testing"
 )
 
-func TestGetTPS(t *testing.T) {
+func TestGetECRate(t *testing.T) {
 	factomdResponse := `{
-	   "jsonrpc": "2.0",
-	   "id": 1,
-	   "result": {
-	      "totaltxrate": 314.1592,
-	      "instanttxrate": 271.828
-	   }
-	}`
+        "jsonrpc": "2.0",
+        "id": 0,
+        "result": {
+            "rate": 95369
+        }
+    }`
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		fmt.Fprintln(w, factomdResponse)
@@ -31,9 +30,15 @@ func TestGetTPS(t *testing.T) {
 
 	SetFactomdServer(ts.URL[7:])
 
-	instant, total, err := GetTPS()
+	response, err := GetECRate()
 	if err != nil {
 		t.Error(err)
 	}
-	t.Logf("Instant: %f, Total: %f\n", instant, total)
+
+	expectedResponse := uint64(95369)
+
+	if expectedResponse != response {
+		t.Errorf("expected:%d\nrecieved:%d", expectedResponse, response)
+	}
+	t.Log(response)
 }

@@ -9,13 +9,16 @@ import (
 	"fmt"
 )
 
+// An Authority is an identity on the Factom Blockchain that is responsible for
+// signing some part of the Factom Directory Block merkel tree to achieve
+// consensus on the network to create a canonical Directory Block.
 type Authority struct {
-	AuthorityChainID  string             `json:"chainid"`
-	ManagementChainID string             `json:"manageid"`
-	MatryoshkaHash    string             `json:"matroyshka"` // [sic]
-	SigningKey        string             `json:"signingkey"`
-	Status            string             `json:"status"`
-	AnchorKeys        []AnchorSigningKey `json:"anchorkeys"`
+	AuthorityChainID  string              `json:"chainid"`
+	ManagementChainID string              `json:"manageid"`
+	MatryoshkaHash    string              `json:"matroyshka"` // [sic]
+	SigningKey        string              `json:"signingkey"`
+	Status            string              `json:"status"`
+	AnchorKeys        []*AnchorSigningKey `json:"anchorkeys"`
 }
 
 func (a *Authority) String() string {
@@ -36,12 +39,13 @@ func (a *Authority) String() string {
 	return s
 }
 
+// AnchorSigningKey is a key for an external blockchain (like Bitcoin or
+// Etherium) used to create a Factom Anchor.
 type AnchorSigningKey struct {
 	BlockChain string `json:"blockchain"`
 	KeyLevel   byte   `json:"level"`
 	KeyType    byte   `json:"keytype"`
 	SigningKey string `json:"key"` //if bytes, it is hex
-
 }
 
 func (k *AnchorSigningKey) String() string {
@@ -55,7 +59,7 @@ func (k *AnchorSigningKey) String() string {
 	return s
 }
 
-// GetAuthorites retrieves a list of the known athorities from factomd
+// GetAuthorities retrieves a list of the known athorities from factomd.
 func GetAuthorities() ([]*Authority, error) {
 	req := NewJSON2Request("authorities", APICounter(), nil)
 	resp, err := factomdRequest(req)

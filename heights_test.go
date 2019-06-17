@@ -14,15 +14,17 @@ import (
 	"testing"
 )
 
-func TestGetTPS(t *testing.T) {
+func TestGetHeights(t *testing.T) {
 	factomdResponse := `{
-	   "jsonrpc": "2.0",
-	   "id": 1,
-	   "result": {
-	      "totaltxrate": 314.1592,
-	      "instanttxrate": 271.828
-	   }
-	}`
+       "jsonrpc":"2.0",
+       "id":0,
+       "result":{
+          "directoryblockheight":72498,
+          "leaderheight":72498,
+          "entryblockheight":72498,
+          "entryheight":72498
+       }
+    }`
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		fmt.Fprintln(w, factomdResponse)
@@ -31,9 +33,19 @@ func TestGetTPS(t *testing.T) {
 
 	SetFactomdServer(ts.URL[7:])
 
-	instant, total, err := GetTPS()
+	response, err := GetHeights()
 	if err != nil {
 		t.Error(err)
 	}
-	t.Logf("Instant: %f, Total: %f\n", instant, total)
+
+	expectedResponse := `DirectoryBlockHeight: 72498
+LeaderHeight: 72498
+EntryBlockHeight: 72498
+EntryHeight: 72498
+`
+
+	if expectedResponse != response.String() {
+		t.Errorf("expected:%s\nrecieved:%s", expectedResponse, response)
+	}
+	t.Log(response)
 }

@@ -9,7 +9,6 @@ import (
 	"crypto/sha256"
 	"crypto/sha512"
 	"encoding/binary"
-	"encoding/hex"
 	"fmt"
 	"math"
 	"regexp"
@@ -24,34 +23,17 @@ const (
 )
 
 var (
+	// RpcConfig sets the default target for the factomd and walletd API servers
 	RpcConfig = &RPCConfig{
 		FactomdServer: "localhost:8088",
 		WalletServer:  "localhost:8089",
 	}
 )
 
-// ChainIDFromFields computes a ChainID based on the binary External IDs of that
-// Chain's First Entry.
-func ChainIDFromFields(fields [][]byte) string {
-	hs := sha256.New()
-	for _, id := range fields {
-		h := sha256.Sum256(id)
-		hs.Write(h[:])
-	}
-	cid := hs.Sum(nil)
-	return hex.EncodeToString(cid)
-}
-
-// ChainIDFromStrings computes the ChainID of a Chain Created with External IDs
-// that would match the given string (in order).
-func ChainIDFromStrings(fields []string) string {
-	var bin [][]byte
-	for _, str := range fields {
-		bin = append(bin, []byte(str))
-	}
-	return ChainIDFromFields(bin)
-}
-
+// EntryCost calculates the cost in Entry Credits of adding an Entry to a Chain
+// on the Factom protocol.
+// The cost is the size of the Entry in Kilobytes excluding the Entry Header
+// with any remainder being charged as a whole Kilobyte.
 func EntryCost(e *Entry) (int8, error) {
 	p, err := e.MarshalBinary()
 	if err != nil {
@@ -72,9 +54,11 @@ func EntryCost(e *Entry) (int8, error) {
 		n++
 	}
 
+	// The Entry Cost should never be less than one
 	if n < 1 {
 		n = 1
 	}
+
 	return n, nil
 }
 

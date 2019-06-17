@@ -71,3 +71,32 @@ func GetFBlock(keymr string) (fblock *FBlock, raw []byte, err error) {
 
 	return wrap.FBlock, raw, nil
 }
+
+// GetFBlockByHeight requests a specified Factoid Block from factomd, returning
+// the FBlock struct, the raw binary FBlock, and an error if present.
+func GetFBlockByHeight(height int64) (ablock *FBlock, raw []byte, err error) {
+	params := heightRequest{Height: height}
+	req := NewJSON2Request("fblock-by-height", APICounter(), params)
+	resp, err := factomdRequest(req)
+	if err != nil {
+		return
+	}
+	if resp.Error != nil {
+		return nil, nil, resp.Error
+	}
+
+	wrap := new(struct {
+		FBlock  *FBlock `json:"fblock"`
+		RawData string  `json:"rawdata"`
+	})
+	if err = json.Unmarshal(resp.JSONResult(), wrap); err != nil {
+		return
+	}
+
+	raw, err = hex.DecodeString(wrap.RawData)
+	if err != nil {
+		return
+	}
+
+	return wrap.FBlock, raw, nil
+}

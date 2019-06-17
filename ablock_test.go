@@ -5,12 +5,14 @@
 package factom_test
 
 import (
-	"testing"
-
 	"encoding/json"
 	"fmt"
+	"net/http"
+	"net/http/httptest"
 
 	. "github.com/FactomProject/factom"
+
+	"testing"
 )
 
 func TestUnmarshalABlock(t *testing.T) {
@@ -29,10 +31,99 @@ func TestUnmarshalABlock(t *testing.T) {
 }
 
 func TestGetABlock(t *testing.T) {
+	factomdResponse := `{
+	    "jsonrpc": "2.0",
+	    "id": 1,
+	    "result": {
+	        "ablock": {
+	            "header": {
+	                "prevbackrefhash": "e3549cd600cbb00d6f8bf4c505ee74f6dc5326d7aa02bb7e4b33f8f16bd6f3f5",
+	                "dbheight": 20000,
+	                "headerexpansionsize": 0,
+	                "headerexpansionarea": "",
+	                "messagecount": 2,
+	                "bodysize": 131,
+	                "adminchainid": "000000000000000000000000000000000000000000000000000000000000000a",
+	                "chainid": "000000000000000000000000000000000000000000000000000000000000000a"
+	            },
+	            "abentries": [{
+	                "adminidtype": 1,
+	                "identityadminchainid": "0000000000000000000000000000000000000000000000000000000000000000",
+	                "prevdbsig": {
+	                    "pub": "0426a802617848d4d16d87830fc521f4d136bb2d0c352850919c2679f189613a",
+	                    "sig": "a7d55725393d78a0e623141a41bfcb64956d308eeb1ae501243ad171c2ed42e62a654e138025d0439ecb5bbf594315c191fa88eedb699d9b63a426a6036d630d"
+	                }
+	            }, {
+	                "adminidtype":0,
+	                "minutenumber": 1
+	            }],
+	            "backreferencehash": "c8ad13a2aea0f961bf73ac9e79ae8aa0d77ddf59e7d02931de7b9e53a3a20c5e",
+	            "lookuphash": "e7eb4bda495dbe7657cae1525b6be78bd2fdbad952ebde506b6a97e1cf8f431e"
+	        },
+	        "rawdata": "000000000000000000000000000000000000000000000000000000000000000ae3549cd600cbb00d6f8bf4c505ee74f6dc5326d7aa02bb7e4b33f8f16bd6f3f500004e200000000002000000830100000000000000000000000000000000000000000000000000000000000000000426a802617848d4d16d87830fc521f4d136bb2d0c352850919c2679f189613aa7d55725393d78a0e623141a41bfcb64956d308eeb1ae501243ad171c2ed42e62a654e138025d0439ecb5bbf594315c191fa88eedb699d9b63a426a6036d630d0001"
+	    }
+	}`
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		fmt.Fprintln(w, factomdResponse)
+	}))
+	defer ts.Close()
+
+	SetFactomdServer(ts.URL[7:])
+
 	ab, raw, err := GetABlock("e7eb4bda495dbe7657cae1525b6be78bd2fdbad952ebde506b6a97e1cf8f431e")
 	if err != nil {
 		t.Error(err)
 	}
 	t.Log("ABlock:", ab)
-	t.Log(fmt.Printf("Raw: %x\n", raw))
+	t.Log(fmt.Sprintf("Raw: %x\n", raw))
+}
+
+func TestGetABlockByHeight(t *testing.T) {
+	simlatedFactomdResponse := `{
+	    "jsonrpc": "2.0",
+	    "id": 1,
+	    "result": {
+	        "ablock": {
+	            "header": {
+	                "prevbackrefhash": "e3549cd600cbb00d6f8bf4c505ee74f6dc5326d7aa02bb7e4b33f8f16bd6f3f5",
+	                "dbheight": 20000,
+	                "headerexpansionsize": 0,
+	                "headerexpansionarea": "",
+	                "messagecount": 2,
+	                "bodysize": 131,
+	                "adminchainid": "000000000000000000000000000000000000000000000000000000000000000a",
+	                "chainid": "000000000000000000000000000000000000000000000000000000000000000a"
+	            },
+	            "abentries": [{
+	                "adminidtype": 1,
+	                "identityadminchainid": "0000000000000000000000000000000000000000000000000000000000000000",
+	                "prevdbsig": {
+	                    "pub": "0426a802617848d4d16d87830fc521f4d136bb2d0c352850919c2679f189613a",
+	                    "sig": "a7d55725393d78a0e623141a41bfcb64956d308eeb1ae501243ad171c2ed42e62a654e138025d0439ecb5bbf594315c191fa88eedb699d9b63a426a6036d630d"
+	                }
+	            }, {
+	                "adminidtype": 0,
+	                "minutenumber": 1
+	            }],
+	            "backreferencehash": "c8ad13a2aea0f961bf73ac9e79ae8aa0d77ddf59e7d02931de7b9e53a3a20c5e",
+	            "lookuphash": "e7eb4bda495dbe7657cae1525b6be78bd2fdbad952ebde506b6a97e1cf8f431e"
+	        },
+	        "rawdata": "000000000000000000000000000000000000000000000000000000000000000ae3549cd600cbb00d6f8bf4c505ee74f6dc5326d7aa02bb7e4b33f8f16bd6f3f500004e200000000002000000830100000000000000000000000000000000000000000000000000000000000000000426a802617848d4d16d87830fc521f4d136bb2d0c352850919c2679f189613aa7d55725393d78a0e623141a41bfcb64956d308eeb1ae501243ad171c2ed42e62a654e138025d0439ecb5bbf594315c191fa88eedb699d9b63a426a6036d630d0001"
+	    }
+	}`
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		fmt.Fprintln(w, simlatedFactomdResponse)
+	}))
+	defer ts.Close()
+
+	SetFactomdServer(ts.URL[7:])
+
+	ab, raw, err := GetABlockByHeight(20000)
+	if err != nil {
+		t.Error(err)
+	}
+	t.Log("ABlock:", ab)
+	t.Log(fmt.Sprintf("Raw: %x\n", raw))
 }

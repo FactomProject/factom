@@ -16,6 +16,7 @@ import (
 	"time"
 )
 
+// RPCConfig is the configuration for the API handler
 type RPCConfig struct {
 	WalletTLSEnable    bool
 	WalletTLSKeyFile   string
@@ -24,6 +25,7 @@ type RPCConfig struct {
 	WalletRPCPassword  string
 	WalletServer       string
 	WalletTimeout      time.Duration
+	WalletCORSDomains  string
 	FactomdTLSEnable   bool
 	FactomdTLSCertFile string
 	FactomdRPCUser     string
@@ -212,6 +214,8 @@ func SendFactomdRequest(req *JSON2Request) (*JSON2Response, error) {
 	return factomdRequest(req)
 }
 
+// factomdRequest sends a JSON RPC request to the factomd API server and returns
+// the corresponding API response.
 func factomdRequest(req *JSON2Request) (*JSON2Response, error) {
 	j, err := json.Marshal(req)
 	if err != nil {
@@ -221,7 +225,7 @@ func factomdRequest(req *JSON2Request) (*JSON2Response, error) {
 	factomdTls, factomdCertPath := GetFactomdEncryption()
 
 	var client *http.Client
-	var httpx string
+	var scheme, host string
 
 	if factomdTls == true {
 		caCert, err := ioutil.ReadFile(factomdCertPath)
@@ -231,17 +235,25 @@ func factomdRequest(req *JSON2Request) (*JSON2Response, error) {
 		caCertPool := x509.NewCertPool()
 		caCertPool.AppendCertsFromPEM(caCert)
 		tr := &http.Transport{TLSClientConfig: &tls.Config{RootCAs: caCertPool}}
-
 		client = &http.Client{Transport: tr, Timeout: GetFactomdTimeout()}
-		httpx = "https"
+		scheme = "https"
+		host = RpcConfig.FactomdServer
 
 	} else {
 		client = &http.Client{Timeout: GetFactomdTimeout()}
-		httpx = "http"
+		if index := strings.Index(RpcConfig.FactomdServer, "://"); index != -1 {
+			scheme = RpcConfig.FactomdServer[0:index]
+			host = RpcConfig.FactomdServer[index+3:]
+		} else {
+			scheme = "http"
+			host = RpcConfig.FactomdServer
+		}
 	}
-	re, err := http.NewRequest("POST",
-		fmt.Sprintf("%s://%s/v2", httpx, RpcConfig.FactomdServer),
-		bytes.NewBuffer(j))
+	re, err := http.NewRequest(
+		"POST",
+		fmt.Sprintf("%s://%s/v2", scheme, host),
+		bytes.NewBuffer(j),
+	)
 	if err != nil {
 		return nil, err
 	}
@@ -274,6 +286,8 @@ func factomdRequest(req *JSON2Request) (*JSON2Response, error) {
 	return r, nil
 }
 
+// walletRequest sends a JSON RPC request to the factom wallet API server and
+// returns the corresponding API response.
 func walletRequest(req *JSON2Request) (*JSON2Response, error) {
 	j, err := json.Marshal(req)
 	if err != nil {
@@ -296,15 +310,16 @@ func walletRequest(req *JSON2Request) (*JSON2Response, error) {
 
 		client = &http.Client{Transport: tr, Timeout: GetWalletTimeout()}
 		httpx = "https"
-
 	} else {
 		client = &http.Client{Timeout: GetWalletTimeout()}
 		httpx = "http"
 	}
 
-	re, err := http.NewRequest("POST",
+	re, err := http.NewRequest(
+		"POST",
 		fmt.Sprintf("%s://%s/v2", httpx, RpcConfig.WalletServer),
-		bytes.NewBuffer(j))
+		bytes.NewBuffer(j),
+	)
 	if err != nil {
 		return nil, err
 	}

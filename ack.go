@@ -9,9 +9,33 @@ import (
 	"fmt"
 )
 
+// TransactionData is metadata about a given Transaction, including data about
+// the Transaction Status (i.e. weather the Transaction has been written to the
+// Blockchain).
+type TransactionData struct {
+	// TransactionDate in Unix time
+	TransactionDate int64 `json:"transactiondate,omitempty"`
+	//TransactionDateString ISO8601 time
+	TransactionDateString string `json:"transactiondatestring,omitempty"`
+	//Unix time
+	BlockDate int64 `json:"blockdate,omitempty"`
+	//ISO8601 time
+	BlockDateString string `json:"blockdatestring,omitempty"`
+	Malleated       struct {
+		MalleatedTxIDs []string `json:"malleatedtxids"`
+	} `json:"malleated,omitempty"`
+	Status string `json:"status"`
+}
+
+type ReserveInfo struct {
+	TxID    string `json:"txid"`
+	Timeout int64  `json:"timeout"` //Unix time
+}
+
+// FactoidTxStatus is the metadata about a Factoid Transaction.
 type FactoidTxStatus struct {
 	TxID string `json:"txid"`
-	GeneralTransactionData
+	TransactionData
 }
 
 func (f *FactoidTxStatus) String() string {
@@ -23,12 +47,13 @@ func (f *FactoidTxStatus) String() string {
 	return s
 }
 
+// EntryStatus is the metadata about an Entry Commit Transaction.
 type EntryStatus struct {
 	CommitTxID string `json:"committxid"`
 	EntryHash  string `json:"entryhash"`
 
-	CommitData GeneralTransactionData `json:"commitdata"`
-	EntryData  GeneralTransactionData `json:"entrydata"`
+	CommitData TransactionData `json:"commitdata"`
+	EntryData  TransactionData `json:"entrydata"`
 
 	ReserveTransactions          []ReserveInfo `json:"reserveinfo,omitempty"`
 	ConflictingRevealEntryHashes []string      `json:"conflictingrevealentryhashes,omitempty"`
@@ -48,49 +73,7 @@ func (e *EntryStatus) String() string {
 	return s
 }
 
-type ReserveInfo struct {
-	TxID    string `json:"txid"`
-	Timeout int64  `json:"timeout"` //Unix time
-}
-
-type GeneralTransactionData struct {
-	// TransactionDate in Unix time
-	TransactionDate int64 `json:"transactiondate,omitempty"`
-	//TransactionDateString ISO8601 time
-	TransactionDateString string `json:"transactiondatestring,omitempty"`
-	//Unix time
-	BlockDate int64 `json:"blockdate,omitempty"`
-	//ISO8601 time
-	BlockDateString string `json:"blockdatestring,omitempty"`
-
-	Malleated *Malleated `json:"malleated,omitempty"`
-	Status    string     `json:"status"`
-}
-
-type Malleated struct {
-	MalleatedTxIDs []string `json:"malleatedtxids"`
-}
-
-// EntryCommitACK takes the txid of the commit and searches for the entry/chain commit
-func EntryCommitACK(txID, fullTransaction string) (*EntryStatus, error) {
-	params := ackRequest{Hash: txID, ChainID: "c", FullTransaction: fullTransaction}
-	req := NewJSON2Request("ack", APICounter(), params)
-	resp, err := factomdRequest(req)
-	if err != nil {
-		return nil, err
-	}
-	if resp.Error != nil {
-		return nil, resp.Error
-	}
-
-	eb := new(EntryStatus)
-	if err := json.Unmarshal(resp.JSONResult(), eb); err != nil {
-		return nil, err
-	}
-
-	return eb, nil
-}
-
+// FactoidACK gets the status of a given Factoid Transaction.
 func FactoidACK(txID, fullTransaction string) (*FactoidTxStatus, error) {
 	params := ackRequest{Hash: txID, ChainID: "f", FullTransaction: fullTransaction}
 	req := NewJSON2Request("ack", APICounter(), params)
@@ -103,6 +86,26 @@ func FactoidACK(txID, fullTransaction string) (*FactoidTxStatus, error) {
 	}
 
 	eb := new(FactoidTxStatus)
+	if err := json.Unmarshal(resp.JSONResult(), eb); err != nil {
+		return nil, err
+	}
+
+	return eb, nil
+}
+
+// EntryCommitACK searches for an entry/chain commit with a given transaction ID.
+func EntryCommitACK(txID, fullTransaction string) (*EntryStatus, error) {
+	params := ackRequest{Hash: txID, ChainID: "c", FullTransaction: fullTransaction}
+	req := NewJSON2Request("ack", APICounter(), params)
+	resp, err := factomdRequest(req)
+	if err != nil {
+		return nil, err
+	}
+	if resp.Error != nil {
+		return nil, resp.Error
+	}
+
+	eb := new(EntryStatus)
 	if err := json.Unmarshal(resp.JSONResult(), eb); err != nil {
 		return nil, err
 	}
@@ -128,11 +131,4 @@ func EntryRevealACK(entryhash, fullTransaction, chainiID string) (*EntryStatus, 
 	}
 
 	return eb, nil
-}
-
-// EntryACK is a deprecated call and SHOULD NOT BE USED.
-// Use either EntryCommitAck or EntryRevealAck depending on the
-// type of hash you are sending.
-func EntryACK(entryhash, fullTransaction string) (*EntryStatus, error) {
-	return EntryRevealACK(entryhash, fullTransaction, "0000000000000000000000000000000000000000000000000000000000000000")
 }

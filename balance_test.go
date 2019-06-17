@@ -5,18 +5,47 @@
 package factom_test
 
 import (
-	"testing"
+	"fmt"
+	"net/http"
+	"net/http/httptest"
 
 	. "github.com/FactomProject/factom"
+
+	"testing"
 )
 
 func TestGetMultipleFCTBalances(t *testing.T) {
-	badfa := "abcdef"
-	if bs, err := GetMultipleFCTBalances(badfa); err != nil {
-		t.Error(err)
-	} else if bs.Balances[0].Err != "Error decoding address" {
-		t.Error("should have recieved error for bad address instead got", err)
-	}
+	factomdResponse := `{
+	  "jsonrpc": "2.0",
+	  "id": 3,
+	  "result": {
+	    "currentheight": 192663,
+	    "lastsavedheight": 192662,
+	    "balances": [
+	      {
+	        "ack": 4008,
+	        "saved": 4008,
+	        "err": ""
+	      }, {
+	        "ack": 4008,
+	        "saved": 4008,
+	        "err": ""
+	      }, {
+	        "ack": 4,
+	        "saved": 4,
+	        "err": ""
+	      }
+	    ]
+	  }
+	}`
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		fmt.Fprintln(w, factomdResponse)
+	}))
+	defer ts.Close()
+
+	SetFactomdServer(ts.URL[7:])
+
 	fas := []string{
 		"FA1y5ZGuHSLmf2TqNf6hVMkPiNGyQpQDTFJvDLRkKQaoPo4bmbgu",
 		"FA1y5ZGuHSLmf2TqNf6hVMkPiNGyQpQDTFJvDLRkKQaoPo4bmbgu",
@@ -30,12 +59,37 @@ func TestGetMultipleFCTBalances(t *testing.T) {
 }
 
 func TestGetMultipleECBalances(t *testing.T) {
-	badec := "abcdef"
-	if bs, err := GetMultipleECBalances(badec); err != nil {
-		t.Error(err)
-	} else if bs.Balances[0].Err != "Error decoding address" {
-		t.Error("should have recieved error for bad address instead got", err)
-	}
+	factomdResponse := `{
+	  "jsonrpc": "2.0",
+	  "id": 4,
+	  "result": {
+	    "currentheight": 192663,
+	    "lastsavedheight": 192662,
+	    "balances": [
+	      {
+	        "ack": 4008,
+	        "saved": 4008,
+	        "err": ""
+	      }, {
+	        "ack": 4008,
+	        "saved": 4008,
+	        "err": ""
+	      }, {
+	        "ack": 4,
+	        "saved": 4,
+	        "err": ""
+	      }
+	    ]
+	  }
+	}`
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		fmt.Fprintln(w, factomdResponse)
+	}))
+	defer ts.Close()
+
+	SetFactomdServer(ts.URL[7:])
+
 	ecs := []string{
 		"EC1m9mouvUQeEidmqpUYpYtXg8fvTYi6GNHaKg8KMLbdMBrFfmUa",
 		"EC1m9mouvUQeEidmqpUYpYtXg8fvTYi6GNHaKg8KMLbdMBrFfmUa",
@@ -46,4 +100,62 @@ func TestGetMultipleECBalances(t *testing.T) {
 		t.Error(err)
 	}
 	t.Log(bs)
+}
+
+func TestGetECBalance(t *testing.T) {
+	factomdResponse := `{
+      "jsonrpc": "2.0",
+      "id": 0,
+      "result": {
+        "balance": 2000
+      }
+    }`
+
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		fmt.Fprintln(w, factomdResponse)
+	}))
+	defer ts.Close()
+
+	SetFactomdServer(ts.URL[7:])
+
+	response, _ := GetECBalance("EC3MAHiZyfuEb5fZP2fSp2gXMv8WemhQEUFXyQ2f2HjSkYx7xY1S")
+
+	//fmt.Println(response)
+	expectedResponse := int64(2000)
+
+	if expectedResponse != response {
+		fmt.Println(response)
+		fmt.Println(expectedResponse)
+		t.Fail()
+	}
+}
+
+func TestGetFactoidBalance(t *testing.T) {
+	factomdResponse := `{
+      "jsonrpc": "2.0",
+      "id": 0,
+      "result": {
+        "balance": 966582271
+      }
+    }`
+
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		fmt.Fprintln(w, factomdResponse)
+	}))
+	defer ts.Close()
+
+	SetFactomdServer(ts.URL[7:])
+
+	response, _ := GetFactoidBalance("FA2jK2HcLnRdS94dEcU27rF3meoJfpUcZPSinpb7AwQvPRY6RL1Q")
+
+	//fmt.Println(response)
+	expectedResponse := int64(966582271)
+
+	if expectedResponse != response {
+		fmt.Println(response)
+		fmt.Println(expectedResponse)
+		t.Fail()
+	}
 }

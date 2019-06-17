@@ -5,10 +5,6 @@
 package factom_test
 
 import (
-	. "github.com/FactomProject/factom"
-
-	"testing"
-
 	"bytes"
 	"encoding/json"
 	"fmt"
@@ -16,8 +12,11 @@ import (
 	"net/http"
 	"os"
 
+	. "github.com/FactomProject/factom"
 	"github.com/FactomProject/factom/wallet"
 	"github.com/FactomProject/factom/wallet/wsapi"
+
+	"testing"
 )
 
 func TestImportAddress(t *testing.T) {

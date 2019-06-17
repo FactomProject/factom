@@ -1,4 +1,4 @@
-// Copyright 2017 Factom Foundation
+// Copyright 2016 Factom Foundation
 // Use of this source code is governed by the MIT
 // license that can be found in the LICENSE file.
 
@@ -56,7 +56,6 @@ func TestEntryPrinting(t *testing.T) {
 	ent.ExtIDs = append(ent.ExtIDs, []byte("This is the first extid."))
 	ent.ExtIDs = append(ent.ExtIDs, []byte("This is the second extid."))
 
-	//fmt.Println(ent.String())
 	expectedReturn := `EntryHash: 52385948ea3ab6fd67b07664ac6a30ae5f6afa94427a547c142517beaa9054d0
 ChainID: 5a402200c5cf278e47905ce52d7d64529a0291829a7bd230072c5468be709069
 ExtID: This is the first extid.
@@ -239,30 +238,31 @@ func TestCommitEntry(t *testing.T) {
 }
 
 func TestReveaEntry(t *testing.T) {
-	simlatedFactomdResponse := `{
-  "jsonrpc": "2.0",
-  "id": 0,
-  "result": {
-    "message": "Entry Reveal Success",
-    "entryhash": "f5c956749fc3eba4acc60fd485fb100e601070a44fcce54ff358d60669854734"
-  }
-}`
-
+	factomdResponse := `{
+	  "jsonrpc": "2.0",
+	  "id": 0,
+	  "result": {
+	    "message": "Entry Reveal Success",
+	    "entryhash": "f5c956749fc3eba4acc60fd485fb100e601070a44fcce54ff358d60669854734"
+	  }
+	}`
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		fmt.Fprintln(w, simlatedFactomdResponse)
+		fmt.Fprintln(w, factomdResponse)
 	}))
 	defer ts.Close()
 
-	url := ts.URL[7:]
-	SetFactomdServer(url)
+	SetFactomdServer(ts.URL[7:])
 
 	ent := new(Entry)
 	ent.ChainID = "954d5a49fd70d9b8bcdb35d252267829957f7ef7fa6c74f88419bdc5e82209f4"
 	ent.Content = []byte("test!")
 	ent.ExtIDs = append(ent.ExtIDs, []byte("test"))
 
-	response, _ := RevealEntry(ent)
+	response, err := RevealEntry(ent)
+	if err != nil {
+		t.Error(err)
+	}
 
 	expectedResponse := "f5c956749fc3eba4acc60fd485fb100e601070a44fcce54ff358d60669854734"
 
@@ -270,4 +270,41 @@ func TestReveaEntry(t *testing.T) {
 		t.Errorf("expected:%s\nrecieved:%s", expectedResponse, response)
 	}
 	t.Log(response)
+}
+
+func TestGetEntry(t *testing.T) {
+	factomdResponse := `{
+		"jsonrpc":"2.0",
+		"id":0,
+		"result":{
+			"chainid":"df3ade9eec4b08d5379cc64270c30ea7315d8a8a1a69efe2b98a60ecdd69e604",
+			"content":"68656C6C6F20776F726C64",
+			"extids":[
+				"466163746f6d416e63686f72436861696e"
+			]
+		}
+	}`
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		fmt.Fprintln(w, factomdResponse)
+	}))
+	defer ts.Close()
+
+	SetFactomdServer(ts.URL[7:])
+
+	response, err := GetEntry("be5216cc7a5a3ad44b49245aec298f47cbdfca9862dee13b0093e5880012b771")
+	if err != nil {
+		t.Error(err)
+	}
+
+	expectedResponse := `EntryHash: 1c840bc18be182e89e12f9e63fb8897d13b071b631ced7e656837ccea8fdb3ae
+ChainID: df3ade9eec4b08d5379cc64270c30ea7315d8a8a1a69efe2b98a60ecdd69e604
+ExtID: FactomAnchorChain
+Content:
+hello world
+`
+
+	if expectedResponse != response.String() {
+		t.Errorf("expected:%s\nrecieved:%s", expectedResponse, response)
+	}
 }

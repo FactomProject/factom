@@ -12,9 +12,9 @@ import (
 	"github.com/FactomProject/factomd/common/factoid"
 )
 
-// ImportWalletFromMnemonic creates a new wallet with a provided Mnemonic seed
+// ImportEncryptedWalletFromMnemonic creates a new wallet with a provided Mnemonic seed
 // defined in bip-0039.
-func ImportLDBWalletFromMnemonic(mnemonic, path string) (*Wallet, error) {
+func ImportEncryptedWalletFromMnemonic(mnemonic, path, password string) (*Wallet, error) {
 	mnemonic, err := factom.ParseMnemonic(mnemonic)
 	if err != nil {
 		return nil, err
@@ -26,7 +26,7 @@ func ImportLDBWalletFromMnemonic(mnemonic, path string) (*Wallet, error) {
 		return nil, fmt.Errorf("%s: file already exists", path)
 	}
 
-	db, err := NewLevelDB(path)
+	db, err := NewEncryptedBoltDB(path, password)
 	if err != nil {
 		return nil, err
 	}
@@ -44,16 +44,16 @@ func ImportLDBWalletFromMnemonic(mnemonic, path string) (*Wallet, error) {
 	return w, nil
 }
 
-// ExportLDBWallet writes all the secret/publilc key pairs from a wallet and the
+// ExportEncryptedWallet writes all the secret/publilc key pairs from a wallet and the
 // wallet seed in a pritable format.
-func ExportLDBWallet(path string) (string, []*factom.FactoidAddress, []*factom.ECAddress, error) {
+func ExportEncryptedWallet(path, password string) (string, []*factom.FactoidAddress, []*factom.ECAddress, error) {
 	// check if the file exists
 	_, err := os.Stat(path)
 	if err != nil {
 		return "", nil, nil, err
 	}
 
-	w, err := NewOrOpenLevelDBWallet(path)
+	w, err := NewEncryptedBoltDBWallet(path, password)
 	if err != nil {
 		return "", nil, nil, err
 	}
