@@ -97,6 +97,7 @@ func GetDBlock(keymr string) (dblock *DBlock, raw []byte, err error) {
 
 	// TODO: we need a better api call for dblock by keymr so that API will
 	// retrun the same as dblock-byheight
+	fmt.Println("SequenceNumber: ", db.Header.SequenceNumber)
 	return GetDBlockByHeight(db.Header.SequenceNumber)
 }
 
