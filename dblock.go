@@ -41,7 +41,7 @@ func (db *DBlock) String() string {
 	s += fmt.Sprintln("DBHash:", db.DBHash)
 	s += fmt.Sprintln("KeyMR:", db.KeyMR)
 	s += fmt.Sprintln("HeaderHash:", db.HeaderHash)
-	s += fmt.Sprintln("SequenceNumber: ", db.SequenceNumber)
+	s += fmt.Sprintln("SequenceNumber:", db.SequenceNumber)
 	s += fmt.Sprintln("Version:", db.Header.Version)
 	s += fmt.Sprintln("NetworkID:", db.Header.NetworkID)
 	s += fmt.Sprintln("BodyMR:", db.Header.BodyMR)
