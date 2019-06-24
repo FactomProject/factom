@@ -15,10 +15,11 @@ import (
 // Directory Block Key Merkel Root is anchored into the Bitcoin and other
 // blockchains for added security and immutability.
 type DBlock struct {
-	DBHash     string `json:"dbhash"`
-	KeyMR      string `json:"keymr"`
-	HeaderHash string `json:"headerhash"`
-	Header     struct {
+	DBHash         string `json:"dbhash"`
+	KeyMR          string `json:"keymr"`
+	HeaderHash     string `json:"headerhash"`
+	SequenceNumber int64  `json:"sequencenynumber"`
+	Header         struct {
 		Version      int    `json:"version"`
 		NetworkID    int    `json:"networkid"`
 		BodyMR       string `json:"bodymr"`
@@ -40,6 +41,7 @@ func (db *DBlock) String() string {
 	s += fmt.Sprintln("DBHash:", db.DBHash)
 	s += fmt.Sprintln("KeyMR:", db.KeyMR)
 	s += fmt.Sprintln("HeaderHash:", db.HeaderHash)
+	s += fmt.Sprintln("SequenceNumber:", db.SequenceNumber)
 	s += fmt.Sprintln("Version:", db.Header.Version)
 	s += fmt.Sprintln("NetworkID:", db.Header.NetworkID)
 	s += fmt.Sprintln("BodyMR:", db.Header.BodyMR)
@@ -97,6 +99,9 @@ func GetDBlock(keymr string) (dblock *DBlock, raw []byte, err error) {
 
 	// TODO: we need a better api call for dblock by keymr so that API will
 	// retrun the same as dblock-byheight
+	//dblockHold, rawHold, errHold := GetDBlockByHeight(db.Header.SequenceNumber)
+	//dblockHold.SequenceNumber = db.Header.SequenceNumber
+	//return dblockHold, rawHold, errHold
 	return GetDBlockByHeight(db.Header.SequenceNumber)
 }
 
@@ -128,6 +133,7 @@ func GetDBlockByHeight(height int64) (dblock *DBlock, raw []byte, err error) {
 		return
 	}
 
+	wrap.DBlock.SequenceNumber = height
 	return wrap.DBlock, raw, nil
 }
 
