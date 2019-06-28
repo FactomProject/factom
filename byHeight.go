@@ -1,4 +1,3 @@
-// BlockByHeightRawResponse returns the raw data from the api call.
 // Copyright 2016 Factom Foundation
 // Use of this source code is governed by the MIT
 // license that can be found in the LICENSE file.
@@ -55,6 +54,7 @@ func (f *BlockByHeightRawResponse) String() string {
 	return s
 }
 
+// GetBlockByHeightRaw fetches the specified block type by height
 // Deprecated: use ablock, dblock, eblock, ecblock and fblock instead.
 func GetBlockByHeightRaw(blockType string, height int64) (*BlockByHeightRawResponse, error) {
 	params := heightRequest{Height: height}
