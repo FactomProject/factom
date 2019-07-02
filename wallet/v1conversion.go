@@ -106,3 +106,49 @@ func ImportV1WalletToLDB(v1path, v2path string) (*Wallet, error) {
 	}
 	return w, err
 }
+
+// ImportV1WalletToEncryptedDB takes a version 1 wallet bolt.db file and imports all of its
+// addresses into a factom wallet.
+func ImportV1WalletToEncryptedDB(v1path, v2path, password string) (*Wallet, error) {
+	w, err := NewEncryptedBoltDBWallet(v2path, password)
+	if err != nil {
+		return nil, err
+	}
+
+	fstate := stateinit.NewFactoidState(v1path)
+
+	_, values := fstate.GetDB().GetKeysValues([]byte(factoid.W_NAME))
+	for _, v := range values {
+		we, ok := v.(wallet.IWalletEntry)
+		if !ok {
+			w.Close()
+			return nil, fmt.Errorf("Cannot retrieve addresses from version 1 database")
+		}
+
+		switch we.GetType() {
+		case "fct":
+			f, err := factom.MakeFactoidAddress(we.GetPrivKey(0)[:32])
+			if err != nil {
+				w.Close()
+				return nil, err
+			}
+			if err := w.InsertFCTAddress(f); err != nil {
+				w.Close()
+				return nil, err
+			}
+		case "ec":
+			e, err := factom.MakeECAddress(we.GetPrivKey(0)[:32])
+			if err != nil {
+				w.Close()
+				return nil, err
+			}
+			if err := w.InsertECAddress(e); err != nil {
+				w.Close()
+				return nil, err
+			}
+		default:
+			return nil, fmt.Errorf("version 1 database returned unknown address type %s %#v", we.GetType(), we)
+		}
+	}
+	return w, err
+}
