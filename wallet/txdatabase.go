@@ -202,7 +202,7 @@ func (db *TXDatabaseOverlay) GetTXRange(start, end int) (
 	}
 
 	// update the database and get the newest fblock
-	_, err := db.update()
+	_, err := db.Update()
 	if err != nil {
 		return nil, err
 	}
