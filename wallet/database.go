@@ -82,7 +82,6 @@ func NewEncryptedBoltDBWallet(path, password string) (*Wallet, error) {
 	if err != nil {
 		return nil, err
 	}
-
 	w.WalletDatabaseOverlay = db
 	if err = w.InitWallet(); err != nil {
 		return nil, err
