@@ -16,6 +16,11 @@ type TLSConfig struct {
 
 // requests
 
+type passphraseRequest struct {
+	Password string `json:"passphrase"`
+	Timeout  int64  `json:"timeout"`
+}
+
 type addressRequest struct {
 	Address string `json:"address"`
 }
@@ -71,6 +76,56 @@ type chainRequest struct {
 	Force bool         `json:"force"`
 }
 
+type identityKeyRequest struct {
+	Public string `json:"public"`
+}
+
+type importIdentityKeysRequest struct {
+	Keys []struct {
+		Secret string `json:"secret"`
+	} `json:keys`
+}
+
+type activeIdentityKeysRequest struct {
+	ChainID string `json:"chainid"`
+	Height  *int64 `json:"height"`
+}
+
+type identityChainRequest struct {
+	Name    []string `json:"name"`
+	PubKeys []string `json:"pubkeys"`
+	ECPub   string   `json:"ecpub"`
+	Force   bool     `json:"force"`
+}
+
+type identityKeyReplacementRequest struct {
+	ChainID   string `json:"chainid"`
+	OldKey    string `json:"oldkey"`
+	NewKey    string `json:"newkey"`
+	SignerKey string `json:"signerkey"`
+	ECPub     string `json:"ecpub"`
+	Force     bool   `json:"force"`
+}
+
+type identityAttributeRequest struct {
+	ReceiverChainID    string                     `json:"receiver-chainid"`
+	DestinationChainID string                     `json:"destination-chainid"`
+	Attributes         []factom.IdentityAttribute `json:"attributes"`
+	SignerKey          string                     `json:"signerkey"`
+	SignerChainID      string                     `json:"signer-chainid"`
+	ECPub              string                     `json:"ecpub"`
+	Force              bool                       `json:"force"`
+}
+
+type identityAttributeEndorsementRequest struct {
+	DestinationChainID string `json:"destination-chainid"`
+	EntryHash          string `json:"entry-hash"`
+	SignerKey          string `json:"signerkey"`
+	SignerChainID      string `json:"signer-chainid"`
+	ECPub              string `json:"ecpub"`
+	Force              bool   `json:"force"`
+}
+
 // responses
 
 type addressResponse struct {
@@ -100,8 +155,9 @@ type multiBalanceResponse struct {
 }
 
 type walletBackupResponse struct {
-	Seed      string             `json:"wallet-seed"`
-	Addresses []*addressResponse `json:"addresses"`
+	Seed         string                 `json:"wallet-seed"`
+	Addresses    []*addressResponse     `json:"addresses"`
+	IdentityKeys []*identityKeyResponse `json:"identity-keys"`
 }
 
 type multiTransactionResponse struct {
@@ -117,6 +173,11 @@ type simpleResponse struct {
 	Success bool `json:"success"`
 }
 
+type unlockResponse struct {
+	Success       bool  `json:"success"`
+	UnlockedUntil int64 `json:"unlockeduntil"`
+}
+
 type entryResponse struct {
 	Commit *factom.JSON2Request `json:"commit"`
 	Reveal *factom.JSON2Request `json:"reveal"`
@@ -124,6 +185,21 @@ type entryResponse struct {
 
 type heightResponse struct {
 	Height int64 `json:"height"`
+}
+
+type identityKeyResponse struct {
+	Public string `json:"public"`
+	Secret string `json:"secret,omitempty"`
+}
+
+type multiIdentityKeyResponse struct {
+	Keys []*identityKeyResponse `json:"keys"`
+}
+
+type activeIdentityKeysResponse struct {
+	ChainID string   `json:"chainid"`
+	Height  int64    `json:"height"`
+	Keys    []string `json:"keys"`
 }
 
 // Helper structs

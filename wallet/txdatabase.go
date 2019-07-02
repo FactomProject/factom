@@ -197,25 +197,63 @@ func (db *TXDatabaseOverlay) GetTXAddress(adr string) (
 
 func (db *TXDatabaseOverlay) GetTXRange(start, end int) (
 	[]interfaces.ITransaction, error) {
-	if start < 0 || end < 0 {
+	if start < 0 || end < 0 || end < start {
 		return nil, fmt.Errorf("Range cannot have negative numbers")
 	}
-	s, e := uint32(start), uint32(end)
 
-	filtered := make([]interfaces.ITransaction, 0)
-
-	txs, err := db.GetAllTXs()
+	// update the database and get the newest fblock
+	_, err := db.update()
 	if err != nil {
 		return nil, err
 	}
+	fblock, err := db.DBO.FetchFBlockHead()
+	if err != nil {
+		return nil, err
+	}
+	if fblock == nil {
+		return nil, fmt.Errorf("FBlock Chain has not finished syncing")
+	}
+	txs := make([]interfaces.ITransaction, 0)
 
-	for _, tx := range txs {
-		if s <= tx.GetBlockHeight() && tx.GetBlockHeight() <= e {
-			filtered = append(filtered, tx)
+	s, e := uint32(start), uint32(end)
+
+	for {
+		// get all of the txs from the block
+		height := fblock.GetDatabaseHeight()
+
+		if s <= height && height <= e {
+			for _, tx := range fblock.GetTransactions() {
+				ins, err := tx.TotalInputs()
+				if err != nil {
+					return nil, err
+				}
+				outs, err := tx.TotalOutputs()
+				if err != nil {
+					return nil, err
+				}
+
+				if ins != 0 || outs != 0 {
+					tx.SetBlockHeight(height)
+					txs = append(txs, tx)
+				}
+			}
+		}
+
+		precedessor := fblock.GetPrevKeyMR().String()
+		if height <= s || precedessor == factom.ZeroHash {
+			break
+		}
+
+		// get the previous block
+		fblock, err = db.GetFBlock(precedessor)
+		if err != nil {
+			return nil, err
+		} else if fblock == nil {
+			return nil, fmt.Errorf("Missing fblock in database: %s", precedessor)
 		}
 	}
 
-	return filtered, nil
+	return txs, nil
 }
 
 // GetFBlock retrives a Factoid Block from Factom

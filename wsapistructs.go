@@ -22,6 +22,16 @@ type addressRequest struct {
 	Address string `json:"address"`
 }
 
+type passphraseRequest struct {
+	Password string `json:"passphrase"`
+	Timeout  int64  `json:"timeout"`
+}
+
+type unlockResponse struct {
+	Success       bool  `json:"success"`
+	UnlockedUntil int64 `json:"unlockeduntil"`
+}
+
 type chainIDRequest struct {
 	ChainID string `json:"chainid"`
 }
