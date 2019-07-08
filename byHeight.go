@@ -9,35 +9,7 @@ import (
 	"fmt"
 )
 
-type BlockByHeightResponse struct {
-	//TODO: implement all of the blocks as proper structures
 
-	DBlock  map[string]interface{} `json:"dblock,omitempty"`
-	ABlock  map[string]interface{} `json:"ablock,omitempty"`
-	FBlock  map[string]interface{} `json:"fblock,omitempty"`
-	ECBlock map[string]interface{} `json:"ecblock,omitempty"`
-
-	RawData string `json:"rawdata,omitempty"`
-}
-
-func (f *BlockByHeightResponse) String() string {
-	var s string
-	if f.DBlock != nil {
-		j, _ := json.Marshal(f.DBlock)
-		s += fmt.Sprintln("DBlock:", string(j))
-	} else if f.ABlock != nil {
-		j, _ := json.Marshal(f.ABlock)
-		s += fmt.Sprintln("ABlock:", string(j))
-	} else if f.FBlock != nil {
-		j, _ := json.Marshal(f.FBlock)
-		s += fmt.Sprintln("FBlock:", string(j))
-	} else if f.ECBlock != nil {
-		j, _ := json.Marshal(f.ECBlock)
-		s += fmt.Sprintln("ECBlock:", string(j))
-	}
-
-	return s
-}
 
 type JStruct struct {
 	data []byte
@@ -82,6 +54,8 @@ func (f *BlockByHeightRawResponse) String() string {
 	return s
 }
 
+// GetBlockByHeightRaw fetches the specified block type by height
+// Deprecated: use ablock, dblock, eblock, ecblock and fblock instead.
 func GetBlockByHeightRaw(blockType string, height int64) (*BlockByHeightRawResponse, error) {
 	params := heightRequest{Height: height}
 	req := NewJSON2Request(fmt.Sprintf("%vblock-by-height", blockType), APICounter(), params)
@@ -94,82 +68,6 @@ func GetBlockByHeightRaw(blockType string, height int64) (*BlockByHeightRawRespo
 	}
 
 	block := new(BlockByHeightRawResponse)
-	if err := json.Unmarshal(resp.JSONResult(), block); err != nil {
-		return nil, err
-	}
-
-	return block, nil
-}
-
-func GetDBlockByHeight(height int64) (*BlockByHeightResponse, error) {
-	params := heightRequest{Height: height}
-	req := NewJSON2Request("dblock-by-height", APICounter(), params)
-	resp, err := factomdRequest(req)
-	if err != nil {
-		return nil, err
-	}
-	if resp.Error != nil {
-		return nil, resp.Error
-	}
-
-	block := new(BlockByHeightResponse)
-	if err := json.Unmarshal(resp.JSONResult(), block); err != nil {
-		return nil, err
-	}
-
-	return block, nil
-}
-
-func GetECBlockByHeight(height int64) (*BlockByHeightResponse, error) {
-	params := heightRequest{Height: height}
-	req := NewJSON2Request("ecblock-by-height", APICounter(), params)
-	resp, err := factomdRequest(req)
-	if err != nil {
-		return nil, err
-	}
-	if resp.Error != nil {
-		return nil, resp.Error
-	}
-
-	block := new(BlockByHeightResponse)
-	if err := json.Unmarshal(resp.JSONResult(), block); err != nil {
-		return nil, err
-	}
-
-	return block, nil
-}
-
-func GetFBlockByHeight(height int64) (*BlockByHeightResponse, error) {
-	params := heightRequest{Height: height}
-	req := NewJSON2Request("fblock-by-height", APICounter(), params)
-	resp, err := factomdRequest(req)
-	if err != nil {
-		return nil, err
-	}
-	if resp.Error != nil {
-		return nil, resp.Error
-	}
-
-	block := new(BlockByHeightResponse)
-	if err := json.Unmarshal(resp.JSONResult(), block); err != nil {
-		return nil, err
-	}
-
-	return block, nil
-}
-
-func GetABlockByHeight(height int64) (*BlockByHeightResponse, error) {
-	params := heightRequest{Height: height}
-	req := NewJSON2Request("ablock-by-height", APICounter(), params)
-	resp, err := factomdRequest(req)
-	if err != nil {
-		return nil, err
-	}
-	if resp.Error != nil {
-		return nil, resp.Error
-	}
-
-	block := new(BlockByHeightResponse)
 	if err := json.Unmarshal(resp.JSONResult(), block); err != nil {
 		return nil, err
 	}
