@@ -1,5 +1,5 @@
 hash: 713151aa273eee2903d840e4b627c53d660de4d347a8a3e3a741bda0f5a0a193
-updated: 2019-06-17T13:03:23.492845198-05:00
+updated: 2019-07-08T12:30:27.753120923-05:00
 imports:
 - name: github.com/beorn7/perks
   version: 3a771d992973f24aa725d07868b467d1ddfceafb
@@ -37,7 +37,7 @@ imports:
   subpackages:
   - controlpanel
 - name: github.com/FactomProject/factomd
-  version: 2696967805906799a50cb2db2e55947b08b06e92
+  version: c1cc53ae6bd1d3882d30d8afcb0134ab139efe47
   subpackages:
   - Utilities/CorrectChainHeads/correctChainHeads
   - Utilities/tools
@@ -181,7 +181,7 @@ imports:
 - name: github.com/sirupsen/logrus
   version: 566a5f690849162ff53cf98f3c42135389d63f95
 - name: github.com/stretchr/testify
-  version: ffdc059bfe9ce6a4e144ba849dbedead332c6053
+  version: 34c6fa2dc70986bccbbffcc6130f6920a924b075
   subpackages:
   - assert
 - name: golang.org/x/crypto
@@ -215,7 +215,7 @@ imports:
   - unicode/bidi
   - unicode/norm
 - name: google.golang.org/genproto
-  version: 32ee49c4dd805befd833990acba36cb75042378c
+  version: a7e196e89fd3a3c4d103ca540bd5dac3a736e375
   subpackages:
   - googleapis/rpc/status
 - name: google.golang.org/grpc
