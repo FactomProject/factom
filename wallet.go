@@ -12,12 +12,6 @@ import (
 // BackupWallet returns a formatted string with the wallet seed and the secret
 // keys for all of the wallet addresses.
 func BackupWallet() (string, error) {
-	type walletBackupResponse struct {
-		Seed         string             `json:"wallet-seed"`
-		Addresses    []*addressResponse `json:"addresses"`
-		IdentityKeys []*addressResponse `json:"identity-keys"`
-	}
-
 	req := NewJSON2Request("wallet-backup", APICounter(), nil)
 	resp, err := walletRequest(req)
 	if err != nil {
@@ -27,7 +21,11 @@ func BackupWallet() (string, error) {
 		return "", resp.Error
 	}
 
-	w := new(walletBackupResponse)
+	w := new(struct {
+		Seed         string             `json:"wallet-seed"`
+		Addresses    []*addressResponse `json:"addresses"`
+		IdentityKeys []*addressResponse `json:"identity-keys"`
+	})
 	if err := json.Unmarshal(resp.JSONResult(), w); err != nil {
 		return "", err
 	}
@@ -47,6 +45,8 @@ func BackupWallet() (string, error) {
 	return s, nil
 }
 
+// GenerateFactoidAddress creates a new Factoid Address and stores it in the
+// Factom Wallet.
 func GenerateFactoidAddress() (*FactoidAddress, error) {
 	req := NewJSON2Request("generate-factoid-address", APICounter(), nil)
 	resp, err := walletRequest(req)
@@ -69,6 +69,8 @@ func GenerateFactoidAddress() (*FactoidAddress, error) {
 	return f, nil
 }
 
+// GenerateECAddress creates a new Entry Credit Address and stores it in the
+// Factom Wallet.
 func GenerateECAddress() (*ECAddress, error) {
 	req := NewJSON2Request("generate-ec-address", APICounter(), nil)
 	resp, err := walletRequest(req)
@@ -113,6 +115,8 @@ func GenerateIdentityKey() (*IdentityKey, error) {
 	return e, nil
 }
 
+// ImportAddresses takes a number of Factoid and Entry Creidit secure keys and
+// stores the Facotid and Entry Credit addresses in the Factom Wallet.
 func ImportAddresses(addrs ...string) (
 	[]*FactoidAddress,
 	[]*ECAddress,
@@ -160,9 +164,18 @@ func ImportAddresses(addrs ...string) (
 	return fs, es, nil
 }
 
+// ImportKoinify creates a Factoid Address from a secret 12 word koinify
+// mnumonic.
+//
+// This functionality is used only to recover addresses that were funded by the
+// Factom Genisis block to pay participants in the initial Factom network crowd
+// funding.
 func ImportKoinify(mnemonic string) (*FactoidAddress, error) {
-	params := new(importKoinifyRequest)
-	params.Words = mnemonic
+	params := &struct {
+		Words string `json:"words"`
+	}{
+		Words: mnemonic,
+	}
 
 	req := NewJSON2Request("import-koinify", APICounter(), params)
 	resp, err := walletRequest(req)
@@ -185,6 +198,8 @@ func ImportKoinify(mnemonic string) (*FactoidAddress, error) {
 	return f, nil
 }
 
+// RemoveAddress removes an address from the Factom Wallet database.
+// (Be careful!)
 func RemoveAddress(address string) error {
 	params := new(addressRequest)
 	params.Address = address
@@ -201,6 +216,7 @@ func RemoveAddress(address string) error {
 	return nil
 }
 
+// FetchAddresses requests all of the addresses in the Factom Wallet database.
 func FetchAddresses() ([]*FactoidAddress, []*ECAddress, error) {
 	req := NewJSON2Request("all-addresses", APICounter(), nil)
 	resp, err := walletRequest(req)
@@ -241,6 +257,7 @@ func FetchAddresses() ([]*FactoidAddress, []*ECAddress, error) {
 	return fs, es, nil
 }
 
+// FetchECAddress requests an Entry Credit address from the Factom Wallet.
 func FetchECAddress(ecpub string) (*ECAddress, error) {
 	if AddressStringType(ecpub) != ECPub {
 		return nil, fmt.Errorf(
@@ -266,6 +283,7 @@ func FetchECAddress(ecpub string) (*ECAddress, error) {
 	return GetECAddress(r.Secret)
 }
 
+// FetchFactoidAddress requests a Factom address from the Factom Wallet.
 func FetchFactoidAddress(fctpub string) (*FactoidAddress, error) {
 	if AddressStringType(fctpub) != FactoidPub {
 		return nil, fmt.Errorf("%s is not a Factoid Address", fctpub)
@@ -397,6 +415,8 @@ func RemoveIdentityKey(pub string) error {
 	return nil
 }
 
+// GetWalletHeight requests the current block heights known to the Factom
+// Wallet.
 func GetWalletHeight() (uint32, error) {
 	req := NewJSON2Request("get-height", APICounter(), nil)
 	resp, err := walletRequest(req)
@@ -463,6 +483,13 @@ type composeEntryResponse struct {
 	Reveal *JSON2Request `json:"reveal"`
 }
 
+// WalletComposeChainCommitReveal composes commit and reveal json objects that
+// may be used to make API calls to the factomd API to create a new Factom
+// Chain.
+//
+// WalletComposeChainCommitReveal may be used by an offline wallet to create the
+// calls needed to create new chains while keeping addresses secure in an
+// offline wallet.
 func WalletComposeChainCommitReveal(chain *Chain, ecPub string, force bool) (*JSON2Request, *JSON2Request, error) {
 	params := new(composeChainRequest)
 	params.Chain = *chain
@@ -486,6 +513,13 @@ func WalletComposeChainCommitReveal(chain *Chain, ecPub string, force bool) (*JS
 	return r.Commit, r.Reveal, nil
 }
 
+// WalletComposeEntryCommitReveal composes commit and reveal json objects that
+// may be used to make API calls to the factomd API to create a new Factom
+// Entry.
+//
+// WalletComposeEntryCommitReveal may be used by an offline wallet to create the
+// calls needed to create new entries while keeping addresses secure in an
+// offline wallet.
 func WalletComposeEntryCommitReveal(entry *Entry, ecPub string, force bool) (*JSON2Request, *JSON2Request, error) {
 	params := new(composeEntryRequest)
 	params.Entry = *entry

@@ -10,6 +10,9 @@ import (
 	netki "github.com/FactomProject/netki-go-partner-client"
 )
 
+// ResolveDnsName resolve a netki wallet DNS name and returns the public address
+// string for the Factoid address and the Entry Credit addresses associated with
+// that name.
 func ResolveDnsName(addr string) (string, string, error) {
 	fct, err1 := netki.WalletNameLookup(addr, "fct")
 	ec, err2 := netki.WalletNameLookup(addr, "fec")
@@ -19,6 +22,8 @@ func ResolveDnsName(addr string) (string, string, error) {
 	return fct, ec, nil
 }
 
+// GetDnsBalance returns the balances of the Factoid and Entry Credit addresses
+// associated with a netki DNS name.
 func GetDnsBalance(addr string) (int64, int64, error) {
 	fct, ec, err := ResolveDnsName(addr)
 	if err != nil {

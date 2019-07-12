@@ -5,7 +5,6 @@
 package wallet
 
 import (
-	"encoding/hex"
 	"fmt"
 	"os"
 
@@ -388,13 +387,13 @@ func fblockHead() (interfaces.IFBlock, error) {
 	if err != nil {
 		return nil, err
 	}
-	dblock, err := factom.GetDBlock(dbhead)
+	dblock, _, err := factom.GetDBlock(dbhead)
 	if err != nil {
 		return nil, err
 	}
 
 	var fblockmr string
-	for _, eblock := range dblock.EntryBlockList {
+	for _, eblock := range dblock.DBEntries {
 		if eblock.ChainID == fblockID {
 			fblockmr = eblock.KeyMR
 		}
@@ -407,33 +406,25 @@ func fblockHead() (interfaces.IFBlock, error) {
 }
 
 func getfblock(keymr string) (interfaces.IFBlock, error) {
-	p, err := factom.GetRaw(keymr)
+	_, raw, err := factom.GetFBlock(keymr)
 	if err != nil {
 		return nil, err
 	}
-	return factoid.UnmarshalFBlock(p)
+	return factoid.UnmarshalFBlock(raw)
 }
 
 func getfblockbyheight(height uint32) (interfaces.IFBlock, error) {
-	p, err := factom.GetFBlockByHeight(int64(height))
+	_, raw, err := factom.GetFBlockByHeight(int64(height))
 	if err != nil {
 		return nil, err
 	}
-	h, err := hex.DecodeString(p.RawData)
-	if err != nil {
-		return nil, err
-	}
-	return factoid.UnmarshalFBlock(h)
+	return factoid.UnmarshalFBlock(raw)
 }
 
 func getdblockbyheight(height uint32) (interfaces.IDirectoryBlock, error) {
-	p, err := factom.GetDBlockByHeight(int64(height))
+	_, raw, err := factom.GetDBlockByHeight(int64(height))
 	if err != nil {
 		return nil, err
 	}
-	h, err := hex.DecodeString(p.RawData)
-	if err != nil {
-		return nil, err
-	}
-	return directoryBlock.UnmarshalDBlock(h)
+	return directoryBlock.UnmarshalDBlock(raw)
 }

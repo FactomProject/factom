@@ -394,7 +394,7 @@ func checkFee(tx *factoid.Transaction) error {
 		return ErrFeeTooLow
 	}
 
-	rate, err := factom.GetRate()
+	rate, err := factom.GetECRate()
 	if err != nil {
 		return err
 	}

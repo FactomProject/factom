@@ -32,7 +32,7 @@ type addressesRequest struct {
 type importRequest struct {
 	Addresses []struct {
 		Secret string `json:"secret"`
-	} `json:addresses`
+	} `json:"addresses"`
 }
 
 type importKoinifyRequest struct {

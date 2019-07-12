@@ -888,7 +888,7 @@ func handleAddFee(params []byte) (interface{}, *factom.JSONError) {
 		return nil, newInvalidParamsError()
 	}
 
-	rate, err := factom.GetRate()
+	rate, err := factom.GetECRate()
 	if err != nil {
 		return nil, newCustomInternalError(err.Error())
 	}
@@ -912,7 +912,7 @@ func handleSubFee(params []byte) (interface{}, *factom.JSONError) {
 		return nil, newInvalidParamsError()
 	}
 
-	rate, err := factom.GetRate()
+	rate, err := factom.GetECRate()
 	if err != nil {
 		return nil, newCustomInternalError(err.Error())
 	}
@@ -1564,7 +1564,7 @@ func factoidTxToTransaction(t interfaces.ITransaction) (
 }
 
 func feesRequired(t interfaces.ITransaction) uint64 {
-	rate, err := factom.GetRate()
+	rate, err := factom.GetECRate()
 	if err != nil {
 		rate = 0
 	}
