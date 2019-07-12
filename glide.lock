@@ -37,7 +37,7 @@ imports:
   subpackages:
   - controlpanel
 - name: github.com/FactomProject/factomd
-  version: c1cc53ae6bd1d3882d30d8afcb0134ab139efe47
+  version: 7fd7716f5af4f8962ef9390adb0f4e4416eb22da
   subpackages:
   - Utilities/CorrectChainHeads/correctChainHeads
   - Utilities/tools
@@ -215,7 +215,7 @@ imports:
   - unicode/bidi
   - unicode/norm
 - name: google.golang.org/genproto
-  version: a7e196e89fd3a3c4d103ca540bd5dac3a736e375
+  version: 32ee49c4dd805befd833990acba36cb75042378c
   subpackages:
   - googleapis/rpc/status
 - name: google.golang.org/grpc
