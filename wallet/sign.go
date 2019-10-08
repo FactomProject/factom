@@ -5,12 +5,24 @@ import (
 )
 
 // SignData signs arbitrary data
-func (w *Wallet) SignData(address string, data []byte) ([]byte, []byte, error) {
-	f, err := w.GetFCTAddress(address)
-	if err != nil {
-		return nil, nil, err
+func (w *Wallet) SignData(signer string, data []byte) ([]byte, []byte, error) {
+
+	var priv []byte
+	var pub []byte
+
+	if fa, err := w.GetFCTAddress(signer); err == nil {
+		priv = fa.SecBytes()
+		pub = fa.PubBytes()
+	} else if ec, err := w.GetECAddress(signer); err == nil {
+		priv = ec.SecBytes()
+		pub = ec.PubBytes()
+	} else if id, err := w.GetIdentityKey(signer); err == nil {
+		priv = id.SecBytes()
+		pub = id.PubBytes()
+	} else {
+		return nil, nil, ErrNoSuchAddress
 	}
 
-	sig := primitives.Sign(f.SecBytes(), data)
-	return f.PubBytes(), sig, nil
+	sig := primitives.Sign(priv, data)
+	return pub, sig, nil
 }

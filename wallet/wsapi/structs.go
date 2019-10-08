@@ -45,8 +45,8 @@ type transactionRequest struct {
 }
 
 type signDataRequest struct {
-	Address string `json:"address"`
-	Data    []byte `json:"data"`
+	Signer string `json:"signer"`
+	Data   []byte `json:"data"`
 }
 
 type transactionValueRequest struct {

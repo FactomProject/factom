@@ -960,7 +960,7 @@ func handleSignData(params []byte) (interface{}, *factom.JSONError) {
 		return nil, newInvalidParamsError()
 	}
 
-	pub, sig, err := fctWallet.SignData(req.Address, req.Data)
+	pub, sig, err := fctWallet.SignData(req.Signer, req.Data)
 	if err != nil {
 		return nil, newCustomInternalError(err.Error())
 	}

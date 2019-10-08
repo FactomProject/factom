@@ -9,13 +9,16 @@ type Signature struct {
 	Signature []byte `json:"signature"`
 }
 
-func SignData(addr string, data []byte) (*Signature, error) {
+// SignData lets you sign arbitrary data by the specified signer.
+// The signer can be either an FA address, EC address, or Identity.
+// Be aware that the data is transmitted to the wallet.
+func SignData(signer string, data []byte) (*Signature, error) {
 	params := &struct {
-		Address string `json:"address"`
-		Data    []byte `json:"data"`
+		Signer string `json:"signer"`
+		Data   []byte `json:"data"`
 	}{
-		Address: addr,
-		Data:    data,
+		Signer: signer,
+		Data:   data,
 	}
 
 	req := NewJSON2Request("sign-data", APICounter(), params)
