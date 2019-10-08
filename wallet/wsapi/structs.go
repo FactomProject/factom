@@ -44,6 +44,11 @@ type transactionRequest struct {
 	Force bool   `json:"force"`
 }
 
+type signDataRequest struct {
+	Address string `json:"address"`
+	Data    []byte `json:"data"`
+}
+
 type transactionValueRequest struct {
 	Name    string `json:"tx-name"`
 	Address string `json:"address"`
@@ -200,6 +205,11 @@ type activeIdentityKeysResponse struct {
 	ChainID string   `json:"chainid"`
 	Height  int64    `json:"height"`
 	Keys    []string `json:"keys"`
+}
+
+type signDataResponse struct {
+	PubKey    []byte `json:"pubkey"`
+	Signature []byte `json:"signature"`
 }
 
 // Helper structs
