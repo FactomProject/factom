@@ -9,7 +9,7 @@ import (
 	"github.com/FactomProject/web"
 )
 
-const httpBad = 400
+const httpBad = 200
 
 // handleV2Error handles the error responses to RPC calls
 func handleV2Error(ctx *web.Context, j *factom.JSON2Request, err *factom.JSONError) {
