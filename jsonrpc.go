@@ -13,6 +13,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"strings"
+	"sync/atomic"
 	"time"
 )
 
@@ -353,11 +354,10 @@ func walletRequest(req *JSON2Request) (*JSON2Response, error) {
 }
 
 // newCounter is used to generate the ID field for the JSON2Request
-func newCounter() func() int {
-	count := 0
-	return func() int {
-		count += 1
-		return count
+func newCounter() func() uint32 {
+	var count uint32
+	return func() uint32 {
+		return atomic.AddUint32(&count, 1)
 	}
 }
 
