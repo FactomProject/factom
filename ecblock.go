@@ -144,6 +144,13 @@ func (e *ECBlock) UnmarshalJSON(js []byte) error {
 				}
 				e.Entries = append(e.Entries, a)
 			}
+		case regexp.MustCompile(`"numec":`).MatchString(string(v)):
+			a := new(ECBalanceIncrease)
+			err := json.Unmarshal(v, a)
+			if err != nil {
+				return err
+			}
+			e.Entries = append(e.Entries, a)
 		default:
 			return ErrUnknownECBEntry
 		}
@@ -317,6 +324,29 @@ func (e *ECEntryCommit) String() string {
 	s += fmt.Sprintln("	Signature:", e.Sig)
 	s += fmt.Sprintln("}")
 
+	return s
+}
+
+// ECBalanceIncrease pays for and reserves a new entry in Factom.
+type ECBalanceIncrease struct {
+	ECPubKey string `json:"ecpubkey"`
+	TXID     string `json:"txid"`
+	Index    uint64 `json:"index"`
+	NumEC    uint64 `json:"numec"`
+}
+
+func (e *ECBalanceIncrease) Type() ECID {
+	return ECIDBalanceIncrease
+}
+
+func (e *ECBalanceIncrease) String() string {
+	var s string
+	s += fmt.Sprintln("BalanceIncrease {")
+	s += fmt.Sprintln("	ECPubKey:", e.ECPubKey)
+	s += fmt.Sprintln("	TXID:", e.TXID)
+	s += fmt.Sprintln("	Index:", e.TXID)
+	s += fmt.Sprintln("	NumEC:", e.NumEC)
+	s += fmt.Sprintln("}")
 	return s
 }
 
