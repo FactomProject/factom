@@ -10,6 +10,17 @@ type heightRequest struct {
 	Height int64 `json:"height"`
 }
 
+type replayRequest struct {
+	StartHeight int64 `json:"startheight"`
+	EndHeight   int64 `json:"endheight,omitempty"`
+}
+
+type replayResponse struct {
+	Message string `json:"message"`
+	Start   int64  `json:"startheight"`
+	End     int64  `json:"endheight"`
+}
+
 type ackRequest struct {
 	Hash            string `json:"hash,omitempty"`
 	ChainID         string `json:"chainid,omitempty"`

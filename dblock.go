@@ -155,3 +155,25 @@ func GetDBlockHead() (string, error) {
 
 	return head.KeyMR, nil
 }
+
+// ReplayDBlockFromHeight requests DBlock states to be emitted over the LiveFeed API
+func ReplayDBlockFromHeight(startheight int64, endheight int64) (*replayResponse, error) {
+	params := replayRequest{StartHeight: startheight, EndHeight: endheight}
+	req := NewJSON2Request("replay-from-height", APICounter(), params)
+	resp, err := factomdRequest(req)
+
+	if err != nil {
+		return nil, err
+	}
+	if resp.Error != nil {
+		return nil, resp.Error
+	}
+
+	finalResp := new(replayResponse)
+	err = json.Unmarshal(resp.Result, finalResp)
+	if err != nil {
+		return nil, err
+	}
+
+	return finalResp, nil
+}
