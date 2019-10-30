@@ -95,10 +95,10 @@ func (a *Anchors) UnmarshalJSON(data []byte) error {
 
 func getAnchors(hash string, height int64) (*Anchors, error) {
 	var params interface{}
-	if height > 0 {
-		params = heightRequest{Height: height}
-	} else {
+	if hash != "" {
 		params = hashRequest{Hash: hash}
+	} else {
+		params = heightRequest{Height: height}
 	}
 	req := NewJSON2Request("anchors", APICounter(), params)
 	resp, err := factomdRequest(req)
