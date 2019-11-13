@@ -14,13 +14,16 @@ import (
 // Note: the FBlock api return does not use a "Header" field like the other
 // block types do for some reason.
 type FBlock struct {
-	BodyMR          string `json:"bodymr"`          // Merkle root of the Factoid transactions which accompany this block.
-	PrevKeyMR       string `json:"prevkeymr"`       // Key Merkle root of previous block.
-	PrevLedgerKeyMR string `json:"prevledgerkeymr"` // Sha3 of the previous Factoid Block
-	ExchRate        int64  `json:"exchrate"`        // Factoshis per Entry Credit
-	DBHeight        int64  `json:"dbheight"`        // Directory Block height
+	BodyMR          string            `json:"bodymr"`          // Merkle root of the Factoid transactions which accompany this block.
+	PrevKeyMR       string            `json:"prevkeymr"`       // Key Merkle root of previous block.
+	PrevLedgerKeyMR string            `json:"prevledgerkeymr"` // Sha3 of the previous Factoid Block
+	ExchRate        int64             `json:"exchrate"`        // Factoshis per Entry Credit
+	DBHeight        int64             `json:"dbheight"`        // Directory Block height
+	Transactions    []json.RawMessage `json:"transactions"`
 
-	Transactions []Transaction `json:"transactions"`
+	ChainID     string `json:"chainid,omitempty"`
+	KeyMR       string `json:"keymr,omitempty"`
+	LedgerKeyMR string `json:"ledgerkeymr,omitempty"`
 }
 
 func (f *FBlock) String() string {
@@ -34,7 +37,7 @@ func (f *FBlock) String() string {
 
 	s += fmt.Sprintln("Transactions {")
 	for _, t := range f.Transactions {
-		s += fmt.Sprintln(t)
+		s += fmt.Sprintln(string(t))
 	}
 	s += fmt.Sprintln("}")
 
