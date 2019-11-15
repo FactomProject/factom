@@ -44,3 +44,32 @@ func (r *RCD1) Hash() []byte {
 func (r *RCD1) PubBytes() []byte {
 	return r.Pub[:]
 }
+
+// RCDe is a Type 0x0e Redeem Condition Datastructure which contains an ecdsa
+// public key used to sign transactions made with an Etheruem Secret.
+type RCDe struct {
+	Pub *[64]byte
+}
+
+// NewRCDe creates a new 0 value Type 0x0e Etheruem RCD.
+func NewRCDe() *RCDe {
+	r := new(RCDe)
+	r.Pub = new([64]byte)
+	return r
+}
+
+func (r *RCDe) Type() uint8 {
+	return byte(0x0e)
+}
+
+// Hash of the Type 0x0e RCD is the double sha256 hash of the type byte (0x0e)
+// and the RCD public key.
+func (r *RCDe) Hash() []byte {
+	p := append([]byte{r.Type()}, r.Pub[:]...)
+	return shad(p)
+}
+
+// PubBytes may be used to validate a signature from a Type 0x0e Factoid RCD.
+func (r *RCDe) PubBytes() []byte {
+	return r.Pub[:]
+}

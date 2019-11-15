@@ -97,6 +97,7 @@ func TestAddressStringType(t *testing.T) {
 		a2 = "Fs1KWJrpLdfucvmYwN2nWrwepLn8ercpMbzXshd1g8zyhKXLVLWj"
 		a3 = "EC2DKSYyRcNWf7RS963VFYgMExoHRYLHVeCfQ9PGPmNzwrcmgm2r"
 		a4 = "Es2Rf7iM6PdsqfYCo3D1tnAR65SkLENyWJG1deUzpRMQmbh9F3eG"
+		a5 = "0xf8f8a2f43c8376ccb0871305060d7b27b0554d2cc72bccf41b2705608452f315"
 	)
 
 	if v := AddressStringType(a0); v != InvalidAddress {
@@ -106,13 +107,16 @@ func TestAddressStringType(t *testing.T) {
 		t.Errorf("wrong address type %s %#v", a1, v)
 	}
 	if v := AddressStringType(a2); v != FactoidSec {
-		t.Errorf("wrong address type %s %#v", a1, v)
+		t.Errorf("wrong address type %s %#v", a2, v)
 	}
 	if v := AddressStringType(a3); v != ECPub {
-		t.Errorf("wrong address type %s %#v", a1, v)
+		t.Errorf("wrong address type %s %#v", a3, v)
 	}
 	if v := AddressStringType(a4); v != ECSec {
-		t.Errorf("wrong address type %s %#v", a1, v)
+		t.Errorf("wrong address type %s %#v", a4, v)
+	}
+	if v := AddressStringType(a5); v != EthSec {
+		t.Errorf("wrong address type %s %#v", a5, v)
 	}
 }
 
@@ -268,6 +272,22 @@ func TestMakeBIP44FactoidAddress(t *testing.T) {
 		t.Errorf(
 			"incorrect factoid address from 12 words: got %s expecting %s",
 			fct.String(), cannonAdr)
+	}
+}
+
+func TestMakeBIP44EthAddress(t *testing.T) {
+	m := "yellow yellow yellow yellow yellow yellow yellow yellow yellow yellow yellow yellow"
+	cannonAdr := "0xA27DF20E6579aC472481F0Ea918165d24bFb713b"
+
+	eth, err := MakeBIP44EthSecret(m, bip32.FirstHardenedChild, 0, 0)
+	if err != nil {
+		t.Error(err)
+	}
+
+	if eth.EthAddress() != cannonAdr {
+		t.Errorf(
+			"incorrect factoid address from 12 words: got %s expecting %s",
+			eth.EthAddress(), cannonAdr)
 	}
 }
 

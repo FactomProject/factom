@@ -69,6 +69,30 @@ func GenerateFactoidAddress() (*FactoidAddress, error) {
 	return f, nil
 }
 
+// GenerateEtherAddress creates a new Ether linked Address and stores it in the
+// Factom Wallet.
+func GenerateEtherAddress() (*EthSecret, error) {
+	req := NewJSON2Request("generate-ether-address", APICounter(), nil)
+	resp, err := walletRequest(req)
+	if err != nil {
+		return nil, err
+	}
+	if resp.Error != nil {
+		return nil, resp.Error
+	}
+
+	a := new(addressResponse)
+	if err := json.Unmarshal(resp.JSONResult(), a); err != nil {
+		return nil, err
+	}
+	f, err := GetEthSecret(a.Secret)
+	if err != nil {
+		return nil, err
+	}
+
+	return f, nil
+}
+
 // GenerateECAddress creates a new Entry Credit Address and stores it in the
 // Factom Wallet.
 func GenerateECAddress() (*ECAddress, error) {
@@ -120,6 +144,7 @@ func GenerateIdentityKey() (*IdentityKey, error) {
 func ImportAddresses(addrs ...string) (
 	[]*FactoidAddress,
 	[]*ECAddress,
+	[]*EthSecret,
 	error) {
 
 	params := new(importRequest)
@@ -130,38 +155,45 @@ func ImportAddresses(addrs ...string) (
 	req := NewJSON2Request("import-addresses", APICounter(), params)
 	resp, err := walletRequest(req)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, nil, err
 	}
 	if resp.Error != nil {
-		return nil, nil, resp.Error
+		return nil, nil, nil, resp.Error
 	}
 
 	r := new(multiAddressResponse)
 	if err := json.Unmarshal(resp.JSONResult(), r); err != nil {
-		return nil, nil, err
+		return nil, nil, nil, err
 	}
 	fs := make([]*FactoidAddress, 0)
 	es := make([]*ECAddress, 0)
+	eths := make([]*EthSecret, 0)
 	for _, address := range r.Addresses {
 		switch AddressStringType(address.Secret) {
+		case EthSec:
+			eth, err := GetEthSecret(address.Secret)
+			if err != nil {
+				return nil, nil, nil, err
+			}
+			eths = append(eths, eth)
 		case FactoidSec:
 			f, err := GetFactoidAddress(address.Secret)
 			if err != nil {
-				return nil, nil, err
+				return nil, nil, nil, err
 			}
 			fs = append(fs, f)
 		case ECSec:
 			e, err := GetECAddress(address.Secret)
 			if err != nil {
-				return nil, nil, err
+				return nil, nil, nil, err
 			}
 			es = append(es, e)
 		default:
-			return nil, nil, fmt.Errorf("Unrecognized address type")
+			return nil, nil, nil, fmt.Errorf("Unrecognized address type")
 		}
 	}
 
-	return fs, es, nil
+	return fs, es, eths, nil
 }
 
 // ImportKoinify creates a Factoid Address from a secret 12 word koinify
@@ -216,45 +248,59 @@ func RemoveAddress(address string) error {
 	return nil
 }
 
-// FetchAddresses requests all of the addresses in the Factom Wallet database.
+// FetchAddresses only fetched fa and ec addresses
+// Deprecated: Use FetchAllAddressTypes
 func FetchAddresses() ([]*FactoidAddress, []*ECAddress, error) {
+	fs, es, _, err := FetchAllAddressTypes()
+	return fs, es, err
+}
+
+// FetchAllAddressTypes requests all of the addresses in the Factom Wallet database.
+func FetchAllAddressTypes() ([]*FactoidAddress, []*ECAddress, []*EthSecret, error) {
 	req := NewJSON2Request("all-addresses", APICounter(), nil)
 	resp, err := walletRequest(req)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, nil, err
 	}
 	if resp.Error != nil {
-		return nil, nil, resp.Error
+		return nil, nil, nil, resp.Error
 	}
 
+	eths := make([]*EthSecret, 0)
 	fs := make([]*FactoidAddress, 0)
 	es := make([]*ECAddress, 0)
 
 	as := new(multiAddressResponse)
 	if err := json.Unmarshal(resp.JSONResult(), as); err != nil {
-		return nil, nil, err
+		return nil, nil, nil, err
 	}
 
 	for _, adr := range as.Addresses {
 		switch AddressStringType(adr.Public) {
+		case EthFA:
+			et, err := GetEthSecret(adr.Secret)
+			if err != nil {
+				return nil, nil, nil, err
+			}
+			eths = append(eths, et)
 		case FactoidPub:
 			f, err := GetFactoidAddress(adr.Secret)
 			if err != nil {
-				return nil, nil, err
+				return nil, nil, nil, err
 			}
 			fs = append(fs, f)
 		case ECPub:
 			e, err := GetECAddress(adr.Secret)
 			if err != nil {
-				return nil, nil, err
+				return nil, nil, nil, err
 			}
 			es = append(es, e)
 		default:
-			return nil, nil, fmt.Errorf("%s is not a valid address", adr.Public)
+			return nil, nil, nil, fmt.Errorf("%s is not a valid address", adr.Public)
 		}
 	}
 
-	return fs, es, nil
+	return fs, es, eths, nil
 }
 
 // FetchECAddress requests an Entry Credit address from the Factom Wallet.

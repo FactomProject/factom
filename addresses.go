@@ -6,7 +6,10 @@ package factom
 
 import (
 	"bytes"
+	"crypto/ecdsa"
+	"encoding/hex"
 	"errors"
+	"fmt"
 	"strings"
 
 	"github.com/FactomProject/btcutil/base58"
@@ -14,6 +17,7 @@ import (
 	"github.com/FactomProject/go-bip32"
 	"github.com/FactomProject/go-bip39"
 	"github.com/FactomProject/go-bip44"
+	"github.com/ethereum/go-ethereum/crypto"
 )
 
 // Common Address errors
@@ -33,6 +37,9 @@ const (
 	FactoidSec
 	ECPub
 	ECSec
+	EthSec     // 0x[32byte hex]
+	EthFA      // eFA..
+	EthAddress // Ethereum address
 )
 
 const (
@@ -40,6 +47,10 @@ const (
 	PrefixLength   = 2
 	ChecksumLength = 4
 	BodyLength     = AddressLength - ChecksumLength
+
+	// In hex characters, not bytes
+	EthSecretLength = 64
+	EthSecretPrefix = 2
 )
 
 var (
@@ -49,10 +60,32 @@ var (
 	ecSecPrefix = []byte{0x5d, 0xb6}
 )
 
-// AddressStringType determin the type of address from the given string.
+// AddressStringType determine the type of address from the given string.
 // AddressStringType must return one of the defined address types;
 // InvalidAddress, FactoidPub, FactoidSec, ECPub, or ECSec.
 func AddressStringType(s string) addressStringType {
+	if has0xPrefix(s) {
+		// Prefix + Secret length check
+		if len(s) != EthSecretPrefix+EthSecretLength {
+			return InvalidAddress
+		}
+
+		_, err := hex.DecodeString(s[2:])
+		if err != nil {
+			return InvalidAddress
+		}
+
+		return EthSec
+	}
+
+	if hasEFAPrefix(s) {
+		ty := AddressStringType(s[1:]) // Chop the e/E
+		if ty == FactoidPub {
+			return EthFA
+		}
+		return InvalidAddress
+	}
+
 	p := base58.Decode(s)
 
 	if len(p) != AddressLength {
@@ -79,6 +112,18 @@ func AddressStringType(s string) addressStringType {
 	default:
 		return InvalidAddress
 	}
+}
+
+// has0xPrefix validates str begins with '0x' or '0X'.
+func has0xPrefix(str string) bool {
+	return len(str) >= 2 && str[0] == '0' && (str[1] == 'x' || str[1] == 'X')
+}
+
+// has0xPrefix validates str begins with 'eFA' or 'EFA'.
+func hasEFAPrefix(str string) bool {
+	return len(str) >= 3 &&
+		(str[0] == 'e' || str[0] == 'E') &&
+		(str[1] == 'F') && (str[2] == 'A')
 }
 
 // IsValidAddress checks that a string is a valid address of one of the defined
@@ -423,6 +468,184 @@ func (a *FactoidAddress) String() string {
 	buf.Write(check)
 
 	return base58.Encode(buf.Bytes())
+}
+
+// EthSecret is a Factoid Redeem Condition Datastructure (a type 0x0e RCD is
+// just the public key) and a corresponding secret key.
+type EthSecret struct {
+	RCD RCD
+	Sec *[32]byte
+}
+
+// NewFactoidAddress creates a blank rcd/secret key pair for a Factoid Address.
+func NewEthSecret() *EthSecret {
+	a := new(EthSecret)
+	r := NewRCDe()
+	r.Pub = new([64]byte)
+	a.RCD = r
+	a.Sec = new([32]byte)
+	return a
+}
+
+func (a EthSecret) PrivateKey() *ecdsa.PrivateKey {
+	secret, err := crypto.ToECDSA(a.Sec[:])
+	if err != nil {
+		return nil
+	}
+	return secret
+}
+
+func (a EthSecret) PublicKey() ecdsa.PublicKey {
+	secret := a.PrivateKey()
+	if secret == nil {
+		return ecdsa.PublicKey{}
+	}
+	return secret.PublicKey
+}
+
+// GetEthSecret creates a Factoid Address rcd/secret key pair from a secret
+// Factoid Address string i.e. 0x1234...
+func GetEthSecret(s string) (*EthSecret, error) {
+	if AddressStringType(s) != EthSec {
+		return nil, ErrInvalidAddress
+	}
+
+	sec, err := hex.DecodeString(s[2:])
+	if err != nil { // Should never hit this
+		return nil, ErrInvalidAddress
+	}
+
+	return MakeEthSecret(sec)
+}
+
+// MakeEthSecret creates a EthSecret rcd/secret key pair from a
+// secret key []byte.
+func MakeEthSecret(sec []byte) (*EthSecret, error) {
+	if len(sec) != 32 {
+		return nil, ErrSecKeyLength
+	}
+
+	a := NewEthSecret()
+	err := a.UnmarshalBinary(sec)
+	if err != nil {
+		return nil, err
+	}
+
+	return a, nil
+}
+
+// MakeBIP44EthSecret generates an EthSecret from a 12 word mnemonic,
+// an account index, a chain index, and an address index, according to the bip44
+// standard for multicoin wallets.
+func MakeBIP44EthSecret(mnemonic string, account, chain, address uint32) (*EthSecret, error) {
+	mnemonic, err := ParseMnemonic(mnemonic)
+	if err != nil {
+		return nil, err
+	}
+
+	child, err := bip44.NewKeyFromMnemonic(mnemonic, bip44.TypeEther, account, chain, address)
+	if err != nil {
+		return nil, err
+	}
+
+	// TODO: Verify this against eth derivation
+	return MakeEthSecret(child.Key)
+}
+
+func (a *EthSecret) UnmarshalBinary(data []byte) error {
+	_, err := a.UnmarshalBinaryData(data)
+	return err
+}
+
+func (a *EthSecret) UnmarshalBinaryData(data []byte) ([]byte, error) {
+	if len(data) < 32 {
+		return nil, ErrSecKeyLength
+	}
+
+	if a.Sec == nil {
+		a.Sec = new([32]byte)
+	}
+
+	copy(a.Sec[:], data[:32])
+	r := NewRCDe()
+
+	pubBytes := a.PubBytes()
+	if len(pubBytes) != 64 {
+		return nil, fmt.Errorf("incorrect number of bytes for public key")
+	}
+	copy(r.Pub[:], pubBytes)
+	a.RCD = r
+
+	return data[32:], nil
+}
+
+func (a *EthSecret) MarshalBinary() ([]byte, error) {
+	return a.SecBytes()[:32], nil
+}
+
+// RCDHash returns the Hash of the Redeem Condition Datastructure from a Factoid
+// Address.
+func (a *EthSecret) RCDHash() []byte {
+	return a.RCD.Hash()
+}
+
+// RCDType returns the Redeem Condition Datastructure type used by the Factoid
+// Address.
+func (a *EthSecret) RCDType() uint8 {
+	return a.RCD.Type()
+}
+
+// PubBytes returns the byte representation of the public key
+func (a EthSecret) PubBytes() []byte {
+	pub := a.PublicKey()
+	bytes := crypto.FromECDSAPub(&pub)
+	// Strip off the 0x04 prefix to indicate an uncompressed key.
+	// You can find the prefix list here:
+	// https://www.oreilly.com/library/view/mastering-ethereum/9781491971932/ch04.html
+	return bytes[1:]
+}
+
+// EthAddress returns the linked ether address
+func (a EthSecret) EthAddress() string {
+	return crypto.PubkeyToAddress(a.PublicKey()).String()
+}
+
+// SecBytes returns the []byte representation of the secret key.
+func (a *EthSecret) SecBytes() []byte {
+	return a.Sec[:]
+}
+
+// SecFixed returns the fixed size secret key ([64]byte).
+func (a *EthSecret) SecFixed() *[32]byte {
+	return a.Sec
+}
+
+// SecString returns the string encoding of the secret key i.e. 0x123...
+func (a EthSecret) SecString() string {
+	str := hex.EncodeToString(a.Sec[:])
+	return "0x" + str
+}
+
+// Returns the FA address
+func (a EthSecret) FAString() string {
+	return a.String()[1:]
+}
+
+// Returns the eFA address
+func (a EthSecret) String() string {
+	buf := new(bytes.Buffer)
+
+	// FC address prefix
+	buf.Write(fcPubPrefix)
+
+	// RCD Hash
+	buf.Write(a.RCDHash())
+
+	// Checksum
+	check := shad(buf.Bytes())[:ChecksumLength]
+	buf.Write(check)
+
+	return "e" + base58.Encode(buf.Bytes())
 }
 
 // ParseMnemonic parse and validate a bip39 mnumonic string. Remove extra

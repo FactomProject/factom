@@ -42,7 +42,7 @@ func TestImportAddress(t *testing.T) {
 	defer func() { done <- 1 }()
 
 	// import the good addresses
-	if _, _, err := ImportAddresses(fs1, es1); err != nil {
+	if _, _, _, err := ImportAddresses(fs1, es1); err != nil {
 		t.Error(err)
 	}
 
@@ -64,7 +64,7 @@ func TestImportAddress(t *testing.T) {
 
 	// try to import the bad addresses
 	for _, bad := range bads {
-		if _, _, err := ImportAddresses(bad); err == nil {
+		if _, _, _, err := ImportAddresses(bad); err == nil {
 			t.Error("Bad address was imported without error", bad)
 		}
 	}
@@ -121,7 +121,7 @@ type walletcall struct {
 
 func helper(t *testing.T, addr []string) (*walletcall, string) {
 	for _, k := range addr {
-		if _, _, err := ImportAddresses(k); err != nil {
+		if _, _, _, err := ImportAddresses(k); err != nil {
 			return nil, "failed"
 		}
 	}
@@ -202,7 +202,7 @@ func populateTestWallet() error {
 	//EC2R4bPDj9WQ8eWA4X3K8NYfTkBh4HFvCopLBq48FyrNXNumSK6w
 	//Es355qB6tWo1ZZRTK8cXpHjxGECXaPGw98AFCRJ6kxZ3J6vp1M2i
 
-	_, _, err := ImportAddresses(
+	_, _, _, err := ImportAddresses(
 		"Fs2TCa7Mo4XGy9FQSoZS8JPnDfv7SjwUSGqrjMWvc1RJ9sKbJeXA",
 		"Fs1os7xg2mN9fTuJmaYZLk6EXz51x2wmmHr2365UAuPMJW3aNr25",
 		"Es4KmwK65t9HCsibYzVDFrijvkgTFZKdEaEAgfMtYTPSVtM3NDSx",

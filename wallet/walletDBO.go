@@ -27,6 +27,7 @@ var (
 	ecDBPrefix       = []byte("Entry Credits")
 	seedDBKey        = []byte("DB Seed")
 	identityDBPrefix = []byte("Identities")
+	ethDBPrefix      = []byte("EthSecrets")
 )
 
 type WalletDatabaseOverlay struct {
@@ -152,6 +153,7 @@ type DBSeedBase struct {
 	NextFactoidAddressIndex uint32
 	NextECAddressIndex      uint32
 	NextIdentityKeyIndex    uint32
+	NextEthKeyIndex         uint32
 }
 
 type DBSeed struct {
@@ -244,6 +246,20 @@ func (e *DBSeed) NextIdentityKey() (*factom.IdentityKey, error) {
 		return nil, err
 	}
 	e.NextIdentityKeyIndex++
+	return add, nil
+}
+
+func (e *DBSeed) NextEthSecret() (*factom.EthSecret, error) {
+	add, err := factom.MakeBIP44EthSecret(
+		e.MnemonicSeed,
+		bip32.FirstHardenedChild,
+		0,
+		e.NextEthKeyIndex,
+	)
+	if err != nil {
+		return nil, err
+	}
+	e.NextEthKeyIndex++
 	return add, nil
 }
 
@@ -441,10 +457,25 @@ func toFList(source []interfaces.BinaryMarshallableAndCopyable) []*factom.Factoi
 }
 
 func (db *WalletDatabaseOverlay) RemoveAddress(pubString string) error {
-	if len(pubString) == 0 {
+	if len(pubString) < 3 {
 		return nil
 	}
-	if pubString[:1] == "F" {
+	if pubString[:3] == "eFA" || pubString[:3] == "EFA" {
+		data, err := db.DBO.Get(ethDBPrefix, []byte(pubString), new(factom.EthSecret))
+		if err != nil {
+			return err
+		}
+		if data == nil {
+			return ErrNoSuchAddress
+		}
+		err = db.DBO.Delete(ethDBPrefix, []byte(pubString))
+		if err == nil {
+			err := db.DBO.Delete(ethDBPrefix, []byte(pubString)) //delete twice to flush the db file
+			return err
+		} else {
+			return err
+		}
+	} else if pubString[:1] == "F" {
 		data, err := db.DBO.Get(fcDBPrefix, []byte(pubString), new(factom.FactoidAddress))
 		if err != nil {
 			return err
@@ -622,5 +653,114 @@ var _ interfaces.BinaryMarshallableAndCopyable = (*ID)(nil)
 func (t *ID) New() interfaces.BinaryMarshallableAndCopyable {
 	e := new(ID)
 	e.IdentityKey = factom.NewIdentityKey()
+	return e
+}
+
+// ---
+
+func (db *WalletDatabaseOverlay) GetNextEthereumKey() (*factom.EthSecret, error) {
+	seed, err := db.GetOrCreateDBSeed()
+	if err != nil {
+		return nil, err
+	}
+	add, err := seed.NextEthSecret()
+	if err != nil {
+		return nil, err
+	}
+	err = db.InsertDBSeed(seed)
+	if err != nil {
+		return nil, err
+	}
+	err = db.InsertEthSecret(add)
+	if err != nil {
+		return nil, err
+	}
+	return add, nil
+}
+
+func (db *WalletDatabaseOverlay) InsertEthSecret(e *factom.EthSecret) error {
+	if e == nil {
+		return nil
+	}
+
+	batch := []interfaces.Record{}
+	batch = append(batch, interfaces.Record{ethDBPrefix, []byte(e.String()), e})
+
+	return db.DBO.PutInBatch(batch)
+}
+
+func (db *WalletDatabaseOverlay) GetEthSecret(str string) (*factom.EthSecret, error) {
+	data, err := db.DBO.Get(ethDBPrefix, []byte(str), new(factom.EthSecret))
+	if err != nil {
+		return nil, err
+	}
+	if data == nil {
+		return nil, ErrNoSuchAddress
+	}
+	return data.(*factom.EthSecret), nil
+}
+
+func (db *WalletDatabaseOverlay) GetAllEthSecrets() ([]*factom.EthSecret, error) {
+	list, err := db.DBO.FetchAllBlocksFromBucket(ethDBPrefix, new(EthS))
+	if err != nil {
+		return nil, err
+	}
+	return toEthSecList(list), nil
+}
+
+func toEthSecList(source []interfaces.BinaryMarshallableAndCopyable) []*factom.EthSecret {
+	answer := make([]*factom.EthSecret, len(source))
+	for i, v := range source {
+		answer[i] = v.(*EthS).EthSecret
+	}
+	sort.Sort(byEName(answer))
+	return answer
+}
+
+func (db *WalletDatabaseOverlay) RemoveEthSecret(pubString string) error {
+	if len(pubString) == 0 {
+		return nil
+	}
+
+	data, err := db.DBO.Get(ethDBPrefix, []byte(pubString), new(factom.IdentityKey))
+	if err != nil {
+		return err
+	}
+	if data == nil {
+		return ErrNoSuchIdentityKey
+	}
+	err = db.DBO.Delete(ethDBPrefix, []byte(pubString))
+	if err == nil {
+		err := db.DBO.Delete(ethDBPrefix, []byte(pubString)) //delete twice to flush the db file
+		return err
+	} else {
+		return err
+	}
+
+	return nil
+}
+
+type byEName []*factom.EthSecret
+
+func (f byEName) Len() int {
+	return len(f)
+}
+func (f byEName) Less(i, j int) bool {
+	a := strings.Compare(f[i].String(), f[j].String())
+	return a < 0
+}
+func (f byEName) Swap(i, j int) {
+	f[i], f[j] = f[j], f[i]
+}
+
+type EthS struct {
+	*factom.EthSecret
+}
+
+var _ interfaces.BinaryMarshallableAndCopyable = (*EthS)(nil)
+
+func (t *EthS) New() interfaces.BinaryMarshallableAndCopyable {
+	e := new(EthS)
+	e.EthSecret = factom.NewEthSecret()
 	return e
 }

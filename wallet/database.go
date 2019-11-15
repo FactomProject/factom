@@ -134,6 +134,12 @@ func (w *Wallet) GenerateFCTAddress() (*factom.FactoidAddress, error) {
 	return w.GetNextFCTAddress()
 }
 
+// GenerateEtherAddress creates and stores a new Ether Linked Address in the
+// Wallet. The address can be reproduced in the future using the Wallet Seed.
+func (w *Wallet) GenerateEtherAddress() (*factom.EthSecret, error) {
+	return w.GetNextEthereumKey()
+}
+
 // GenerateIdentityKey creates and stores a new Identity Key in the Wallet.
 func (w *Wallet) GenerateIdentityKey() (*factom.IdentityKey, error) {
 	return w.GetNextIdentityKey()
@@ -141,18 +147,33 @@ func (w *Wallet) GenerateIdentityKey() (*factom.IdentityKey, error) {
 
 // GetAllAddresses retrieves all Entry Credit and Factoid Addresses from the
 // Wallet Database.
+//
+// Deprecated: This specifically excludes eth secrets to maintain backwards
+// compatibility. Should use GetAllAddressesTypes
 func (w *Wallet) GetAllAddresses() ([]*factom.FactoidAddress, []*factom.ECAddress, error) {
+	fs, ecs, _, err := w.GetAllAddressesTypes()
+	return fs, ecs, err
+}
+
+// GetAllAddresses retrieves all Entry Credit and Factoid Addresses from the
+// Wallet Database.
+func (w *Wallet) GetAllAddressesTypes() ([]*factom.FactoidAddress, []*factom.ECAddress, []*factom.EthSecret, error) {
 	fcs, err := w.GetAllFCTAddresses()
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, nil, err
 	}
 
 	ecs, err := w.GetAllECAddresses()
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, nil, err
 	}
 
-	return fcs, ecs, nil
+	eths, err := w.GetAllEthSecrets()
+	if err != nil {
+		return nil, nil, nil, err
+	}
+
+	return fcs, ecs, eths, nil
 }
 
 // GetSeed returns the string representaion of the Wallet Seed. The Wallet Seed

@@ -237,6 +237,8 @@ func handleV2Request(j *factom.JSON2Request) (*factom.JSON2Response, *factom.JSO
 			resp, jsonError = handleGenerateECAddress(params)
 		case "generate-factoid-address":
 			resp, jsonError = handleGenerateFactoidAddress(params)
+		case "generate-ether-address":
+			resp, jsonError = handleGenerateEtherAddress(params)
 		case "import-addresses":
 			resp, jsonError = handleImportAddresses(params)
 		case "import-koinify":
@@ -542,7 +544,7 @@ func handleAddress(params []byte) (interface{}, *factom.JSONError) {
 func handleAllAddresses(params []byte) (interface{}, *factom.JSONError) {
 	resp := new(multiAddressResponse)
 
-	fs, es, err := fctWallet.GetAllAddresses()
+	fs, es, eths, err := fctWallet.GetAllAddressesTypes()
 	if err != nil {
 		return nil, newCustomInternalError(err.Error())
 	}
@@ -552,12 +554,26 @@ func handleAllAddresses(params []byte) (interface{}, *factom.JSONError) {
 	for _, e := range es {
 		resp.Addresses = append(resp.Addresses, mkAddressResponse(e))
 	}
+	for _, eth := range eths {
+		resp.Addresses = append(resp.Addresses, mkAddressResponse(eth))
+	}
 
 	return resp, nil
 }
 
 func handleGenerateFactoidAddress(params []byte) (interface{}, *factom.JSONError) {
 	a, err := fctWallet.GenerateFCTAddress()
+	if err != nil {
+		return nil, newCustomInternalError(err.Error())
+	}
+
+	resp := mkAddressResponse(a)
+
+	return resp, nil
+}
+
+func handleGenerateEtherAddress(params []byte) (interface{}, *factom.JSONError) {
+	a, err := fctWallet.GenerateEtherAddress()
 	if err != nil {
 		return nil, newCustomInternalError(err.Error())
 	}
@@ -587,6 +603,16 @@ func handleImportAddresses(params []byte) (interface{}, *factom.JSONError) {
 	resp := new(multiAddressResponse)
 	for _, v := range req.Addresses {
 		switch factom.AddressStringType(v.Secret) {
+		case factom.EthSec:
+			eth, err := factom.GetEthSecret(v.Secret)
+			if err != nil {
+				return nil, newCustomInternalError(err.Error())
+			}
+			if err := fctWallet.InsertEthSecret(eth); err != nil {
+				return nil, newCustomInternalError(err.Error())
+			}
+			a := mkAddressResponse(eth)
+			resp.Addresses = append(resp.Addresses, a)
 		case factom.FactoidSec:
 			f, err := factom.GetFactoidAddress(v.Secret)
 			if err != nil {

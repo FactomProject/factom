@@ -1,5 +1,5 @@
-hash: 713151aa273eee2903d840e4b627c53d660de4d347a8a3e3a741bda0f5a0a193
-updated: 2019-07-08T12:30:27.753120923-05:00
+hash: fbc2972d8fb62eca61952cde68a5f2846739775dc78c699ca2fc7dbae06b6ead
+updated: 2019-11-15T10:11:45.344797069-06:00
 imports:
 - name: github.com/beorn7/perks
   version: 3a771d992973f24aa725d07868b467d1ddfceafb
@@ -9,6 +9,14 @@ imports:
   version: f2b1058a82554c0c7c3b8809c5956c38374604d8
   subpackages:
   - base58
+- name: github.com/davecgh/go-spew
+  version: d8f796af33cc11cb798c1aaeb27a4ebc5099927d
+  subpackages:
+  - spew
+- name: github.com/ethereum/go-ethereum
+  version: 738b51ae31c48a598b7c5bad37c054976a41025f
+  subpackages:
+  - crypto
 - name: github.com/FactomProject/basen
   version: fe3947df716ebfda9847eb1b9a48f9592e06478c
 - name: github.com/FactomProject/bolt
@@ -37,7 +45,7 @@ imports:
   subpackages:
   - controlpanel
 - name: github.com/FactomProject/factomd
-  version: 7fd7716f5af4f8962ef9390adb0f4e4416eb22da
+  version: c1cc53ae6bd1d3882d30d8afcb0134ab139efe47
   subpackages:
   - Utilities/CorrectChainHeads/correctChainHeads
   - Utilities/tools
@@ -45,6 +53,7 @@ imports:
   - anchor
   - common/adminBlock
   - common/constants
+  - common/constants/runstate
   - common/directoryBlock
   - common/directoryBlock/dbInfo
   - common/entryBlock
@@ -155,6 +164,10 @@ imports:
   version: 6d0b8010fcc857872e42fc6c931227569016843c
 - name: github.com/oklog/run
   version: 6934b124db28979da51d3470dadfa34d73d72652
+- name: github.com/pmezard/go-difflib
+  version: 792786c7400a136282c1664665ae0a8db921c6c2
+  subpackages:
+  - difflib
 - name: github.com/prometheus/client_golang
   version: f30f428035633da15d00d3dfefb0128c5e569ef4
   subpackages:
@@ -181,7 +194,7 @@ imports:
 - name: github.com/sirupsen/logrus
   version: 566a5f690849162ff53cf98f3c42135389d63f95
 - name: github.com/stretchr/testify
-  version: 34c6fa2dc70986bccbbffcc6130f6920a924b075
+  version: 221dbe5ed46703ee255b1da0dec05086f5035f62
   subpackages:
   - assert
 - name: golang.org/x/crypto
@@ -263,4 +276,6 @@ imports:
   - types
 - name: gopkg.in/warnings.v0
   version: ec4a0fea49c7b46c2aeb0b51aac55779c607e52b
+- name: gopkg.in/yaml.v2
+  version: 5420a8b6744d3b0345ab293f6fcba19c978f1183
 testImports: []
