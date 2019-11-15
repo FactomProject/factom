@@ -528,6 +528,12 @@ func handleAddress(params []byte) (interface{}, *factom.JSONError) {
 			return nil, newCustomInternalError("Wallet: address not found")
 		}
 		resp = mkAddressResponse(e)
+	case factom.EthFA:
+		eth, err := fctWallet.GetEthSecret(req.Address)
+		if err != nil {
+			return nil, newCustomInternalError(err.Error())
+		}
+		resp = mkAddressResponse(eth)
 	case factom.FactoidPub:
 		f, err := fctWallet.GetFCTAddress(req.Address)
 		if err != nil {
