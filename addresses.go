@@ -37,9 +37,8 @@ const (
 	FactoidSec
 	ECPub
 	ECSec
-	EthSec     // 0x[32byte hex]
-	EthFA      // eFA..
-	EthAddress // Ethereum address
+	EthSec // 0x[32byte hex]
+	EthFA  // eFA..
 )
 
 const (
@@ -65,17 +64,17 @@ var (
 // InvalidAddress, FactoidPub, FactoidSec, ECPub, or ECSec.
 func AddressStringType(s string) addressStringType {
 	if has0xPrefix(s) {
-		// Prefix + Secret length check
-		if len(s) != EthSecretPrefix+EthSecretLength {
-			return InvalidAddress
-		}
-
 		_, err := hex.DecodeString(s[2:])
 		if err != nil {
 			return InvalidAddress
 		}
 
-		return EthSec
+		// Prefix + Secret length check means secret key
+		if len(s) == EthSecretPrefix+EthSecretLength {
+			return EthSec
+		}
+
+		return InvalidAddress
 	}
 
 	if hasEFAPrefix(s) {
