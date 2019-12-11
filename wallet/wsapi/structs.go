@@ -32,7 +32,7 @@ type addressesRequest struct {
 type importRequest struct {
 	Addresses []struct {
 		Secret string `json:"secret"`
-	} `json:addresses`
+	} `json:"addresses"`
 }
 
 type importKoinifyRequest struct {
@@ -42,6 +42,11 @@ type importKoinifyRequest struct {
 type transactionRequest struct {
 	Name  string `json:"tx-name"`
 	Force bool   `json:"force"`
+}
+
+type signDataRequest struct {
+	Signer string `json:"signer"`
+	Data   []byte `json:"data"`
 }
 
 type transactionValueRequest struct {
@@ -200,6 +205,11 @@ type activeIdentityKeysResponse struct {
 	ChainID string   `json:"chainid"`
 	Height  int64    `json:"height"`
 	Keys    []string `json:"keys"`
+}
+
+type signDataResponse struct {
+	PubKey    []byte `json:"pubkey"`
+	Signature []byte `json:"signature"`
 }
 
 // Helper structs

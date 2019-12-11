@@ -1,0 +1,78 @@
+# Golang CircleCI 2.0 configuration file
+#
+# Check https://circleci.com/docs/2.0/language-go/ for more details
+version: 2
+jobs:
+  build:
+    docker:
+      # specify the version
+      - image: circleci/golang:1.12
+
+      # Specify service dependencies here if necessary
+      # CircleCI maintains a library of pre-built images
+      # documented at https://circleci.com/docs/2.0/circleci-images/
+      # - image: circleci/postgres:9.4
+
+    working_directory: /go/src/github.com/FactomProject/factom
+    steps:
+      - checkout
+      - run:
+          name: Get Glide
+          command: |
+            go get -v github.com/Masterminds/glide
+            cd $GOPATH/src/github.com/Masterminds/glide
+            git checkout tags/v0.13.1
+            go install
+# Potentially enable coveralls in the future
+#      - run:
+#          name: Get goveralls
+#          command: |
+#            go get github.com/mattn/goveralls
+      - run:
+          name: Get the dependencies
+          command: |
+            glide install
+      - run:
+          name: Build and install to verify it builds
+          command: go install -v
+
+      # Move gopath to tmp so we have test files
+      - run:
+          name: Move GOPATH to persist
+          command: cp -r $GOPATH/ /tmp
+
+
+      - persist_to_workspace:
+          root: /tmp
+          paths: go
+
+  test:
+    working_directory: /tmp # All the binaries are saved here
+    docker:
+      - image: circleci/golang:1.12
+
+    steps:
+      - attach_workspace:
+          at: /tmp
+      - run:
+          name: Run unit tests
+          command: |
+            export PATH="/tmp/go/bin:$PATH"
+            export GOPATH=/tmp/go
+            cd /tmp/go/src/github.com/FactomProject/factom
+            go test -v ./...
+
+workflows:
+  version: 2
+  commit-workflow:
+    jobs:
+      - build:
+          filters:
+            tags:
+              only: /.*/
+      - test:
+          filters:
+            tags:
+              only: /.*/
+          requires:
+            - build

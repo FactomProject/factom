@@ -62,6 +62,14 @@ func NewLevelDB(ldbpath string) (*WalletDatabaseOverlay, error) {
 }
 
 func NewBoltDB(boltPath string) (*WalletDatabaseOverlay, error) {
+	// setup panic recovery
+	defer func() {
+		if r := recover(); r != nil {
+			fmt.Printf("Could not use wallet file \"%s\"\n%v\n", boltPath, r)
+			os.Exit(1)
+		}
+	}()
+
 	// check if the file exists or if it is a directory
 	fileInfo, err := os.Stat(boltPath)
 	if err == nil {
@@ -77,19 +85,13 @@ func NewBoltDB(boltPath string) (*WalletDatabaseOverlay, error) {
 		}
 	}
 
-	if err != nil && !os.IsNotExist(err) { //some other error, besides the file not existing
+	// check for other errors besides the file not existing
+	if err != nil && !os.IsNotExist(err) {
 		fmt.Printf("database error %s\n", err)
 		return nil, err
 	}
 
-	defer func() {
-		if r := recover(); r != nil {
-			fmt.Printf("Could not use wallet file \"%s\"\n%v\n", boltPath, r)
-			os.Exit(1)
-		}
-	}()
 	db := hybridDB.NewBoltMapHybridDB(nil, boltPath)
-
 	fmt.Println("Database started from: " + boltPath)
 	return NewWalletOverlay(db), nil
 }

@@ -265,6 +265,8 @@ func handleV2Request(j *factom.JSON2Request) (*factom.JSON2Response, *factom.JSO
 			resp, jsonError = handleSubFee(params)
 		case "sign-transaction":
 			resp, jsonError = handleSignTransaction(params)
+		case "sign-data":
+			resp, jsonError = handleSignData(params)
 		case "compose-transaction":
 			resp, jsonError = handleComposeTransaction(params)
 		case "remove-address":
@@ -888,7 +890,7 @@ func handleAddFee(params []byte) (interface{}, *factom.JSONError) {
 		return nil, newInvalidParamsError()
 	}
 
-	rate, err := factom.GetRate()
+	rate, err := factom.GetECRate()
 	if err != nil {
 		return nil, newCustomInternalError(err.Error())
 	}
@@ -912,7 +914,7 @@ func handleSubFee(params []byte) (interface{}, *factom.JSONError) {
 		return nil, newInvalidParamsError()
 	}
 
-	rate, err := factom.GetRate()
+	rate, err := factom.GetECRate()
 	if err != nil {
 		return nil, newCustomInternalError(err.Error())
 	}
@@ -950,6 +952,20 @@ func handleSignTransaction(params []byte) (interface{}, *factom.JSONError) {
 	resp.FeesRequired = feesRequired(tx)
 
 	return resp, nil
+}
+
+func handleSignData(params []byte) (interface{}, *factom.JSONError) {
+	req := new(signDataRequest)
+	if err := json.Unmarshal(params, req); err != nil {
+		return nil, newInvalidParamsError()
+	}
+
+	pub, sig, err := fctWallet.SignData(req.Signer, req.Data)
+	if err != nil {
+		return nil, newCustomInternalError(err.Error())
+	}
+
+	return signDataResponse{PubKey: pub, Signature: sig}, nil
 }
 
 func handleComposeTransaction(params []byte) (interface{}, *factom.JSONError) {
@@ -1564,7 +1580,7 @@ func factoidTxToTransaction(t interfaces.ITransaction) (
 }
 
 func feesRequired(t interfaces.ITransaction) uint64 {
-	rate, err := factom.GetRate()
+	rate, err := factom.GetECRate()
 	if err != nil {
 		rate = 0
 	}

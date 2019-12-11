@@ -4,12 +4,21 @@
 
 package factom
 
-import "fmt"
-
 // requests
 
 type heightRequest struct {
 	Height int64 `json:"height"`
+}
+
+type replayRequest struct {
+	StartHeight int64 `json:"startheight"`
+	EndHeight   int64 `json:"endheight,omitempty"`
+}
+
+type replayResponse struct {
+	Message string `json:"message"`
+	Start   int64  `json:"startheight"`
+	End     int64  `json:"endheight"`
 }
 
 type ackRequest struct {
@@ -44,30 +53,8 @@ type hashRequest struct {
 	Hash string `json:"hash"`
 }
 
-type HeightsResponse struct {
-	DirectoryBlockHeight int64 `json:"directoryblockheight"`
-	LeaderHeight         int64 `json:"leaderheight"`
-	EntryBlockHeight     int64 `json:"entryblockheight"`
-	EntryHeight          int64 `json:"entryheight"`
-}
-
-func (d *HeightsResponse) String() string {
-	var s string
-
-	s += fmt.Sprintln("DirectoryBlockHeight:", d.DirectoryBlockHeight)
-	s += fmt.Sprintln("LeaderHeight:", d.LeaderHeight)
-	s += fmt.Sprintln("EntryBlockHeight:", d.EntryBlockHeight)
-	s += fmt.Sprintln("EntryHeight:", d.EntryHeight)
-
-	return s
-}
-
 type importRequest struct {
 	Addresses []secretRequest `json:"addresses"`
-}
-
-type importKoinifyRequest struct {
-	Words string `json:"words"`
 }
 
 type keyMRRequest struct {

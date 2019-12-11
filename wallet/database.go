@@ -36,59 +36,51 @@ func (w *Wallet) InitWallet() error {
 func NewOrOpenLevelDBWallet(path string) (*Wallet, error) {
 	w := new(Wallet)
 	w.transactions = make(map[string]*factoid.Transaction)
+
 	db, err := NewLevelDB(path)
 	if err != nil {
 		return nil, err
 	}
 	w.WalletDatabaseOverlay = db
-	err = w.InitWallet()
-	if err != nil {
+
+	if err = w.InitWallet(); err != nil {
 		return nil, err
 	}
+
 	return w, nil
 }
 
 func NewOrOpenBoltDBWallet(path string) (*Wallet, error) {
 	w := new(Wallet)
 	w.transactions = make(map[string]*factoid.Transaction)
+
 	db, err := NewBoltDB(path)
 	if err != nil {
 		return nil, err
 	}
 	w.WalletDatabaseOverlay = db
-	err = w.InitWallet()
-	if err != nil {
-		return nil, err
-	}
-	return w, nil
-}
 
-func NewMapDBWallet() (*Wallet, error) {
-	w := new(Wallet)
-	w.transactions = make(map[string]*factoid.Transaction)
-	db := NewMapDB()
-	w.WalletDatabaseOverlay = db
-	err := w.InitWallet()
-	if err != nil {
+	if err = w.InitWallet(); err != nil {
 		return nil, err
 	}
+
 	return w, nil
 }
 
 func NewEncryptedBoltDBWallet(path, password string) (*Wallet, error) {
 	w := new(Wallet)
 	w.transactions = make(map[string]*factoid.Transaction)
+
 	db, err := NewEncryptedBoltDB(path, password)
 	if err != nil {
 		return nil, err
 	}
 	w.WalletDatabaseOverlay = db
-	err = w.InitWallet()
-	if err != nil {
+
+	if err = w.InitWallet(); err != nil {
 		return nil, err
 	}
-	w.Encrypted = true
-	w.DBPath = path
+
 	return w, nil
 }
 
@@ -97,6 +89,18 @@ func NewEncryptedBoltDBWalletAwaitingPassphrase(path string) (*Wallet, error) {
 	w.transactions = make(map[string]*factoid.Transaction)
 	w.Encrypted = true
 	w.DBPath = path
+	return w, nil
+}
+
+func NewMapDBWallet() (*Wallet, error) {
+	w := new(Wallet)
+	w.transactions = make(map[string]*factoid.Transaction)
+	w.WalletDatabaseOverlay = NewMapDB()
+
+	if err := w.InitWallet(); err != nil {
+		return nil, err
+	}
+
 	return w, nil
 }
 
@@ -113,6 +117,7 @@ func (w *Wallet) AddTXDB(t *TXDatabaseOverlay) {
 	w.txdb = t
 }
 
+// TXDB returns a handle for the Transaction Database.
 func (w *Wallet) TXDB() *TXDatabaseOverlay {
 	return w.txdb
 }
@@ -141,6 +146,7 @@ func (w *Wallet) GetAllAddresses() ([]*factom.FactoidAddress, []*factom.ECAddres
 	if err != nil {
 		return nil, nil, err
 	}
+
 	ecs, err := w.GetAllECAddresses()
 	if err != nil {
 		return nil, nil, err

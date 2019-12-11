@@ -132,7 +132,7 @@ func GetIdentityKey(s string) (*IdentityKey, error) {
 
 func MakeIdentityKey(sec []byte) (*IdentityKey, error) {
 	if len(sec) != 32 {
-		return nil, fmt.Errorf("secret key portion must be 32 bytes")
+		return nil, ErrSecKeyLength
 	}
 
 	k := NewIdentityKey()
@@ -146,12 +146,18 @@ func MakeIdentityKey(sec []byte) (*IdentityKey, error) {
 }
 
 func MakeBIP44IdentityKey(mnemonic string, account, chain, address uint32) (*IdentityKey, error) {
-	mnemonic, err := ParseAndValidateMnemonic(mnemonic)
+	mnemonic, err := ParseMnemonic(mnemonic)
 	if err != nil {
 		return nil, err
 	}
 
-	child, err := bip44.NewKeyFromMnemonic(mnemonic, bip44.TypeFactomIdentity, account, chain, address)
+	child, err := bip44.NewKeyFromMnemonic(
+		mnemonic,
+		bip44.TypeFactomIdentity,
+		account,
+		chain,
+		address,
+	)
 	if err != nil {
 		return nil, err
 	}

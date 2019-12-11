@@ -5,7 +5,6 @@
 package wallet
 
 import (
-	"encoding/hex"
 	"fmt"
 	"os"
 
@@ -92,7 +91,7 @@ func (db *TXDatabaseOverlay) Close() error {
 // local database is used to cache the factoid blocks.
 func (db *TXDatabaseOverlay) GetAllTXs() ([]interfaces.ITransaction, error) {
 	// update the database and get the newest fblock
-	_, err := db.update()
+	_, err := db.Update()
 	if err != nil {
 		return nil, err
 	}
@@ -202,7 +201,7 @@ func (db *TXDatabaseOverlay) GetTXRange(start, end int) (
 	}
 
 	// update the database and get the newest fblock
-	_, err := db.update()
+	_, err := db.Update()
 	if err != nil {
 		return nil, err
 	}
@@ -285,9 +284,9 @@ func (db *TXDatabaseOverlay) InsertFBlockHead(fblock interfaces.IFBlock) error {
 	return db.DBO.SaveFactoidBlockHead(fblock)
 }
 
-// update gets all fblocks written since the database was last updated, and
+// Update gets all fblocks written since the database was last updated, and
 // returns the most recent fblock keymr.
-func (db *TXDatabaseOverlay) update() (string, error) {
+func (db *TXDatabaseOverlay) Update() (string, error) {
 	newestFBlock, err := fblockHead()
 	if err != nil {
 		return "", err
@@ -331,7 +330,15 @@ func (db *TXDatabaseOverlay) update() (string, error) {
 	// If the newest block in the tx cashe has a greater height than the newest
 	// fblock then clear the cashe and start from 0.
 	if start >= newestHeight {
+		db.DBO.Clear(databaseOverlay.FACTOIDBLOCK)
 		return newestFBlock.GetKeyMR().String(), nil
+	}
+
+	// If the latest block from the database is not available from the blockchain
+	// then clear the cashe and start from 0.
+	if f, err := getfblockbyheight(start); err != nil {
+		db.DBO.Clear(databaseOverlay.FACTOIDBLOCK)
+		return f.GetKeyMR().String(), err
 	}
 
 	db.DBO.StartMultiBatch()
@@ -380,13 +387,13 @@ func fblockHead() (interfaces.IFBlock, error) {
 	if err != nil {
 		return nil, err
 	}
-	dblock, err := factom.GetDBlock(dbhead)
+	dblock, _, err := factom.GetDBlock(dbhead)
 	if err != nil {
 		return nil, err
 	}
 
 	var fblockmr string
-	for _, eblock := range dblock.EntryBlockList {
+	for _, eblock := range dblock.DBEntries {
 		if eblock.ChainID == fblockID {
 			fblockmr = eblock.KeyMR
 		}
@@ -399,33 +406,25 @@ func fblockHead() (interfaces.IFBlock, error) {
 }
 
 func getfblock(keymr string) (interfaces.IFBlock, error) {
-	p, err := factom.GetRaw(keymr)
+	_, raw, err := factom.GetFBlock(keymr)
 	if err != nil {
 		return nil, err
 	}
-	return factoid.UnmarshalFBlock(p)
+	return factoid.UnmarshalFBlock(raw)
 }
 
 func getfblockbyheight(height uint32) (interfaces.IFBlock, error) {
-	p, err := factom.GetFBlockByHeight(int64(height))
+	_, raw, err := factom.GetFBlockByHeight(int64(height))
 	if err != nil {
 		return nil, err
 	}
-	h, err := hex.DecodeString(p.RawData)
-	if err != nil {
-		return nil, err
-	}
-	return factoid.UnmarshalFBlock(h)
+	return factoid.UnmarshalFBlock(raw)
 }
 
 func getdblockbyheight(height uint32) (interfaces.IDirectoryBlock, error) {
-	p, err := factom.GetDBlockByHeight(int64(height))
+	_, raw, err := factom.GetDBlockByHeight(int64(height))
 	if err != nil {
 		return nil, err
 	}
-	h, err := hex.DecodeString(p.RawData)
-	if err != nil {
-		return nil, err
-	}
-	return directoryBlock.UnmarshalDBlock(h)
+	return directoryBlock.UnmarshalDBlock(raw)
 }

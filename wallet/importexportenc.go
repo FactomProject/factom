@@ -15,7 +15,7 @@ import (
 // ImportEncryptedWalletFromMnemonic creates a new wallet with a provided Mnemonic seed
 // defined in bip-0039.
 func ImportEncryptedWalletFromMnemonic(mnemonic, path, password string) (*Wallet, error) {
-	mnemonic, err := factom.ParseAndValidateMnemonic(mnemonic)
+	mnemonic, err := factom.ParseMnemonic(mnemonic)
 	if err != nil {
 		return nil, err
 	}
