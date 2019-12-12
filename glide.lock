@@ -45,7 +45,7 @@ imports:
   subpackages:
   - controlpanel
 - name: github.com/FactomProject/factomd
-  version: c1cc53ae6bd1d3882d30d8afcb0134ab139efe47
+  version: 7fd7716f5af4f8962ef9390adb0f4e4416eb22da
   subpackages:
   - Utilities/CorrectChainHeads/correctChainHeads
   - Utilities/tools
@@ -53,7 +53,6 @@ imports:
   - anchor
   - common/adminBlock
   - common/constants
-  - common/constants/runstate
   - common/directoryBlock
   - common/directoryBlock/dbInfo
   - common/entryBlock
