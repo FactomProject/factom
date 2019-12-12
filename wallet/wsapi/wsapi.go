@@ -525,9 +525,18 @@ func handleAddress(params []byte) (interface{}, *factom.JSONError) {
 			return nil, newCustomInternalError(err.Error())
 		}
 		if e == nil {
-			return nil, newCustomInternalError("Wallet: address not found")
+			return nil, newCustomInternalError(fmt.Sprintf("Wallet: address '%s' not found", req.Address))
 		}
 		resp = mkAddressResponse(e)
+	case factom.EthGatewayFA:
+		var err error
+		// If we have a gateway address, we need to change the encoding to
+		// a regular Fe before hitting the database
+		req.Address, err = factom.EthGatewayToRegular(req.Address)
+		if err != nil {
+			return nil, newCustomInternalError(err.Error())
+		}
+		fallthrough
 	case factom.EthFA:
 		eth, err := fctWallet.GetEthSecret(req.Address)
 		if err != nil {

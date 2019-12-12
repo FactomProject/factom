@@ -460,7 +460,8 @@ func (db *WalletDatabaseOverlay) RemoveAddress(pubString string) error {
 	if len(pubString) < 3 {
 		return nil
 	}
-	if pubString[:3] == "eFA" || pubString[:3] == "EFA" {
+	// TODO: Ensure this works
+	if pubString[:2] == "Fe" {
 		data, err := db.DBO.Get(ethDBPrefix, []byte(pubString), new(factom.EthSecret))
 		if err != nil {
 			return err
@@ -475,7 +476,7 @@ func (db *WalletDatabaseOverlay) RemoveAddress(pubString string) error {
 		} else {
 			return err
 		}
-	} else if pubString[:1] == "F" {
+	} else if pubString[:2] == "FA" {
 		data, err := db.DBO.Get(fcDBPrefix, []byte(pubString), new(factom.FactoidAddress))
 		if err != nil {
 			return err
@@ -684,6 +685,7 @@ func (db *WalletDatabaseOverlay) InsertEthSecret(e *factom.EthSecret) error {
 	}
 
 	batch := []interfaces.Record{}
+	fmt.Println(e.String())
 	batch = append(batch, interfaces.Record{ethDBPrefix, []byte(e.String()), e})
 
 	return db.DBO.PutInBatch(batch)

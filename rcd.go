@@ -46,12 +46,12 @@ func (r *RCD1) PubBytes() []byte {
 }
 
 // RCDe is a Type 0x0e Redeem Condition Datastructure which contains an ecdsa
-// public key used to sign transactions made with an Etheruem Secret.
+// public key used to sign transactions made with an Ethereum Secret.
 type RCDe struct {
 	Pub *[64]byte
 }
 
-// NewRCDe creates a new 0 value Type 0x0e Etheruem RCD.
+// NewRCDe creates a new 0 value Type 0x0e Ethereum RCD.
 func NewRCDe() *RCDe {
 	r := new(RCDe)
 	r.Pub = new([64]byte)

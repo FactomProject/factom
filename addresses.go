@@ -37,8 +37,9 @@ const (
 	FactoidSec
 	ECPub
 	ECSec
-	EthSec // 0x[32byte hex]
-	EthFA  // eFA..
+	EthSec       // 0x[32byte hex]
+	EthFA        // Fe...
+	EthGatewayFA // FE...
 )
 
 const (
@@ -57,6 +58,10 @@ var (
 	fcSecPrefix = []byte{0x64, 0x78}
 	ecPubPrefix = []byte{0x59, 0x2a}
 	ecSecPrefix = []byte{0x5d, 0xb6}
+
+	// RCD-e prefixes
+	fePubPrefix = []byte{0x62, 0xf4} // Fe...
+	fEPubPrefix = []byte{0x60, 0x28} // FE...
 )
 
 // AddressStringType determine the type of address from the given string.
@@ -74,14 +79,6 @@ func AddressStringType(s string) addressStringType {
 			return EthSec
 		}
 
-		return InvalidAddress
-	}
-
-	if hasEFAPrefix(s) {
-		ty := AddressStringType(s[1:]) // Chop the e/E
-		if ty == FactoidPub {
-			return EthFA
-		}
 		return InvalidAddress
 	}
 
@@ -108,6 +105,10 @@ func AddressStringType(s string) addressStringType {
 		return FactoidPub
 	case bytes.Equal(prefix, fcSecPrefix):
 		return FactoidSec
+	case bytes.Equal(prefix, fePubPrefix):
+		return EthFA
+	case bytes.Equal(prefix, fEPubPrefix):
+		return EthGatewayFA
 	default:
 		return InvalidAddress
 	}
@@ -116,13 +117,6 @@ func AddressStringType(s string) addressStringType {
 // has0xPrefix validates str begins with '0x' or '0X'.
 func has0xPrefix(str string) bool {
 	return len(str) >= 2 && str[0] == '0' && (str[1] == 'x' || str[1] == 'X')
-}
-
-// has0xPrefix validates str begins with 'eFA' or 'EFA'.
-func hasEFAPrefix(str string) bool {
-	return len(str) >= 3 &&
-		(str[0] == 'e' || str[0] == 'E') &&
-		(str[1] == 'F') && (str[2] == 'A')
 }
 
 // IsValidAddress checks that a string is a valid address of one of the defined
@@ -627,24 +621,42 @@ func (a EthSecret) SecString() string {
 
 // Returns the FA address
 func (a EthSecret) FAString() string {
-	return a.String()[1:]
+	return EncodeRCDHash(fcPubPrefix, a.RCDHash())
 }
 
-// Returns the eFA address
+// Returns the FE address
+func (a EthSecret) GateWayAddress() string {
+	return EncodeRCDHash(fEPubPrefix, a.RCDHash())
+}
+
+func EthGatewayToRegular(s string) (string, error) {
+	if AddressStringType(s) != EthGatewayFA {
+		return "", fmt.Errorf("expected an ethereum gateway address")
+	}
+
+	p := base58.Decode(s)
+	return EncodeRCDHash(fePubPrefix, p[PrefixLength:BodyLength]), nil
+}
+
+// Returns the Fe address
 func (a EthSecret) String() string {
+	return EncodeRCDHash(fePubPrefix, a.RCDHash())
+}
+
+func EncodeRCDHash(prefix []byte, payload []byte) string {
 	buf := new(bytes.Buffer)
 
-	// FC address prefix
-	buf.Write(fcPubPrefix)
+	// FE address prefix
+	buf.Write(prefix)
 
 	// RCD Hash
-	buf.Write(a.RCDHash())
+	buf.Write(payload)
 
 	// Checksum
 	check := shad(buf.Bytes())[:ChecksumLength]
 	buf.Write(check)
 
-	return "e" + base58.Encode(buf.Bytes())
+	return base58.Encode(buf.Bytes())
 }
 
 // ParseMnemonic parse and validate a bip39 mnumonic string. Remove extra

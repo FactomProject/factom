@@ -277,7 +277,7 @@ func FetchAllAddressTypes() ([]*FactoidAddress, []*ECAddress, []*EthSecret, erro
 
 	for _, adr := range as.Addresses {
 		switch AddressStringType(adr.Public) {
-		case EthFA:
+		case EthFA, EthGatewayFA:
 			et, err := GetEthSecret(adr.Secret)
 			if err != nil {
 				return nil, nil, nil, err

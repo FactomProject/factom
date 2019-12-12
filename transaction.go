@@ -329,7 +329,7 @@ func AddTransactionInput(
 	amount uint64,
 ) (*Transaction, error) {
 	addrType := AddressStringType(address)
-	if addrType == EthFA {
+	if addrType == EthFA || addrType == EthGatewayFA {
 		return nil, fmt.Errorf("ether linked addresses are not supported for factoid txs yet")
 	}
 
@@ -368,7 +368,7 @@ func AddTransactionOutput(
 	amount uint64,
 ) (*Transaction, error) {
 	addrType := AddressStringType(address)
-	if addrType == EthFA {
+	if addrType == EthFA || addrType == EthGatewayFA {
 		return nil, fmt.Errorf("ether linked addresses are not supported for factoid txs yet")
 	}
 	if addrType != FactoidPub {
