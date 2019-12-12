@@ -17,6 +17,10 @@ imports:
   version: 738b51ae31c48a598b7c5bad37c054976a41025f
   subpackages:
   - crypto
+- name: github.com/ethereum/go-ethereum
+  version: 738b51ae31c48a598b7c5bad37c054976a41025f
+  subpackages:
+  - crypto
 - name: github.com/FactomProject/basen
   version: fe3947df716ebfda9847eb1b9a48f9592e06478c
 - name: github.com/FactomProject/bolt
