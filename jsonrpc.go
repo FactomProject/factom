@@ -18,20 +18,21 @@ import (
 
 // RPCConfig is the configuration for the API handler
 type RPCConfig struct {
-	WalletTLSEnable    bool
-	WalletTLSKeyFile   string
-	WalletTLSCertFile  string
-	WalletRPCUser      string
-	WalletRPCPassword  string
-	WalletServer       string
-	WalletTimeout      time.Duration
-	WalletCORSDomains  string
-	FactomdTLSEnable   bool
-	FactomdTLSCertFile string
-	FactomdRPCUser     string
-	FactomdRPCPassword string
-	FactomdServer      string
-	FactomdTimeout     time.Duration
+	WalletTLSEnable       bool
+	WalletTLSKeyFile      string
+	WalletTLSCertFile     string
+	WalletRPCUser         string
+	WalletRPCPassword     string
+	WalletServer          string
+	WalletTimeout         time.Duration
+	WalletCORSDomains     string
+	FactomdTLSEnable      bool
+	FactomdTLSCertFile    string
+	FactomdRPCUser        string
+	FactomdRPCPassword    string
+	FactomdServer         string
+	FactomdTimeout        time.Duration
+	WalletWhiteListEnable bool
 }
 
 func EncodeJSON(data interface{}) ([]byte, error) {

@@ -16,6 +16,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
+	"net"
 	"net/http"
 	"os"
 	"reflect"
@@ -35,11 +36,13 @@ import (
 const APIVersion string = "2.0"
 
 var (
-	webServer *web.Server
-	fctWallet *wallet.Wallet
-	rpcUser   string
-	rpcPass   string
-	authsha   []byte
+	webServer       *web.Server
+	fctWallet       *wallet.Wallet
+	rpcUser         string
+	rpcPass         string
+	authsha         []byte
+	whitelistEnable bool
+	whitelist       []string
 )
 
 // httpBasicAuth returns the UTF-8 bytes of the HTTP Basic authentication
@@ -119,6 +122,7 @@ func Start(w *wallet.Wallet, net string, c factom.RPCConfig) {
 
 	rpcUser = c.WalletRPCUser
 	rpcPass = c.WalletRPCPassword
+	whitelistEnable = c.WalletWhiteListEnable
 
 	h := sha256.New()
 	h.Write(httpBasicAuth(rpcUser, rpcPass))
@@ -153,6 +157,28 @@ func Stop() {
 	webServer.Close()
 }
 
+func WhiteListIP(raw string) error {
+	ip := net.ParseIP(raw)
+	if ip == nil {
+		return errors.New("unable to parse IP")
+	}
+	whitelist = append(whitelist, ip.String())
+	return nil
+}
+
+func checkWhitelistHeader(r *http.Request) error {
+	if !whitelistEnable {
+		return nil
+	}
+	for _, ip := range whitelist {
+		if ip == r.RemoteAddr {
+			return nil
+		}
+	}
+	fmt.Println("denied a connection from non-whitelisted ip:", r.RemoteAddr)
+	return errors.New("not whitelisted")
+}
+
 func checkAuthHeader(r *http.Request) error {
 	// Don't bother to check the autorization if the rpc user/pass is not
 	// specified.
@@ -178,6 +204,11 @@ func checkAuthHeader(r *http.Request) error {
 }
 
 func handleV2(ctx *web.Context) {
+	if err := checkWhitelistHeader(ctx.Request); err != nil {
+		http.Error(ctx.ResponseWriter, "401 Unauthorized.", http.StatusUnauthorized)
+		return
+	}
+
 	if err := checkAuthHeader(ctx.Request); err != nil {
 		remoteIP := ""
 		remoteIP += strings.Split(ctx.Request.RemoteAddr, ":")[0]
