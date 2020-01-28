@@ -170,8 +170,18 @@ func checkWhitelistHeader(r *http.Request) error {
 	if !whitelistEnable {
 		return nil
 	}
+
+	host, _, err := net.SplitHostPort(r.RemoteAddr)
+	if err != nil {
+		return errors.New("unable to determine ip address of " + r.RemoteAddr)
+	}
+
+	if host == "127.0.0.1" || host == "::1" {
+		return nil
+	}
+
 	for _, ip := range whitelist {
-		if ip == r.RemoteAddr {
+		if ip == host {
 			return nil
 		}
 	}
