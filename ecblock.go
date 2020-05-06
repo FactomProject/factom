@@ -350,9 +350,8 @@ func (e *ECBalanceIncrease) String() string {
 	return s
 }
 
-// GetECBlock requests a specified Entry Credit Block from the factomd API.
-func GetECBlock(keymr string) (ecblock *ECBlock, raw []byte, err error) {
-	params := keyMRRequest{KeyMR: keymr}
+func getECBlock(keymr string, noraw bool) (ecblock *ECBlock, raw []byte, err error) {
+	params := keyMRRequest{KeyMR: keymr, NoRaw: noraw}
 	req := NewJSON2Request("entrycredit-block", APICounter(), params)
 	resp, err := factomdRequest(req)
 	if err != nil {
@@ -380,10 +379,19 @@ func GetECBlock(keymr string) (ecblock *ECBlock, raw []byte, err error) {
 	return wrap.ECBlock, raw, nil
 }
 
-// GetECBlockByHeight request an Entry Credit Block of a given height from the
-// factomd API.
-func GetECBlockByHeight(height int64) (ecblock *ECBlock, raw []byte, err error) {
-	params := heightRequest{Height: height}
+// GetECBlock requests a specified Entry Credit Block from the factomd API with the raw data
+func GetECBlock(keymr string) (ecblock *ECBlock, raw []byte, err error) {
+	return getECBlock(keymr, false)
+}
+
+// GetSimpleECBlock requests a specified Entry Credit Block from the factomd API without the raw data
+func GetSimpleECBlock(keymr string) (ecblock *ECBlock, err error) {
+	ecblock, _, err = getECBlock(keymr, true)
+	return
+}
+
+func getECBlockByHeight(height int64, noraw bool) (ecblock *ECBlock, raw []byte, err error) {
+	params := heightRequest{Height: height, NoRaw: noraw}
 	req := NewJSON2Request("ecblock-by-height", APICounter(), params)
 	resp, err := factomdRequest(req)
 	if err != nil {
@@ -407,4 +415,17 @@ func GetECBlockByHeight(height int64) (ecblock *ECBlock, raw []byte, err error) 
 	}
 
 	return wrap.ECBlock, raw, nil
+}
+
+// GetECBlockByHeight request an Entry Credit Block of a given height from the
+// factomd API with the raw data
+func GetECBlockByHeight(height int64) (ecblock *ECBlock, raw []byte, err error) {
+	return getECBlockByHeight(height, false)
+}
+
+// GetECBlockByHeight request an Entry Credit Block of a given height from the
+// factomd API without the raw data
+func GetSimpleECBlockByHeight(height int64) (ecblock *ECBlock, err error) {
+	ecblock, _, err = getECBlockByHeight(height, true)
+	return
 }

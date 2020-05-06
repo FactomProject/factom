@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"reflect"
 
 	. "github.com/FactomProject/factom"
 
@@ -67,6 +68,15 @@ func TestGetDBlockByHeight(t *testing.T) {
 	}
 	t.Log("dblock:", d)
 	t.Log(fmt.Sprintf("raw: %x\n", raw))
+
+	d2, err := GetSimpleDBlockByHeight(100)
+	if err != nil {
+		t.Error(err)
+	}
+
+	if !reflect.DeepEqual(d, d2) {
+		t.Error("Response of DBlock from GetDBlockByHeight and GetSimpleDBlockByHeight did not match")
+	}
 }
 
 func TestGetDBlockHead(t *testing.T) {

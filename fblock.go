@@ -44,10 +44,8 @@ func (f *FBlock) String() string {
 	return s
 }
 
-// GetFblock requests a specified Factoid Block from factomd. It returns the
-// FBlock struct, the raw binary FBlock, and an error if present.
-func GetFBlock(keymr string) (fblock *FBlock, raw []byte, err error) {
-	params := keyMRRequest{KeyMR: keymr}
+func getFBlock(keymr string, noraw bool) (fblock *FBlock, raw []byte, err error) {
+	params := keyMRRequest{KeyMR: keymr, NoRaw: noraw}
 	req := NewJSON2Request("factoid-block", APICounter(), params)
 	resp, err := factomdRequest(req)
 	if err != nil {
@@ -75,10 +73,21 @@ func GetFBlock(keymr string) (fblock *FBlock, raw []byte, err error) {
 	return wrap.FBlock, raw, nil
 }
 
-// GetFBlockByHeight requests a specified Factoid Block from factomd, returning
-// the FBlock struct, the raw binary FBlock, and an error if present.
-func GetFBlockByHeight(height int64) (ablock *FBlock, raw []byte, err error) {
-	params := heightRequest{Height: height}
+// GetFBlock requests a specified Factoid Block from factomd. It returns the
+// FBlock struct, the raw binary FBlock, and an error if present.
+func GetFBlock(keymr string) (fblock *FBlock, raw []byte, err error) {
+	return getFBlock(keymr, false)
+}
+
+// GetSimpleFBlock requests a specified Factoid Block from factomd. It returns the
+// FBlock struct, and an error if present.
+func GetSimpleFBlock(keymr string) (fblock *FBlock, err error) {
+	fblock, _, err = getFBlock(keymr, true)
+	return
+}
+
+func getFBlockByHeight(height int64, noraw bool) (fblock *FBlock, raw []byte, err error) {
+	params := heightRequest{Height: height, NoRaw: noraw}
 	req := NewJSON2Request("fblock-by-height", APICounter(), params)
 	resp, err := factomdRequest(req)
 	if err != nil {
@@ -102,4 +111,17 @@ func GetFBlockByHeight(height int64) (ablock *FBlock, raw []byte, err error) {
 	}
 
 	return wrap.FBlock, raw, nil
+}
+
+// GetFBlockByHeight requests a specified Factoid Block from factomd, returning
+// the FBlock struct, the raw binary FBlock, and an error if present.
+func GetFBlockByHeight(height int64) (fblock *FBlock, raw []byte, err error) {
+	return getFBlockByHeight(height, false)
+}
+
+// GetSimpleFBlockByHeight requests a specified Factoid Block from factomd, returning
+// the FBlock struct, the raw binary FBlock, and an error if present.
+func GetSimpleFBlockByHeight(height int64) (fblock *FBlock, err error) {
+	fblock, _, err = getFBlockByHeight(height, true)
+	return
 }
