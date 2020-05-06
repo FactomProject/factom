@@ -8,6 +8,7 @@ package factom
 
 type heightRequest struct {
 	Height int64 `json:"height"`
+	NoRaw  bool  `json:"noraw,omitempty"`
 }
 
 type replayRequest struct {
@@ -59,6 +60,7 @@ type importRequest struct {
 
 type keyMRRequest struct {
 	KeyMR string `json:"keymr"`
+	NoRaw bool   `json:"noraw,omitempty"`
 }
 
 type messageRequest struct {

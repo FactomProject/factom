@@ -7,6 +7,7 @@ package factom_test
 import (
 	"net/http"
 	"net/http/httptest"
+	"reflect"
 	"testing"
 
 	"encoding/json"
@@ -105,6 +106,15 @@ func TestGetFBlock(t *testing.T) {
 	}
 	t.Log(fb)
 	t.Log(fmt.Printf("%x\n", raw))
+
+	fb2, err := GetSimpleFBlock("cfcac07b29ccfa413aeda646b5d386006468189939dfdfa6415b97cc35f2ea1a")
+	if err != nil {
+		t.Error(err)
+	}
+
+	if !reflect.DeepEqual(fb, fb2) {
+		t.Error("Response of FBlock from GetFBlock and GetSimpleFBlock did not match")
+	}
 }
 
 func TestGetFBlockByHeight(t *testing.T) {
@@ -181,4 +191,13 @@ func TestGetFBlockByHeight(t *testing.T) {
 	}
 	t.Log("FBlock:", ab)
 	t.Log(fmt.Sprintf("Raw: %x\n", raw))
+
+	ab2, err := GetSimpleFBlockByHeight(20000)
+	if err != nil {
+		t.Error(err)
+	}
+
+	if !reflect.DeepEqual(ab, ab2) {
+		t.Error("Response of FBlock from GetFBlockByHeight and GetSimpleFBlockByHeight did not match")
+	}
 }

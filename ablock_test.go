@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"reflect"
 
 	. "github.com/FactomProject/factom"
 
@@ -77,6 +78,15 @@ func TestGetABlock(t *testing.T) {
 	}
 	t.Log("ABlock:", ab)
 	t.Log(fmt.Sprintf("Raw: %x\n", raw))
+
+	ab2, err := GetSimpleABlock("e7eb4bda495dbe7657cae1525b6be78bd2fdbad952ebde506b6a97e1cf8f431e")
+	if err != nil {
+		t.Error(err)
+	}
+
+	if !reflect.DeepEqual(ab, ab2) {
+		t.Error("Response of ABlock from GetABlock and GetSimpleABlock did not match")
+	}
 }
 
 func TestGetABlockByHeight(t *testing.T) {
@@ -126,4 +136,13 @@ func TestGetABlockByHeight(t *testing.T) {
 	}
 	t.Log("ABlock:", ab)
 	t.Log(fmt.Sprintf("Raw: %x\n", raw))
+
+	ab2, err := GetSimpleABlockByHeight(20000)
+	if err != nil {
+		t.Error(err)
+	}
+
+	if !reflect.DeepEqual(ab, ab2) {
+		t.Error("Response of ABlock from GetABlockByHeight and GetSimpleABlockByHeight did not match")
+	}
 }

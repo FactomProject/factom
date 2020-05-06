@@ -602,8 +602,7 @@ func (a *AdminAddAuthorityEfficiency) String() string {
 	return s
 }
 
-// GetABlock requests a specific ABlock from the factomd API.
-func GetABlock(keymr string) (ablock *ABlock, raw []byte, err error) {
+func getABlock(keymr string, noraw bool) (ablock *ABlock, raw []byte, err error) {
 	params := keyMRRequest{KeyMR: keymr}
 	req := NewJSON2Request("admin-block", APICounter(), params)
 	resp, err := factomdRequest(req)
@@ -633,10 +632,19 @@ func GetABlock(keymr string) (ablock *ABlock, raw []byte, err error) {
 	return wrap.ABlock, raw, nil
 }
 
-// GetABlockByHeight requests an ABlock of a specific height from the factomd
-// API.
-func GetABlockByHeight(height int64) (ablock *ABlock, raw []byte, err error) {
-	params := heightRequest{Height: height}
+// GetABlock requests a specific ABlock from the factomd API with the raw data
+func GetABlock(keymr string) (ablock *ABlock, raw []byte, err error) {
+	return getABlock(keymr, false)
+}
+
+// GetSimpleABlock requests a specific ABlock from the factomd API without the raw data
+func GetSimpleABlock(keymr string) (ablock *ABlock, err error) {
+	ablock, _, err = getABlock(keymr, true)
+	return
+}
+
+func getABlockByHeight(height int64, noraw bool) (ablock *ABlock, raw []byte, err error) {
+	params := heightRequest{Height: height, NoRaw: noraw}
 	req := NewJSON2Request("ablock-by-height", APICounter(), params)
 	resp, err := factomdRequest(req)
 	if err != nil {
@@ -660,4 +668,17 @@ func GetABlockByHeight(height int64) (ablock *ABlock, raw []byte, err error) {
 	}
 
 	return wrap.ABlock, raw, nil
+}
+
+// GetABlockByHeight requests an ABlock of a specific height from the factomd
+// API with the raw data
+func GetABlockByHeight(height int64) (ablock *ABlock, raw []byte, err error) {
+	return getABlockByHeight(height, false)
+}
+
+// GetSimpleABlockByHeight requests an ABlock of a specific height from the factomd
+// API without the raw data
+func GetSimpleABlockByHeight(height int64) (ablock *ABlock, err error) {
+	ablock, _, err = getABlockByHeight(height, false)
+	return
 }
