@@ -12,8 +12,11 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"net/http/cookiejar"
 	"strings"
 	"time"
+
+	"golang.org/x/net/publicsuffix"
 )
 
 // RPCConfig is the configuration for the API handler
@@ -189,6 +192,18 @@ func GetWalletEncryption() (bool, string) {
 	return RpcConfig.WalletTLSEnable, RpcConfig.WalletTLSCertFile
 }
 
+// SetOpenNode points the Factomd server to the open node API and enables cookies
+func SetOpenNode() {
+	EnableCookies()
+	RpcConfig.FactomdServer = OpenNode
+}
+
+// EnableCookies will accept and manage cookies from the API server
+func EnableCookies() {
+	// cookiejar.New never returns an error
+	cookieJar, _ = cookiejar.New(&cookiejar.Options{PublicSuffixList: publicsuffix.List})
+}
+
 // SetFactomdServer sets where to find the factomd server, and tells the server its public ip
 func SetFactomdServer(s string) {
 	RpcConfig.FactomdServer = s
@@ -249,6 +264,10 @@ func factomdRequest(req *JSON2Request) (*JSON2Response, error) {
 			host = RpcConfig.FactomdServer
 		}
 	}
+
+	// no effect if nil
+	client.Jar = cookieJar
+
 	re, err := http.NewRequest(
 		"POST",
 		fmt.Sprintf("%s://%s/v2", scheme, host),

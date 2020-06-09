@@ -11,6 +11,7 @@ import (
 	"encoding/binary"
 	"fmt"
 	"math"
+	"net/http"
 	"regexp"
 	"strconv"
 	"strings"
@@ -20,6 +21,7 @@ import (
 const (
 	// ZeroHash is the string of all 00s
 	ZeroHash = "0000000000000000000000000000000000000000000000000000000000000000"
+	OpenNode = "https://api.factomd.net"
 )
 
 var (
@@ -28,6 +30,7 @@ var (
 		FactomdServer: "localhost:8088",
 		WalletServer:  "localhost:8089",
 	}
+	cookieJar http.CookieJar
 )
 
 // EntryCost calculates the cost in Entry Credits of adding an Entry to a Chain
