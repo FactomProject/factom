@@ -18,6 +18,12 @@ type Entry struct {
 	Content []byte   `json:"content"`
 }
 
+type PendingEntry struct {
+	ChainID   string `json:"chainid,omitempty"`
+	EntryHash string `json:"entryhash"`
+	Status    string `json:"status"`
+}
+
 // NewEntryFromBytes creates a new Factom Entry from byte data.
 func NewEntryFromBytes(chainid []byte, content []byte, extids ...[]byte) *Entry {
 	entry := new(Entry)
@@ -298,18 +304,27 @@ func GetEntry(hash string) (*Entry, error) {
 
 // GetPendingEntries requests a list of all Entries that are waiting to be
 // written into the next block on the Factom Blockchain.
-func GetPendingEntries() (string, error) {
+// Entry commits that are not yet revealed do not have a ChainID.
+// The order of entries is:
+//  |VM1...|VM2...|VM3...|...|Unconfirmed...|
+// Where entries in VM# are ordered inside and Unconfirmed are random.
+// Unconfirmed entries are entry reveals with a status of NotConfirmed
+// and only exist on the node, not the rest of the network.
+func GetPendingEntries() ([]PendingEntry, error) {
 	req := NewJSON2Request("pending-entries", APICounter(), nil)
 	resp, err := factomdRequest(req)
 
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 	if resp.Error != nil {
-		return "", err
+		return nil, err
 	}
 
-	rBytes := resp.JSONResult()
+	pending := make([]PendingEntry, 0)
+	if err := json.Unmarshal(resp.JSONResult(), &pending); err != nil {
+		return nil, err
+	}
 
-	return string(rBytes), nil
+	return pending, nil
 }

@@ -305,6 +305,38 @@ hello world
 `
 
 	if expectedResponse != response.String() {
-		t.Errorf("expected:%s\nrecieved:%s", expectedResponse, response)
+		t.Errorf("expected:%s\nreceived:%s", expectedResponse, response)
+	}
+}
+
+func TestGetPending(t *testing.T) {
+	factomdResponse := `{
+		"jsonrpc":"2.0",
+		"id":0,
+		"result":[
+			{"entryhash":"64ebbb592737e8dcad8bce5db209713a8af18ca306ea6542e86bb1d1c88f5529","chainid":"cffce0f409ebba4ed236d49d89c70e4bd1f1367d86402a3363366683265a242d","status":"TransactionACK"},
+			{"entryhash":"fcfafbef8471d99cfda1cb8d77a15d71d39d96acaf85da836c1f5075a71bb7c3","chainid":"cffce0f409ebba4ed236d49d89c70e4bd1f1367d86402a3363366683265a242d","status":"TransactionACK"},
+			{"entryhash":"5ecfd88edacbaeea8dde7ead5634dbfb000c37e9d6a07ffa14432f3a1d07549d","chainid":"6e4540d08d5ac6a1a394e982fb6a2ab8b516ee751c37420055141b94fe070bfe","status":"TransactionACK"},
+			{"entryhash":"d72101ca339aa7206ae6d82594b61051ff901f78276c389ce8b885f34caa9d34","chainid":null,"status":"TransactionACK"},
+			{"entryhash":"2eb17336caf62f1eb869a5380298ced3b2653b496bd90e99a0a2da58c8b3101b","chainid":"a642a8674f46696cc47fdb6b65f9c87b2a19c5ea8123b3d2f0c13b6f33a9d5ef","status":"TransactionACK"}
+	]}`
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		fmt.Fprintln(w, factomdResponse)
+	}))
+	defer ts.Close()
+
+	SetFactomdServer(ts.URL[7:])
+
+	response, err := GetPendingEntries()
+	if err != nil {
+		t.Error(err)
+	}
+
+	received := fmt.Sprintf("%+v", response)
+	expected := "[{ChainID:cffce0f409ebba4ed236d49d89c70e4bd1f1367d86402a3363366683265a242d EntryHash:64ebbb592737e8dcad8bce5db209713a8af18ca306ea6542e86bb1d1c88f5529 Status:TransactionACK} {ChainID:cffce0f409ebba4ed236d49d89c70e4bd1f1367d86402a3363366683265a242d EntryHash:fcfafbef8471d99cfda1cb8d77a15d71d39d96acaf85da836c1f5075a71bb7c3 Status:TransactionACK} {ChainID:6e4540d08d5ac6a1a394e982fb6a2ab8b516ee751c37420055141b94fe070bfe EntryHash:5ecfd88edacbaeea8dde7ead5634dbfb000c37e9d6a07ffa14432f3a1d07549d Status:TransactionACK} {ChainID: EntryHash:d72101ca339aa7206ae6d82594b61051ff901f78276c389ce8b885f34caa9d34 Status:TransactionACK} {ChainID:a642a8674f46696cc47fdb6b65f9c87b2a19c5ea8123b3d2f0c13b6f33a9d5ef EntryHash:2eb17336caf62f1eb869a5380298ced3b2653b496bd90e99a0a2da58c8b3101b Status:TransactionACK}]"
+
+	if received != expected {
+		t.Errorf("expected:%s\nreceived:%s", expected, received)
 	}
 }
