@@ -9,16 +9,9 @@ type PendingTransaction struct {
 	TxID      string `json:"transactionid"`
 	Status    string `json:"status"`
 	Fees      uint64 `json:"fees"`
-	Inputs    []PendingAddress
-	Outputs   []PendingAddress
-	ECOutputs []PendingAddress
-}
-
-// PendingAddress is the input or recipient of a transaction
-type PendingAddress struct {
-	Amount  uint64 `json:"amount"`
-	RCDHash string `json:"address"`
-	Address string `json:"useraddress"`
+	Inputs    []TransactionAddress
+	Outputs   []TransactionAddress
+	ECOutputs []TransactionAddress
 }
 
 // GetPendingTransactions requests a list of transactions that have been
