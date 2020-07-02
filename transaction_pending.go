@@ -7,6 +7,7 @@ import (
 // PendingTransaction is a single transaction returned by the pending-transaction API call
 type PendingTransaction struct {
 	TxID      string `json:"transactionid"`
+	DBHeight  uint32 `json:"dbheight"`
 	Status    string `json:"status"`
 	Fees      uint64 `json:"fees"`
 	Inputs    []TransactionAddress
