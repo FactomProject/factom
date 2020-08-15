@@ -177,11 +177,8 @@ func (e *Entry) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-// ComposeEntryCommit creates a JSON2Request to commit a new Entry via the
-// factomd web api. The request includes the marshaled MessageRequest with the
-// Entry Credit Signature.
-func ComposeEntryCommit(e *Entry, ec *ECAddress) (*JSON2Request, error) {
-	buf := new(bytes.Buffer)
+func EntryCommitMessage(e *Entry, ec *ECAddress) (*bytes.Buffer, error) {
+	buf  := new(bytes.Buffer)
 
 	// 1 byte version
 	buf.Write([]byte{0})
@@ -204,9 +201,19 @@ func ComposeEntryCommit(e *Entry, ec *ECAddress) (*JSON2Request, error) {
 	buf.Write(ec.PubBytes())
 	buf.Write(sig[:])
 
-	params := messageRequest{Message: hex.EncodeToString(buf.Bytes())}
-	req := NewJSON2Request("commit-entry", APICounter(), params)
+	return buf, nil
+}
 
+// ComposeEntryCommit creates a JSON2Request to commit a new Entry via the
+// factomd web api. The request includes the marshaled MessageRequest with the
+// Entry Credit Signature.
+func ComposeEntryCommit(e *Entry, ec *ECAddress) (*JSON2Request, error) {
+	b, err := EntryCommitMessage(e, ec)
+	if  err != nil {
+		return nil, err
+	}
+	params := messageRequest{Message: hex.EncodeToString(b.Bytes())}
+	req := NewJSON2Request("commit-entry", APICounter(), params)
 	return req, nil
 }
 
