@@ -18,7 +18,7 @@ type MultiBalanceResponse struct {
 	} `json:"balances"`
 }
 
-// GetECBalance returns the balance in factoshi (factoid * 1e8) of a given Entry
+// GetECBalance returns the Entry Credit balance of a given Entry
 // Credit Public Address.
 func GetECBalance(addr string) (int64, error) {
 	type balanceResponse struct {
