@@ -603,7 +603,7 @@ func (a *AdminAddAuthorityEfficiency) String() string {
 }
 
 func getABlock(keymr string, noraw bool) (ablock *ABlock, raw []byte, err error) {
-	params := keyMRRequest{KeyMR: keymr}
+	params := keyMRRequest{KeyMR: keymr, NoRaw: noraw}
 	req := NewJSON2Request("admin-block", APICounter(), params)
 	resp, err := factomdRequest(req)
 	if err != nil {
