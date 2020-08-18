@@ -126,7 +126,6 @@ func TestGetECBlock(t *testing.T) {
 		t.Error(err)
 	}
 	t.Log("ECBlock: ", ecb)
-
 }
 
 func TestGetECBlockByHeight(t *testing.T) {
