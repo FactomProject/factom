@@ -68,7 +68,7 @@ func (db *DBlock) String() string {
 // GetDBlock requests a Directory Block by its Key Merkle Root from the factomd
 func GetDBlock(keymr string) (dblock *DBlock, err error) {
 	params := keyMRRequest{KeyMR: keymr}
-	req := NewJSON2Request("directory-block", APICounter(), params) // doesn't have a "no raw" request
+	req := NewJSON2Request("directory-block", APICounter(), params)
 	resp, err := factomdRequest(req)
 	if err != nil {
 		return
