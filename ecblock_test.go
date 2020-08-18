@@ -9,7 +9,6 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
-	"reflect"
 
 	. "github.com/FactomProject/factom"
 
@@ -122,21 +121,12 @@ func TestGetECBlock(t *testing.T) {
 
 	SetFactomdServer(ts.URL[7:])
 
-	ecb, raw, err := GetECBlock("a7baaa24e477a0acef165461d70ec94ff3f33ad15562ecbe937967a761929a17")
+	ecb, err := GetECBlock("a7baaa24e477a0acef165461d70ec94ff3f33ad15562ecbe937967a761929a17")
 	if err != nil {
 		t.Error(err)
 	}
 	t.Log("ECBlock: ", ecb)
-	t.Log(fmt.Sprintf("raw: %x\n", raw))
 
-	ecb2, err := GetSimpleECBlock("a7baaa24e477a0acef165461d70ec94ff3f33ad15562ecbe937967a761929a17")
-	if err != nil {
-		t.Error(err)
-	}
-
-	if !reflect.DeepEqual(ecb, ecb2) {
-		t.Error("Response of ECBlock from GetECBlock and GetSimpleECBlock did not match")
-	}
 }
 
 func TestGetECBlockByHeight(t *testing.T) {
@@ -222,19 +212,9 @@ func TestGetECBlockByHeight(t *testing.T) {
 
 	SetFactomdServer(ts.URL[7:])
 
-	ecb, raw, err := GetECBlockByHeight(10199)
+	ecb, err := GetECBlockByHeight(10199)
 	if err != nil {
 		t.Error(err)
 	}
 	t.Log("ECBlock: ", ecb)
-	t.Log(fmt.Sprintf("raw: %x\n", raw))
-
-	ecb2, err := GetSimpleECBlockByHeight(10199)
-	if err != nil {
-		t.Error(err)
-	}
-
-	if !reflect.DeepEqual(ecb, ecb2) {
-		t.Error("Response of ECBlock from GetECBlockByHeight and GetSimpleECBlockByHeight did not match")
-	}
 }

@@ -5,7 +5,6 @@
 package factom
 
 import (
-	"encoding/hex"
 	"encoding/json"
 	"fmt"
 )
@@ -44,84 +43,48 @@ func (f *FBlock) String() string {
 	return s
 }
 
-func getFBlock(keymr string, noraw bool) (fblock *FBlock, raw []byte, err error) {
-	params := keyMRRequest{KeyMR: keymr, NoRaw: noraw}
+// GetFBlock requests a specified Factoid Block from factomd by its keymr
+func GetFBlock(keymr string) (fblock *FBlock, err error) {
+	params := keyMRRequest{KeyMR: keymr, NoRaw: true}
 	req := NewJSON2Request("factoid-block", APICounter(), params)
 	resp, err := factomdRequest(req)
 	if err != nil {
 		return
 	}
 	if resp.Error != nil {
-		return nil, nil, resp.Error
+		return nil, resp.Error
 	}
 
 	// Create temporary struct to unmarshal json object
 	wrap := new(struct {
-		FBlock  *FBlock `json:"fblock"`
-		RawData string  `json:"rawdata"`
+		FBlock *FBlock `json:"fblock"`
 	})
 
 	if err = json.Unmarshal(resp.JSONResult(), wrap); err != nil {
 		return
 	}
 
-	raw, err = hex.DecodeString(wrap.RawData)
-	if err != nil {
-		return
-	}
-
-	return wrap.FBlock, raw, nil
+	return wrap.FBlock, nil
 }
 
-// GetFBlock requests a specified Factoid Block from factomd. It returns the
-// FBlock struct, the raw binary FBlock, and an error if present.
-func GetFBlock(keymr string) (fblock *FBlock, raw []byte, err error) {
-	return getFBlock(keymr, false)
-}
-
-// GetSimpleFBlock requests a specified Factoid Block from factomd. It returns the
-// FBlock struct, and an error if present.
-func GetSimpleFBlock(keymr string) (fblock *FBlock, err error) {
-	fblock, _, err = getFBlock(keymr, true)
-	return
-}
-
-func getFBlockByHeight(height int64, noraw bool) (fblock *FBlock, raw []byte, err error) {
-	params := heightRequest{Height: height, NoRaw: noraw}
+// GetFBlockByHeight requests a specified Factoid Block from factomd by its height
+func GetFBlockByHeight(height int64) (fblock *FBlock, err error) {
+	params := heightRequest{Height: height, NoRaw: true}
 	req := NewJSON2Request("fblock-by-height", APICounter(), params)
 	resp, err := factomdRequest(req)
 	if err != nil {
 		return
 	}
 	if resp.Error != nil {
-		return nil, nil, resp.Error
+		return nil, resp.Error
 	}
 
 	wrap := new(struct {
-		FBlock  *FBlock `json:"fblock"`
-		RawData string  `json:"rawdata"`
+		FBlock *FBlock `json:"fblock"`
 	})
 	if err = json.Unmarshal(resp.JSONResult(), wrap); err != nil {
 		return
 	}
 
-	raw, err = hex.DecodeString(wrap.RawData)
-	if err != nil {
-		return
-	}
-
-	return wrap.FBlock, raw, nil
-}
-
-// GetFBlockByHeight requests a specified Factoid Block from factomd, returning
-// the FBlock struct, the raw binary FBlock, and an error if present.
-func GetFBlockByHeight(height int64) (fblock *FBlock, raw []byte, err error) {
-	return getFBlockByHeight(height, false)
-}
-
-// GetSimpleFBlockByHeight requests a specified Factoid Block from factomd, returning
-// the FBlock struct, the raw binary FBlock, and an error if present.
-func GetSimpleFBlockByHeight(height int64) (fblock *FBlock, err error) {
-	fblock, _, err = getFBlockByHeight(height, true)
-	return
+	return wrap.FBlock, nil
 }

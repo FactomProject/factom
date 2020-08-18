@@ -5,7 +5,6 @@
 package factom
 
 import (
-	"encoding/hex"
 	"encoding/json"
 	"fmt"
 )
@@ -66,7 +65,8 @@ func (db *DBlock) String() string {
 // we either need to change the "directoy-block" API call or add a new call to
 // return the propper information (it should match the dblock-by-height call)
 
-func getDBlock(keymr string, noraw bool) (dblock *DBlock, raw []byte, err error) {
+// GetDBlock requests a Directory Block by its Key Merkle Root from the factomd
+func GetDBlock(keymr string) (dblock *DBlock, err error) {
 	params := keyMRRequest{KeyMR: keymr}
 	req := NewJSON2Request("directory-block", APICounter(), params) // doesn't have a "no raw" request
 	resp, err := factomdRequest(req)
@@ -74,7 +74,7 @@ func getDBlock(keymr string, noraw bool) (dblock *DBlock, raw []byte, err error)
 		return
 	}
 	if resp.Error != nil {
-		return nil, nil, resp.Error
+		return nil, resp.Error
 	}
 
 	db := new(struct {
@@ -97,36 +97,24 @@ func getDBlock(keymr string, noraw bool) (dblock *DBlock, raw []byte, err error)
 
 	// TODO: we need a better api call for dblock by keymr so that API will
 	// retrun the same as dblock-byheight
-	return getDBlockByHeight(db.Header.SequenceNumber, noraw)
+	return GetDBlockByHeight(db.Header.SequenceNumber)
 }
 
-// GetDBlock requests a Directory Block by its Key Merkle Root from the factomd
-// API with the raw data
-func GetDBlock(keymr string) (dblock *DBlock, raw []byte, err error) {
-	return getDBlock(keymr, false)
-}
-
-// GetSimpleDBlock requests a Directory Block by its Key Merkle Root from the factomd
-// API without the raw data
-func GetSimpleDBlock(keymr string) (dblock *DBlock, err error) {
-	dblock, _, err = getDBlock(keymr, true)
-	return
-}
-
-func getDBlockByHeight(height int64, noraw bool) (dblock *DBlock, raw []byte, err error) {
-	params := heightRequest{Height: height, NoRaw: noraw}
+// GetDBlockByHeight requests a Directory Block by its block height from the factomd
+// API.
+func GetDBlockByHeight(height int64) (dblock *DBlock, err error) {
+	params := heightRequest{Height: height, NoRaw: true}
 	req := NewJSON2Request("dblock-by-height", APICounter(), params)
 	resp, err := factomdRequest(req)
 	if err != nil {
 		return
 	}
 	if resp.Error != nil {
-		return nil, nil, resp.Error
+		return nil, resp.Error
 	}
 
 	wrap := new(struct {
-		DBlock  *DBlock `json:"dblock"`
-		RawData string  `json:"rawdata"`
+		DBlock *DBlock `json:"dblock"`
 	})
 
 	err = json.Unmarshal(resp.JSONResult(), wrap)
@@ -134,26 +122,8 @@ func getDBlockByHeight(height int64, noraw bool) (dblock *DBlock, raw []byte, er
 		return
 	}
 
-	raw, err = hex.DecodeString(wrap.RawData)
-	if err != nil {
-		return
-	}
-
 	wrap.DBlock.SequenceNumber = height
-	return wrap.DBlock, raw, nil
-}
-
-// GetDBlockByHeight requests a Directory Block by its block height from the factomd
-// API.
-func GetDBlockByHeight(height int64) (dblock *DBlock, raw []byte, err error) {
-	return getDBlockByHeight(height, false)
-}
-
-// GetSimpleDBlockByHeight requests a Directory Block by its block height from the factomd
-// API.
-func GetSimpleDBlockByHeight(height int64) (dblock *DBlock, err error) {
-	dblock, _, err = getDBlockByHeight(height, true)
-	return
+	return wrap.DBlock, nil
 }
 
 // GetDBlockHead requests the most recent Directory Block Key Merkel Root
