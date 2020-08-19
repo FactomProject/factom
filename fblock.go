@@ -5,7 +5,6 @@
 package factom
 
 import (
-	"encoding/hex"
 	"encoding/json"
 	"fmt"
 )
@@ -44,62 +43,48 @@ func (f *FBlock) String() string {
 	return s
 }
 
-// GetFblock requests a specified Factoid Block from factomd. It returns the
-// FBlock struct, the raw binary FBlock, and an error if present.
-func GetFBlock(keymr string) (fblock *FBlock, raw []byte, err error) {
-	params := keyMRRequest{KeyMR: keymr}
+// GetFBlock requests a specified Factoid Block from factomd by its keymr
+func GetFBlock(keymr string) (fblock *FBlock, err error) {
+	params := keyMRRequest{KeyMR: keymr, NoRaw: true}
 	req := NewJSON2Request("factoid-block", APICounter(), params)
 	resp, err := factomdRequest(req)
 	if err != nil {
 		return
 	}
 	if resp.Error != nil {
-		return nil, nil, resp.Error
+		return nil, resp.Error
 	}
 
 	// Create temporary struct to unmarshal json object
 	wrap := new(struct {
-		FBlock  *FBlock `json:"fblock"`
-		RawData string  `json:"rawdata"`
+		FBlock *FBlock `json:"fblock"`
 	})
 
 	if err = json.Unmarshal(resp.JSONResult(), wrap); err != nil {
 		return
 	}
 
-	raw, err = hex.DecodeString(wrap.RawData)
-	if err != nil {
-		return
-	}
-
-	return wrap.FBlock, raw, nil
+	return wrap.FBlock, nil
 }
 
-// GetFBlockByHeight requests a specified Factoid Block from factomd, returning
-// the FBlock struct, the raw binary FBlock, and an error if present.
-func GetFBlockByHeight(height int64) (ablock *FBlock, raw []byte, err error) {
-	params := heightRequest{Height: height}
+// GetFBlockByHeight requests a specified Factoid Block from factomd by its height
+func GetFBlockByHeight(height int64) (fblock *FBlock, err error) {
+	params := heightRequest{Height: height, NoRaw: true}
 	req := NewJSON2Request("fblock-by-height", APICounter(), params)
 	resp, err := factomdRequest(req)
 	if err != nil {
 		return
 	}
 	if resp.Error != nil {
-		return nil, nil, resp.Error
+		return nil, resp.Error
 	}
 
 	wrap := new(struct {
-		FBlock  *FBlock `json:"fblock"`
-		RawData string  `json:"rawdata"`
+		FBlock *FBlock `json:"fblock"`
 	})
 	if err = json.Unmarshal(resp.JSONResult(), wrap); err != nil {
 		return
 	}
 
-	raw, err = hex.DecodeString(wrap.RawData)
-	if err != nil {
-		return
-	}
-
-	return wrap.FBlock, raw, nil
+	return wrap.FBlock, nil
 }

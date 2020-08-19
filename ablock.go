@@ -5,7 +5,6 @@
 package factom
 
 import (
-	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -602,22 +601,21 @@ func (a *AdminAddAuthorityEfficiency) String() string {
 	return s
 }
 
-// GetABlock requests a specific ABlock from the factomd API.
-func GetABlock(keymr string) (ablock *ABlock, raw []byte, err error) {
-	params := keyMRRequest{KeyMR: keymr}
+// GetABlock requests a specific ABlock from the factomd API
+func GetABlock(keymr string) (ablock *ABlock, err error) {
+	params := keyMRRequest{KeyMR: keymr, NoRaw: true}
 	req := NewJSON2Request("admin-block", APICounter(), params)
 	resp, err := factomdRequest(req)
 	if err != nil {
 		return
 	}
 	if resp.Error != nil {
-		return nil, nil, resp.Error
+		return nil, resp.Error
 	}
 
 	// create a wraper construct for the ECBlock API return
 	wrap := new(struct {
-		ABlock  *ABlock `json:"ablock"`
-		RawData string  `json:"rawdata"`
+		ABlock *ABlock `json:"ablock"`
 	})
 
 	err = json.Unmarshal(resp.JSONResult(), wrap)
@@ -625,39 +623,27 @@ func GetABlock(keymr string) (ablock *ABlock, raw []byte, err error) {
 		return
 	}
 
-	raw, err = hex.DecodeString(wrap.RawData)
-	if err != nil {
-		return
-	}
-
-	return wrap.ABlock, raw, nil
+	return wrap.ABlock, nil
 }
 
 // GetABlockByHeight requests an ABlock of a specific height from the factomd
-// API.
-func GetABlockByHeight(height int64) (ablock *ABlock, raw []byte, err error) {
-	params := heightRequest{Height: height}
+func GetABlockByHeight(height int64) (ablock *ABlock, err error) {
+	params := heightRequest{Height: height, NoRaw: true}
 	req := NewJSON2Request("ablock-by-height", APICounter(), params)
 	resp, err := factomdRequest(req)
 	if err != nil {
 		return
 	}
 	if resp.Error != nil {
-		return nil, nil, resp.Error
+		return nil, resp.Error
 	}
 
 	wrap := new(struct {
-		ABlock  *ABlock `json:"ablock"`
-		RawData string  `json:"rawdata"`
+		ABlock *ABlock `json:"ablock"`
 	})
 	if err = json.Unmarshal(resp.JSONResult(), wrap); err != nil {
 		return
 	}
 
-	raw, err = hex.DecodeString(wrap.RawData)
-	if err != nil {
-		return
-	}
-
-	return wrap.ABlock, raw, nil
+	return wrap.ABlock, nil
 }
