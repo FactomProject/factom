@@ -71,12 +71,11 @@ func TestGetABlock(t *testing.T) {
 
 	SetFactomdServer(ts.URL[7:])
 
-	ab, raw, err := GetABlock("e7eb4bda495dbe7657cae1525b6be78bd2fdbad952ebde506b6a97e1cf8f431e")
+	ab, err := GetABlock("e7eb4bda495dbe7657cae1525b6be78bd2fdbad952ebde506b6a97e1cf8f431e")
 	if err != nil {
 		t.Error(err)
 	}
 	t.Log("ABlock:", ab)
-	t.Log(fmt.Sprintf("Raw: %x\n", raw))
 }
 
 func TestGetABlockByHeight(t *testing.T) {
@@ -120,10 +119,9 @@ func TestGetABlockByHeight(t *testing.T) {
 
 	SetFactomdServer(ts.URL[7:])
 
-	ab, raw, err := GetABlockByHeight(20000)
+	ab, err := GetABlockByHeight(20000)
 	if err != nil {
 		t.Error(err)
 	}
 	t.Log("ABlock:", ab)
-	t.Log(fmt.Sprintf("Raw: %x\n", raw))
 }

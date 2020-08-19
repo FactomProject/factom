@@ -9,8 +9,6 @@ import (
 	"fmt"
 )
 
-
-
 type JStruct struct {
 	data []byte
 }
@@ -57,7 +55,7 @@ func (f *BlockByHeightRawResponse) String() string {
 // GetBlockByHeightRaw fetches the specified block type by height
 // Deprecated: use ablock, dblock, eblock, ecblock and fblock instead.
 func GetBlockByHeightRaw(blockType string, height int64) (*BlockByHeightRawResponse, error) {
-	params := heightRequest{Height: height}
+	params := heightRequest{Height: height, NoRaw: false} // include raw
 	req := NewJSON2Request(fmt.Sprintf("%vblock-by-height", blockType), APICounter(), params)
 	resp, err := factomdRequest(req)
 	if err != nil {

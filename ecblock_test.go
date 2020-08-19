@@ -121,12 +121,11 @@ func TestGetECBlock(t *testing.T) {
 
 	SetFactomdServer(ts.URL[7:])
 
-	ecb, raw, err := GetECBlock("a7baaa24e477a0acef165461d70ec94ff3f33ad15562ecbe937967a761929a17")
+	ecb, err := GetECBlock("a7baaa24e477a0acef165461d70ec94ff3f33ad15562ecbe937967a761929a17")
 	if err != nil {
 		t.Error(err)
 	}
 	t.Log("ECBlock: ", ecb)
-	t.Log(fmt.Sprintf("raw: %x\n", raw))
 }
 
 func TestGetECBlockByHeight(t *testing.T) {
@@ -212,10 +211,9 @@ func TestGetECBlockByHeight(t *testing.T) {
 
 	SetFactomdServer(ts.URL[7:])
 
-	ecb, raw, err := GetECBlockByHeight(10199)
+	ecb, err := GetECBlockByHeight(10199)
 	if err != nil {
 		t.Error(err)
 	}
 	t.Log("ECBlock: ", ecb)
-	t.Log(fmt.Sprintf("raw: %x\n", raw))
 }
