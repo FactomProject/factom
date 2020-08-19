@@ -61,12 +61,11 @@ func TestGetDBlockByHeight(t *testing.T) {
 
 	SetFactomdServer(ts.URL[7:])
 
-	d, raw, err := GetDBlockByHeight(100)
+	d, err := GetDBlockByHeight(100)
 	if err != nil {
 		t.Error(err)
 	}
 	t.Log("dblock:", d)
-	t.Log(fmt.Sprintf("raw: %x\n", raw))
 }
 
 func TestGetDBlockHead(t *testing.T) {

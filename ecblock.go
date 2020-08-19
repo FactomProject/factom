@@ -350,61 +350,48 @@ func (e *ECBalanceIncrease) String() string {
 	return s
 }
 
-// GetECBlock requests a specified Entry Credit Block from the factomd API.
-func GetECBlock(keymr string) (ecblock *ECBlock, raw []byte, err error) {
-	params := keyMRRequest{KeyMR: keymr}
+// GetECBlock requests a specified Entry Credit Block from the factomd API
+func GetECBlock(keymr string) (ecblock *ECBlock, err error) {
+	params := keyMRRequest{KeyMR: keymr, NoRaw: true}
 	req := NewJSON2Request("entrycredit-block", APICounter(), params)
 	resp, err := factomdRequest(req)
 	if err != nil {
 		return
 	}
 	if resp.Error != nil {
-		return nil, nil, resp.Error
+		return nil, resp.Error
 	}
 
 	// create a wraper construct for the ECBlock API return
 	wrap := new(struct {
 		ECBlock *ECBlock `json:"ecblock"`
-		RawData string   `json:"rawdata"`
 	})
 	err = json.Unmarshal(resp.JSONResult(), wrap)
 	if err != nil {
 		return
 	}
 
-	raw, err = hex.DecodeString(wrap.RawData)
-	if err != nil {
-		return
-	}
-
-	return wrap.ECBlock, raw, nil
+	return wrap.ECBlock, nil
 }
 
-// GetECBlockByHeight request an Entry Credit Block of a given height from the
-// factomd API.
-func GetECBlockByHeight(height int64) (ecblock *ECBlock, raw []byte, err error) {
-	params := heightRequest{Height: height}
+// GetECBlockByHeight request an Entry Credit Block of a given height
+func GetECBlockByHeight(height int64) (ecblock *ECBlock, err error) {
+	params := heightRequest{Height: height, NoRaw: true}
 	req := NewJSON2Request("ecblock-by-height", APICounter(), params)
 	resp, err := factomdRequest(req)
 	if err != nil {
 		return
 	}
 	if resp.Error != nil {
-		return nil, nil, resp.Error
+		return nil, resp.Error
 	}
 
 	wrap := new(struct {
 		ECBlock *ECBlock `json:"ecblock"`
-		RawData string   `json:"rawdata"`
 	})
 	if err = json.Unmarshal(resp.JSONResult(), wrap); err != nil {
 		return
 	}
 
-	raw, err = hex.DecodeString(wrap.RawData)
-	if err != nil {
-		return
-	}
-
-	return wrap.ECBlock, raw, nil
+	return wrap.ECBlock, nil
 }
