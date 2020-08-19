@@ -26,7 +26,7 @@ func GetPendingTransactions() ([]PendingTransaction, error) {
 		return nil, err
 	}
 	if resp.Error != nil {
-		return nil, err
+		return nil, resp.Error
 	}
 
 	transList := resp.JSONResult()

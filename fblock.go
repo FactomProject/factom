@@ -32,7 +32,7 @@ type FBlock struct {
 // The data has been rearranged from the raw json response to make it easier to work with.
 type FBTransaction struct {
 	TxID        string                     `json:"txid"` // hex string
-	Blockheight int64                      `json:"blockheight"`
+	BlockHeight int64                      `json:"blockheight"`
 	Timestamp   time.Time                  `json:"timestamp"`
 	Inputs      []SignedTransactionAddress `json:"inputs"`
 	Outputs     []TransactionAddress       `json:"outputs"`
@@ -61,8 +61,8 @@ type SignedTransactionAddress struct {
 // to transform the json response to the appropriate struct and back
 type rawFBTransaction struct {
 	TxID           string               `json:"txid"`
-	Blockheight    int64                `json:"blockheight"`
-	Millitimestamp int64                `json:"millitimestamp"`
+	BlockHeight    int64                `json:"blockheight"`
+	MilliTimestamp int64                `json:"millitimestamp"`
 	Inputs         []TransactionAddress `json:"inputs"`
 	Outputs        []TransactionAddress `json:"outputs"`
 	OutECs         []TransactionAddress `json:"outecs"`
@@ -75,11 +75,14 @@ type rawSigBlock struct {
 
 func (t *FBTransaction) MarshalJSON() ([]byte, error) {
 	txReq := &rawFBTransaction{
-		Blockheight:    t.Blockheight,
-		Millitimestamp: t.Timestamp.UnixNano() / 1e6,
+		TxID:           t.TxID,
+		BlockHeight:    t.BlockHeight,
+		MilliTimestamp: t.Timestamp.UnixNano()/1e6 + (t.Timestamp.UnixNano()/1e3)%1e3,
 		Outputs:        t.Outputs,
 		OutECs:         t.OutECs,
-		TxID:           t.TxID,
+		Inputs:         make([]TransactionAddress, 0, len(t.Inputs)),
+		RCDs:           make([]string, 0, len(t.Inputs)),
+		SigBlocks:      make([]rawSigBlock, 0, len(t.Inputs)),
 	}
 
 	for _, in := range t.Inputs {
@@ -98,9 +101,9 @@ func (t *FBTransaction) UnmarshalJSON(data []byte) error {
 		return err
 	}
 
-	t.Blockheight = txResp.Blockheight
+	t.BlockHeight = txResp.BlockHeight
 	// the bug in the nanosecond conversion is intentional to stay consistent with factomd
-	t.Timestamp = time.Unix(txResp.Millitimestamp/1e3, (txResp.Millitimestamp%1e3)*1e3)
+	t.Timestamp = time.Unix(txResp.MilliTimestamp/1e3, (txResp.MilliTimestamp%1e3)*1e3)
 	t.Outputs = txResp.Outputs
 	t.OutECs = txResp.OutECs
 	t.TxID = txResp.TxID
@@ -127,7 +130,7 @@ func (t *FBTransaction) UnmarshalJSON(data []byte) error {
 func (t FBTransaction) String() string {
 	var s string
 	s += fmt.Sprintln("TxID:", t.TxID)
-	s += fmt.Sprintln("Blockheight:", t.Blockheight)
+	s += fmt.Sprintln("BlockHeight:", t.BlockHeight)
 	s += fmt.Sprintln("Timestamp:", t.Timestamp)
 
 	if len(t.Inputs) > 0 {
