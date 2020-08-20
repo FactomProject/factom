@@ -29,48 +29,6 @@ func TestJSONTransactions(t *testing.T) {
 	t.Log("Unmarshaled:", tx2)
 }
 
-func TestTransactions(t *testing.T) {
-	// start the test wallet
-	done, err := StartTestWallet()
-	if err != nil {
-		t.Error(err)
-	}
-	defer func() { done <- 1 }()
-
-	// make sure the wallet is empty
-	if txs, err := ListTransactionsTmp(); err != nil {
-		t.Error(err)
-	} else if len(txs) > 0 {
-		t.Error("Unexpected transactions returned from the wallet:", txs)
-	}
-
-	// create a new transaction
-	tx1, err := NewTransaction("tx1")
-	if err != nil {
-		t.Error(err)
-	}
-	if tx1 == nil {
-		t.Error("No transaction was returned")
-	}
-
-	if tx, err := GetTmpTransaction("tx1"); err != nil {
-		t.Error(err)
-	} else if tx == nil {
-		t.Error("Temporary transaction was not saved in the wallet")
-	}
-
-	// delete a transaction
-	if err := DeleteTransaction("tx1"); err != nil {
-		t.Error(err)
-	}
-
-	if txs, err := ListTransactionsTmp(); err != nil {
-		t.Error(err)
-	} else if len(txs) > 0 {
-		t.Error("Unexpected transactions returned from the wallet:", txs)
-	}
-}
-
 // helper functions for testing
 
 func mkdummytx() *Transaction {
