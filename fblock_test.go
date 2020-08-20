@@ -5,12 +5,12 @@
 package factom_test
 
 import (
+	"bytes"
+	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"testing"
-
-	"encoding/json"
-	"fmt"
 
 	. "github.com/FactomProject/factom"
 )
@@ -179,4 +179,23 @@ func TestGetFBlockByHeight(t *testing.T) {
 		t.Error(err)
 	}
 	t.Log("FBlock:", ab)
+}
+
+func TestFBTransaction_MarshalJSON(t *testing.T) {
+	original := []byte(`[{"txid":"fab98df81a80b1177c5226ff307be7ecc77c30666c63f06623a606424d41fe72","blockheight":0,"millitimestamp":1453149000985,"inputs":[],"outputs":[],"outecs":[],"rcds":[],"sigblocks":[]},{"txid":"1ec91421e01d95267f3deb9b9d5f29d3438387a0280a5ffa5e9a60f235212ae8","blockheight":0,"millitimestamp":1453149058599,"inputs":[{"amount":26268275436,"address":"3d956f129c08ac413025be3f6e47e3fb26461df35c9ccaf2fe4d53373e52536b","useraddress":"FA2SCdYb8iBYmMcmeUjHB8NhKx6DqH3wDovkumgbKt4oNkD3TJMg"}],"outputs":[{"amount":26267184636,"address":"ccf82cf94557f08a6859d8bf4a9b3ce361d0abae1e3bf5136b24638b74d32bc6","useraddress":"FA3XME5vdcjG8jPT188UFkum9BeAJJLgwyCkGB12QLsDA2qQaBET"}],"outecs":[],"rcds":["016664074524dd6a58e6593780717233b56d381a6798e5ee5ba75564bde589a6bf"],"sigblocks":[{"signatures":["efdab088b50d56ea2dfd4f600d5727a06cd7e9f3c353288e6898723ea32f4f044d27a80a199cfefec06cf53e18ea863b05b1075001d592b913e7f32c3d3f2204"]}]}]`)
+
+	var tr []*FBTransaction
+
+	if err := json.Unmarshal(original, &tr); err != nil {
+		t.Errorf("error unmarshalling transactions: %v", err)
+	}
+
+	rem, err := json.Marshal(tr)
+	if err != nil {
+		t.Errorf("error re-marshalling transactions: %v", err)
+	}
+
+	if !bytes.Equal(rem, original) {
+		t.Errorf("re-marshall doesn't match original. got = %v, want = %v", string(rem), string(original))
+	}
 }
