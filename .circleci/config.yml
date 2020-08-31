@@ -1,78 +1,44 @@
-# Golang CircleCI 2.0 configuration file
-#
-# Check https://circleci.com/docs/2.0/language-go/ for more details
-version: 2
+version: 2 
 jobs:
   build:
-    docker:
-      # specify the version
-      - image: circleci/golang:1.12
+    docker: 
+      # CircleCI Go images available at: https://hub.docker.com/r/circleci/golang/
+      - image: circleci/golang:1.14
 
-      # Specify service dependencies here if necessary
-      # CircleCI maintains a library of pre-built images
-      # documented at https://circleci.com/docs/2.0/circleci-images/
-      # - image: circleci/postgres:9.4
+    environment: 
+      TEST_RESULTS: /tmp/test-results
 
-    working_directory: /go/src/github.com/FactomProject/factom
     steps:
       - checkout
-      - run:
-          name: Get Glide
-          command: |
-            go get -v github.com/Masterminds/glide
-            cd $GOPATH/src/github.com/Masterminds/glide
-            git checkout tags/v0.13.1
-            go install
-# Potentially enable coveralls in the future
-#      - run:
-#          name: Get goveralls
-#          command: |
-#            go get github.com/mattn/goveralls
-      - run:
-          name: Get the dependencies
-          command: |
-            glide install
-      - run:
-          name: Build and install to verify it builds
-          command: go install -v
+      - run: mkdir -p $TEST_RESULTS 
 
-      # Move gopath to tmp so we have test files
-      - run:
-          name: Move GOPATH to persist
-          command: cp -r $GOPATH/ /tmp
+      - restore_cache:
+          keys:
+            - go-mod-v4-{{ checksum "go.sum" }}
 
+      # Make sure it builds first
+      - run: go build
 
-      - persist_to_workspace:
-          root: /tmp
-          paths: go
-
-  test:
-    working_directory: /tmp # All the binaries are saved here
-    docker:
-      - image: circleci/golang:1.12
-
-    steps:
-      - attach_workspace:
-          at: /tmp
       - run:
           name: Run unit tests
           command: |
-            export PATH="/tmp/go/bin:$PATH"
-            export GOPATH=/tmp/go
-            cd /tmp/go/src/github.com/FactomProject/factom
-            go test -v ./...
+            PACKAGE_NAMES=$(go list ./... | circleci tests split --split-by=timings --timings-type=classname)
+            gotestsum --junitfile ${TEST_RESULTS}/gotestsum-report.xml -- $PACKAGE_NAMES
+            
+      - save_cache:
+          key: go-mod-v4-{{ checksum "go.sum" }}
+          paths:
+            - "/go/pkg/mod"
+
+      - store_artifacts:
+          path: /tmp/test-results
+          destination: raw-test-output
+
+      - store_test_results:
+          path: /tmp/test-results
 
 workflows:
   version: 2
-  commit-workflow:
+  build-workflow:
     jobs:
-      - build:
-          filters:
-            tags:
-              only: /.*/
-      - test:
-          filters:
-            tags:
-              only: /.*/
-          requires:
-            - build
+      - build
