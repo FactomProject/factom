@@ -35,11 +35,11 @@ type FBTransaction struct {
 	Timestamp   time.Time                  `json:"timestamp"`
 	Inputs      []SignedTransactionAddress `json:"inputs"`
 	Outputs     []TransactionAddress       `json:"outputs"`
-	OutECs      []TransactionAddress       `json:"outecs"`
+	ECOutputs   []TransactionAddress       `json:"outecs"`
 }
 
 // TransactionAddress holds the relevant data for either an input or an output.
-// The amount is in either Factoshi (Input and Output) or EC (OutECs).
+// The amount is in either Factoshi (Input and Output) or EC (ECOutputs).
 // The RCDHash is the SHA256 hash of the RCD.
 // The address is the human readable address calculated from the RCDHash and type.
 type TransactionAddress struct {
@@ -64,7 +64,7 @@ type rawFBTransaction struct {
 	MilliTimestamp int64                `json:"millitimestamp"`
 	Inputs         []TransactionAddress `json:"inputs"`
 	Outputs        []TransactionAddress `json:"outputs"`
-	OutECs         []TransactionAddress `json:"outecs"`
+	ECOutputs      []TransactionAddress `json:"outecs"`
 	RCDs           []string             `json:"rcds"`
 	SigBlocks      []rawSigBlock        `json:"sigblocks"`
 }
@@ -78,7 +78,7 @@ func (t *FBTransaction) MarshalJSON() ([]byte, error) {
 		BlockHeight:    t.BlockHeight,
 		MilliTimestamp: t.Timestamp.UnixNano()/1e6 + (t.Timestamp.UnixNano()/1e3)%1e3,
 		Outputs:        t.Outputs,
-		OutECs:         t.OutECs,
+		ECOutputs:      t.ECOutputs,
 		Inputs:         make([]TransactionAddress, 0, len(t.Inputs)),
 		RCDs:           make([]string, 0, len(t.Inputs)),
 		SigBlocks:      make([]rawSigBlock, 0, len(t.Inputs)),
@@ -104,7 +104,7 @@ func (t *FBTransaction) UnmarshalJSON(data []byte) error {
 	// the bug in the nanosecond conversion is intentional to stay consistent with factomd
 	t.Timestamp = time.Unix(txResp.MilliTimestamp/1e3, (txResp.MilliTimestamp%1e3)*1e3)
 	t.Outputs = txResp.Outputs
-	t.OutECs = txResp.OutECs
+	t.ECOutputs = txResp.ECOutputs
 	t.TxID = txResp.TxID
 
 	// catch decoding errors or malicious data
@@ -146,9 +146,9 @@ func (t FBTransaction) String() string {
 		}
 	}
 
-	if len(t.OutECs) > 0 {
-		s += fmt.Sprintln("OutECs:")
-		for _, ec := range t.OutECs {
+	if len(t.ECOutputs) > 0 {
+		s += fmt.Sprintln("ECOutputs:")
+		for _, ec := range t.ECOutputs {
 			s += fmt.Sprintln("   ", ec.Address, ec.Amount)
 		}
 	}
