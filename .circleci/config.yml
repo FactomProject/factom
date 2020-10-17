@@ -2,7 +2,6 @@ version: 2
 jobs:
   build:
     docker: 
-      # CircleCI Go images available at: https://hub.docker.com/r/circleci/golang/
       - image: circleci/golang:1.14
 
     environment: 
@@ -16,7 +15,6 @@ jobs:
           keys:
             - go-mod-v4-{{ checksum "go.sum" }}
 
-      # Make sure it builds first
       - run: go build
 
       - run:
@@ -37,8 +35,30 @@ jobs:
       - store_test_results:
           path: /tmp/test-results
 
+  gofmt:
+    docker: 
+      - image: circleci/golang:1.14
+
+    steps:
+      - checkout
+      - run:
+          name: "Enforce Go Formatted Code"
+          command: test $(gofmt -l . | wc -l) -eq 0
+      
+  govet:
+    docker: 
+      - image: circleci/golang:1.14
+
+    steps:
+      - checkout
+      - run:
+          name: "Go vet"
+          command: go vet ./...
+
 workflows:
   version: 2
   build-workflow:
     jobs:
       - build
+      - gofmt
+      - govet
