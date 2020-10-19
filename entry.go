@@ -178,7 +178,7 @@ func (e *Entry) UnmarshalJSON(data []byte) error {
 }
 
 func EntryCommitMessage(e *Entry, ec *ECAddress) (*bytes.Buffer, error) {
-	buf  := new(bytes.Buffer)
+	buf := new(bytes.Buffer)
 
 	// 1 byte version
 	buf.Write([]byte{0})
@@ -209,7 +209,7 @@ func EntryCommitMessage(e *Entry, ec *ECAddress) (*bytes.Buffer, error) {
 // Entry Credit Signature.
 func ComposeEntryCommit(e *Entry, ec *ECAddress) (*JSON2Request, error) {
 	b, err := EntryCommitMessage(e, ec)
-	if  err != nil {
+	if err != nil {
 		return nil, err
 	}
 	params := messageRequest{Message: hex.EncodeToString(b.Bytes())}
