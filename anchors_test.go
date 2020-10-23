@@ -105,3 +105,40 @@ Ethereum {
 	}
 
 }
+
+func TestGetAnchorsFactom(t *testing.T) {
+	factomdResponse := `{"jsonrpc":"2.0","id":0,"result":{"directoryblockheight":200000,"directoryblockkeymr":"ce86fc790dd1462aea255adaa64e2f21c871995df2c2c119352d869fa1d7269f","factom":{"entryhash":"2e1be21115e4fb2b24f25941448c620b08bd1ab01971931900944fee9136674f","blockhash":"3c9d3b90d00ecc62fd354d0bd6eb02b7f67c3ea05bc3d2d38853dcd3cadfe71a"}}}`
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		fmt.Fprintln(w, factomdResponse)
+	}))
+	defer ts.Close()
+
+	SetFactomdServer(ts.URL[7:])
+
+	response, err := GetAnchorsFactom("ce86fc790dd1462aea255adaa64e2f21c871995df2c2c119352d869fa1d7269f") // irrelevant, hardcoded above
+	if err != nil {
+		t.Error(err)
+	}
+	response2, err := GetAnchorsFactomByHeight(200000) // irrelevant, hardcoded above
+	if err != nil {
+		t.Error(err)
+	}
+
+	received1 := fmt.Sprintf("%+v", response)
+	received2 := fmt.Sprintf("%+v", response2)
+	expected := `Height: 200000
+KeyMR: ce86fc790dd1462aea255adaa64e2f21c871995df2c2c119352d869fa1d7269f
+Factom {
+ EntryHash: 2e1be21115e4fb2b24f25941448c620b08bd1ab01971931900944fee9136674f
+ BlockHash: 3c9d3b90d00ecc62fd354d0bd6eb02b7f67c3ea05bc3d2d38853dcd3cadfe71a
+}
+`
+	if received1 != expected {
+		t.Errorf("GetAnchorsFactom() expected:%s\nreceived:%s", expected, received1)
+	}
+	if received2 != expected {
+		t.Errorf("GetAnchorsFactomByHeight() expected:%s\nreceived:%s", expected, received2)
+	}
+
+}
