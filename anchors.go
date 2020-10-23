@@ -43,6 +43,20 @@ type MerkleNode struct {
 	Top   string `json:"top,omitempty"`
 }
 
+// AnchorsFactom is an anchors response from factomd in custom (private) networks, e.g. testnet
+// Note that Ethereum or Bitcoin can be nil
+type AnchorsFactom struct {
+	Height uint32        `json:"directoryblockheight"`
+	KeyMR  string        `json:"directoryblockkeymr"`
+	Factom *AnchorFactom `json:"factom"`
+}
+
+// AnchorFactom is the factom mainnet specific anchor, used into custom (private) networks, e.g. testnet
+type AnchorFactom struct {
+	EntryHash string `json:"entryhash"`
+	BlockHash string `json:"blockhash"`
+}
+
 func (a *Anchors) String() string {
 	var sb strings.Builder
 	fmt.Fprintf(&sb, "Height: %d\n", a.Height)
@@ -84,12 +98,37 @@ func (a *Anchors) String() string {
 	return sb.String()
 }
 
+func (a *AnchorsFactom) String() string {
+	var sb strings.Builder
+	fmt.Fprintf(&sb, "Height: %d\n", a.Height)
+	fmt.Fprintf(&sb, "KeyMR: %s\n", a.KeyMR)
+
+	if a.Factom != nil {
+		fmt.Fprintf(&sb, "Factom {\n")
+		fmt.Fprintf(&sb, " EntryHash: %s\n", a.Factom.EntryHash)
+		fmt.Fprintf(&sb, " BlockHash: %s\n", a.Factom.BlockHash)
+		fmt.Fprintf(&sb, "}\n")
+	} else {
+		fmt.Fprintf(&sb, "Factom {}\n")
+	}
+
+	return sb.String()
+}
+
 // UnmarshalJSON is an unmarshaller that handles the variable response from factomd
 func (a *Anchors) UnmarshalJSON(data []byte) error {
 	type tmp *Anchors // unmarshal into a new type to prevent infinite loop
 	// json can't unmarshal a bool into a struct, but it can recognize a null pointer
 	data = bytes.Replace(data, []byte("\"ethereum\":false"), []byte("\"ethereum\":null"), -1)
 	data = bytes.Replace(data, []byte("\"bitcoin\":false"), []byte("\"bitcoin\":null"), -1)
+	return json.Unmarshal(data, tmp(a))
+}
+
+// UnmarshalJSON is an unmarshaller that handles the variable response from factomd
+func (a *AnchorsFactom) UnmarshalJSON(data []byte) error {
+	type tmp *AnchorsFactom // unmarshal into a new type to prevent infinite loop
+	// json can't unmarshal a bool into a struct, but it can recognize a null pointer
+	data = bytes.Replace(data, []byte("\"factom\":false"), []byte("\"factom\":null"), -1)
 	return json.Unmarshal(data, tmp(a))
 }
 
@@ -117,7 +156,31 @@ func getAnchors(hash string, height int64) (*Anchors, error) {
 	return &res, nil
 }
 
-// GetAnchors retrieves the bitcoin and ethereum anchors from factod.
+func getAnchorsFactom(hash string, height int64) (*AnchorsFactom, error) {
+	var params interface{}
+	if hash != "" {
+		params = hashRequest{Hash: hash}
+	} else {
+		params = heightRequest{Height: height}
+	}
+	req := NewJSON2Request("anchors", APICounter(), params)
+	resp, err := factomdRequest(req)
+	if err != nil {
+		return nil, err
+	}
+	if resp.Error != nil {
+		return nil, resp.Error
+	}
+	var res AnchorsFactom
+	err = json.Unmarshal(resp.Result, &res)
+	if err != nil {
+		return nil, err
+	}
+
+	return &res, nil
+}
+
+// GetAnchors retrieves the bitcoin and ethereum anchors from factomd.
 // Hash can be entry hash, entry block keymr, factoid block keymr,
 // admin block lookup hash, entry credit block header hash, or
 // directory block keymr
@@ -125,8 +188,22 @@ func GetAnchors(hash string) (*Anchors, error) {
 	return getAnchors(hash, 0)
 }
 
+// GetAnchorsFactom retrieves factom mainnet anchors from factomd.
+// Hash can be entry hash, entry block keymr, factoid block keymr,
+// admin block lookup hash, entry credit block header hash, or
+// directory block keymr
+func GetAnchorsFactom(hash string) (*AnchorsFactom, error) {
+	return getAnchorsFactom(hash, 0)
+}
+
 // GetAnchorsByHeight retrieves the bitcoin and ethereum anchors for
 // a specific height
 func GetAnchorsByHeight(height int64) (*Anchors, error) {
 	return getAnchors("", height)
+}
+
+// GetAnchorsFactomByHeight retrieves factom mainnet anchors for
+// a specific height
+func GetAnchorsFactomByHeight(height int64) (*AnchorsFactom, error) {
+	return getAnchorsFactom("", height)
 }
